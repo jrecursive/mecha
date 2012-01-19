@@ -7,13 +7,15 @@ public class Vertex extends JSONObject {
     final private static Logger log = 
         Logger.getLogger(Vertex.class.getName());
     
-    static int node_id = 0;
-    public int this_node_id;
+    /*
+     * For sane and practical use of DOTExporter.
+    */
+    static int vertexDotIdCounter = 0;
+    public int vertexDotId;
 	
 	public Vertex(String refId) {
         super();
-        node_id++;
-        this_node_id = node_id;
+        vertexDotId = vertexDotIdCounter++;
         try {
     	   super.put("ref_id", refId);
         } catch (Exception ex) {

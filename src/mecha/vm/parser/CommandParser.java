@@ -41,13 +41,13 @@ public class CommandParser {
 		process(luceneQuery);
 
 		if (SHOW_GRAPH) {
-	       	FileWriter outFile = new FileWriter("query.dot");
+	       	FileWriter outFile = new FileWriter("./tmp/query.dot");
 	       	PrintWriter dot_wr = new PrintWriter(outFile);
 	       	DOTExporter de = new DOTExporter(
 	       	   new VertexNameProvider<Vertex>() {
 	       	       public String getVertexName(Vertex v) {
 	       	           try {
-    	       	           return "" + v.this_node_id;
+    	       	           return "" + v.vertexDotId;
     	       	       } catch (Exception ex) {
     	       	           ex.printStackTrace();
     	       	           return null;
