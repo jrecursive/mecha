@@ -15,6 +15,9 @@ public class MVMContext {
         vars = new ConcurrentHashMap<String, Object>();
     }
     
+    /*
+     * From global scope, MVM user variables.
+    */
     public ConcurrentHashMap<String, Object> getVars() {
         return vars;
     }

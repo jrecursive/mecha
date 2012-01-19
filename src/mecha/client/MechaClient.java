@@ -7,9 +7,6 @@ import java.util.logging.*;
 
 import net.tootallnate.websocket.Draft;
 import net.tootallnate.websocket.WebSocketClient;
-import net.tootallnate.websocket.drafts.Draft_10;
-import net.tootallnate.websocket.drafts.Draft_17;
-import net.tootallnate.websocket.drafts.Draft_75;
 import net.tootallnate.websocket.drafts.Draft_76;
 
 public class MechaClient extends WebSocketClient {

@@ -28,8 +28,8 @@ public class RiakConnector extends OtpProcess {
     final private MDB mdb;
     final private OtpProcessManager procMgr;
     
-    public RiakConnector() throws Exception {
-        mdb = new MDB();
+    public RiakConnector(MDB mdb) throws Exception {
+        this.mdb = mdb;
         procMgr = new OtpProcessManager(
             Mecha.getConfig().getString("mecha-nodename"),
             Mecha.getConfig().getString("riak-cookie"));
@@ -60,7 +60,6 @@ public class RiakConnector extends OtpProcess {
         
         public void run() {
             try {
-                //log.info("receive: " + msg);
                 OtpErlangTuple svcMsg = (OtpErlangTuple) msg.getMsg();
                 String cmd = ((OtpErlangAtom) svcMsg.elementAt(0)).atomValue();
                 OtpErlangObject[] args = ((OtpErlangList) svcMsg.elementAt(1)).elements();
@@ -262,7 +261,7 @@ public class RiakConnector extends OtpProcess {
         try {
             final String rpcNode = Mecha.getConfig().getString("riak-nodename");
 
-            String erlangMe = 
+            String temporaryOtpNodename = 
                 HashUtils.sha1(
                     rpcNode + 
                     "-" + 
@@ -270,7 +269,8 @@ public class RiakConnector extends OtpProcess {
                 "@127.0.0.1";
             
             final OtpProcessManager foldProcMgr = 
-                new OtpProcessManager(erlangMe, Mecha.getConfig().getString("riak-cookie"));
+                new OtpProcessManager(temporaryOtpNodename, 
+                                      Mecha.getConfig().getString("riak-cookie"));
             final OtpErlangObject[] args1 = 
                 { new OtpErlangAtom("message_queue_len") };
             final OtpErlangObject[] args = 
@@ -308,6 +308,10 @@ public class RiakConnector extends OtpProcess {
                                 OtpErlangTuple otpbkv = new OtpErlangTuple(bkv);
                                 getMbox().send(streamToPid, otpbkv);
                                 
+                                /*
+                                 * TODO: Either configurable backpressure ACKs or 
+                                 *       bite the bullet & enforce synchronous replies.
+                                */
                                 if (tcount.incrementAndGet()>=5000) {
                                     tcount.set(0);
                                     while(true) {
@@ -420,7 +424,10 @@ public class RiakConnector extends OtpProcess {
     // TODO: diffuse request to all bucket db's under partition & gather
     //
     
+    //
     // TODO: reduce redundant code between the two list variations
+    //
+    
     public OtpErlangObject list(OtpErlangLong partition, OtpErlangAtom _placeholder) {
         log.info("list: " + partition);
         try {
@@ -453,7 +460,10 @@ public class RiakConnector extends OtpProcess {
         }
     }
     
+    //
     // TODO: reduce redundant code between the two list variations
+    //
+    
     public OtpErlangObject list(OtpErlangLong partition, OtpErlangBinary bucket) {
         log.info("list: " + partition + ": " + (new String(bucket.binaryValue())));
         try {
@@ -488,4 +498,3 @@ public class RiakConnector extends OtpProcess {
     }
     
 }
-

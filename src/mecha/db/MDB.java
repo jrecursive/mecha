@@ -67,7 +67,7 @@ public class MDB {
     }
     
     /* 
-     * storage methods
+     * storage
     */
     
     public void start(String partition) throws Exception {
@@ -104,7 +104,6 @@ public class MDB {
     }
     
     public void delete(String partition, byte[] bucket, byte[] key) throws Exception {
-        //log.info("delete: " + (new String(bucket)) + ", " + (new String(key)));
         if (null == partitionBuckets.get(partition)) start(partition);
         getBucket(partition, bucket).delete(key);
     }
@@ -125,7 +124,6 @@ public class MDB {
     
     public void foldBucketNames(String partition, 
                                 MDB.ForEachFunction fun) throws Exception {
-        log.info("foldBucketNames: " + partition);
         if (null == partitionBuckets.get(partition)) start(partition);
         Map<String, Bucket> pbWMap = partitionBuckets.get(partition);
         for(String b: pbWMap.keySet()) {
@@ -232,7 +230,7 @@ public class MDB {
     }
 
     /*
-     * helper methods
+     * helpers
     */
 
     private Bucket getBucket(String partition, byte[] bucket) throws Exception {

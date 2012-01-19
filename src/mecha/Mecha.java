@@ -8,6 +8,8 @@ import org.json.*;
 
 import mecha.util.*;
 import mecha.server.*;
+import mecha.db.*;
+import mecha.jinterface.*;
 
 public class Mecha {
     final private static Logger log = 
@@ -15,7 +17,11 @@ public class Mecha {
 
     final private static JSONObject config
         = Mecha.loadConfig(TextFile.get("config.json"));
+    
+    final private MDB mdb;
     final private Server server;
+    final private SolrManager solrManager;
+    final private RiakConnector riakConnector;
     
     public static void main(String args[]) throws Exception {
         Mecha mecha = new Mecha();
@@ -26,10 +32,21 @@ public class Mecha {
     }
     
     private Mecha() throws Exception {
-        log.info("starting server");
+        log.info("starting indexes");
+        solrManager = new SolrManager();
+        
+        log.info("starting mdb");
+        mdb = new MDB();
+        
+        log.info("starting query server");
         server = new Server();
         server.start();
-        log.info("started");
+        
+        log.info("starting web services");
+        // TODO: jetty ws integ
+        
+        log.info("starting riak connector");
+        riakConnector = new RiakConnector(mdb);
     }
     
     private static JSONObject loadConfig(String configFileStr) {
