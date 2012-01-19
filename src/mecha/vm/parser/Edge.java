@@ -4,16 +4,16 @@ import java.util.logging.*;
 import org.jgrapht.graph.DefaultEdge;
 import org.json.*;
 
-public class QueryEdge<V> extends DefaultEdge {
+public class Edge<V> extends DefaultEdge {
     final private static Logger log = 
-        Logger.getLogger(QueryEdge.class.getName());
+        Logger.getLogger(Edge.class.getName());
     
     private V v1;
     private V v2;
     private String label;
     public JSONObject data;
 	
-    public QueryEdge(V v1, V v2, String label) {
+    public Edge(V v1, V v2, String label) {
         this.v1 = v1;
         this.v2 = v2;
         this.label = label;
@@ -32,7 +32,7 @@ public class QueryEdge<V> extends DefaultEdge {
         return label;
     }
 
-	public QueryEdge() {
+	public Edge() {
 		data = new JSONObject();
 	}
 	
@@ -40,9 +40,9 @@ public class QueryEdge<V> extends DefaultEdge {
 		data.put(k,v);
 	}
 	
-	public String get(String k) throws Exception {
-		return data.getString(k);
-	}
+	public <T> T get(String k) throws Exception {
+        return (T) data.get(k);
+    }
 	
 	public String toString(int d) throws org.json.JSONException {
 		return data.toString(4).replaceAll("\"", "\\\"");

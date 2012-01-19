@@ -3,14 +3,14 @@ package mecha.vm.parser;
 import java.util.logging.*;
 import org.json.*;
 
-public class QueryNode extends JSONObject {	
+public class Vertex extends JSONObject {	
     final private static Logger log = 
-        Logger.getLogger(QueryNode.class.getName());
+        Logger.getLogger(Vertex.class.getName());
     
     static int node_id = 0;
     public int this_node_id;
 	
-	public QueryNode(String refId) {
+	public Vertex(String refId) {
         super();
         node_id++;
         this_node_id = node_id;
@@ -18,7 +18,6 @@ public class QueryNode extends JSONObject {
     	   super.put("ref_id", refId);
         } catch (Exception ex) {
             ex.printStackTrace();
-            // ultra fail whale if we EVER get here
         }
     }
 	
@@ -33,18 +32,12 @@ public class QueryNode extends JSONObject {
 	public String toString() {
 		String str = "";
 		try {
+		    /*
+		     * For sane and practical use of DOTExporter.
+		    */
 			str = super.toString();
-			
 			JSONObject jo = new JSONObject(str);
-			
-			// TODO: DOUBLE CHECK REF_ID ETC USE
-            /*
-            jo.remove("ref_id");
-            jo.remove("query");
-            jo.remove("node_type");
-            */
             str = jo.toString();
-            
 			while(str.indexOf("\"")!=-1) {
 				str = str.replace("\"", "'");
 			}
