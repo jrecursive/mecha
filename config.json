@@ -1,0 +1,68 @@
+{
+    ##
+    ## machine hostname
+    ##
+    "hostname": "crusty",
+    
+    ##
+    ## client password
+    ##
+    "password": "me3ch4a",
+
+    ##
+    ## mecha jinterface settings
+    ##
+    "mecha-nodename": "mecha@127.0.0.1",
+    
+    ## 
+    ## riak-nodename: full node name of local riak node
+    ## riak-cookie: cookie for riak cluster
+    ## 
+    "riak-nodename": "riak@127.0.0.1",
+    "riak-cookie": "re14ak",
+    
+    ##
+    ## data-directory:  where leveldb object store files go
+    ## 
+    "data-directory": "/research-data",
+    
+    ##
+    ## solr
+    ##
+    "solr-url": "http://127.0.0.1:7331/solr",
+    
+    ##
+    ## client listen port
+    ##
+    "client-port": 10102,
+    
+    ## 
+    ## client websocket endpoint
+    ##
+    "client-endpoint": "/mecha",
+    
+    ##
+    ## client www root
+    ##
+    "client-www-root": "./www",
+
+    ##
+    ## ***************************************
+    ##
+    ## Advanced configuration options
+    ## 
+    ## Handle with care.
+    ##
+    ## ***************************************
+    ## 
+    
+    ##
+    ## leveldb config
+    ##
+    "leveldb": {
+        ##
+        ## Bytes of memory to allocate per bucket for leveldb cache.
+        ##
+        "cache-per-bucket": 104857600
+    }
+}

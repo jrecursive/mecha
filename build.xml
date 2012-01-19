@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project basedir="." default="build" name="mecha">
+    <property environment="env"/>
+    <property name="debuglevel" value="source,lines,vars"/>
+    <property name="target" value="1.6"/>
+    <property name="source" value="1.6"/>
+    
+    <path id="mecha.classpath">
+        <pathelement location="bin"/>
+        <pathelement location="wordnet/classes"/>
+        <fileset refid="jar.fileset"/>
+    </path>
+    
+    <fileset id="jar.fileset" dir="lib">
+        <include name="**/*"/>
+    </fileset>
+    
+    <target name="init">
+        <mkdir dir="bin"/>
+        <copy includeemptydirs="false" todir="bin">
+            <fileset dir="src" excludes="**/*.launch, **/*.java"/>
+        </copy>
+    </target>
+    
+    <target name="clean">
+        <delete dir="bin"/>
+    </target>
+    
+    <target depends="clean" name="cleanall"/>
+    
+    <target depends="build-subprojects,build-project" name="build"/>
+    
+    <target name="build-subprojects"/>
+    
+    <target depends="init" name="build-project">
+        <echo message="${ant.project.name}: ${ant.file}"/>
+        <javac debug="true" debuglevel="${debuglevel}" destdir="bin" source="${source}" target="${target}">
+            <src path="src"/>
+            <classpath refid="mecha.classpath"/>
+        </javac>
+    </target>
+    
+    <target name="package" depends="build-project">
+        <jar destfile="mecha.jar"
+            basedir="bin" />
+    </target>
+
+    
+    <target description="Build all projects which reference this project. Useful to propagate changes." name="build-refprojects"/>
+</project>
