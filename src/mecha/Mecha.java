@@ -23,6 +23,10 @@ public class Mecha {
     final private SolrManager solrManager;
     final private RiakConnector riakConnector;
     
+    /*
+     * startup & init
+    */
+    
     private static Mecha mechaInst;
     static {
         try {

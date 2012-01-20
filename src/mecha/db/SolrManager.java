@@ -3,6 +3,7 @@ package mecha.db;
 import java.util.*;
 import java.util.logging.*;
 import java.util.concurrent.*;
+import org.apache.solr.client.solrj.SolrServer;
 import mecha.Mecha;
 
 public class SolrManager {
@@ -34,6 +35,10 @@ public class SolrManager {
             new SolrCore(solrHomePath, coreName);
         cores.put(coreName, solrInst);
         return solrInst;
+    }
+    
+    public SolrServer getSolrServer(String coreName) throws Exception {
+        return getCore(coreName).getServer();
     }
     
 }

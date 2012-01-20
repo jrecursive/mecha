@@ -30,6 +30,8 @@ public class RiakConnector extends OtpProcess {
     
     public RiakConnector(MDB mdb) throws Exception {
         this.mdb = mdb;
+        log.info(Mecha.getConfig().getString("mecha-nodename") + "/" + 
+                 Mecha.getConfig().getString("riak-cookie"));
         procMgr = new OtpProcessManager(
             Mecha.getConfig().getString("mecha-nodename"),
             Mecha.getConfig().getString("riak-cookie"));
@@ -38,7 +40,7 @@ public class RiakConnector extends OtpProcess {
     public void startConnector() throws Exception {
         procMgr.spawn("kv_store", this);
     }
-
+    
     /*
      * OtpProcess methods
     */

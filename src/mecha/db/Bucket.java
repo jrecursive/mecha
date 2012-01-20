@@ -85,7 +85,7 @@ public class Bucket {
              * CURRENT: index only the "most current" value
              *
             */
-            JSONObject jo1 = new JSONObject(values.getJSONObject(values.length()-1));
+            JSONObject jo1 = values.getJSONObject(values.length()-1);
             JSONObject jo = new JSONObject(jo1.getString("data"));
 
             /*
@@ -128,8 +128,11 @@ public class Bucket {
                     f.endsWith("_d") ||     // double
                     f.endsWith("_b") ||     // boolean ("true" or "false")
                     f.endsWith("_xy") ||    // x,y coordinate
+                    f.endsWith("_xyz") ||    // x,y,z coordinate
+                    f.endsWith("_xyzw") ||    // x,y,z,w coordinate
                     f.endsWith("_ll") ||    // lat,lon latitude, longitude coordinate
                     f.endsWith("_geo") ||   // geohash
+                    
                     
                     /*
                      * If last_modified is specifically set as a field on

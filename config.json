@@ -12,7 +12,7 @@
     ##
     ## mecha jinterface settings
     ##
-    "mecha-nodename": "mecha@127.0.0.1",
+    "mecha-nodename": "fabric_ji@127.0.0.1",
     
     ## 
     ## riak-nodename: full node name of local riak node

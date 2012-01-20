@@ -77,7 +77,7 @@ public class MDB {
         // TODO: Consistently distribute data across all named directories (if array of names configured)
         try {
             String dataDirRoot = Mecha.getConfig().getString("data-directory");
-            String dataDir = dataDirRoot + File.pathSeparator + partition;
+            String dataDir = dataDirRoot + "/" + partition;
             new File(dataDir).mkdirs();
             partitionDirs.put(partition, dataDir);
             openBuckets(partition, dataDir);
@@ -243,7 +243,7 @@ public class MDB {
         if (null == bucketMap) bucketMap = new ConcurrentHashMap<String, Bucket>();
         if (null == bucketMap.get(b)) {
             String bEnc = HashUtils.sha1(b);
-            String bucketDataDir = partitionDirs.get(partition) + File.pathSeparator + bEnc;
+            String bucketDataDir = partitionDirs.get(partition) + "/" + bEnc;
             log.info("starting Bucket(" + partition + "," + bucketDataDir + ")");
             String mdFn = bucketDataDir + ".bucket";
             String bucketName = TextFile.get(mdFn);
