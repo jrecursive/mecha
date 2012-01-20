@@ -5,7 +5,7 @@
     "hostname": "crusty",
     
     ##
-    ## client password
+    ## websocket server password
     ##
     "password": "me3ch4a",
 
@@ -24,28 +24,26 @@
     ##
     ## data-directory:  where leveldb object store files go
     ## 
-    "data-directory": "/research-data",
+    "data-directory": "/mecha/obj",
     
     ##
-    ## solr
+    ## solr-home: directory where solr.xml exists
+    ## solr-cores: solr cores defined in solr.xml to automatically start
+    ## solr-url: deprecated
     ##
-    "solr-url": "http://127.0.0.1:7331/solr",
+    "solr-home": "./solr",
+    "solr-cores": [ "index", "tmp" ],
+    "solr-url": "http://127.0.0.1:7331/solr/index",
     
     ##
-    ## client listen port
+    ## client-port: websocket listen port
+    ## client-endpoint: websocket endpoint
+    ## client-www-root: websocket server www root
     ##
     "client-port": 10102,
-    
-    ## 
-    ## client websocket endpoint
-    ##
     "client-endpoint": "/mecha",
-    
-    ##
-    ## client www root
-    ##
     "client-www-root": "./www",
-
+    
     ##
     ## ***************************************
     ##
@@ -58,6 +56,8 @@
     
     ##
     ## leveldb config
+    ##
+    ## TODO: specify different cache by bucket name or regex
     ##
     "leveldb": {
         ##

@@ -30,13 +30,13 @@ public class MDB {
     // maps partitions to absolute disk locations
     final private Map<String, String> partitionDirs =
         new ConcurrentHashMap<String, String>();
-    
-    // Solr committer
-    final private URL solrUrl;
-    final private SolrServer solrServer;
-    final private Thread documentQueueIndexerThread;
-    final LinkedBlockingQueue<SolrInputDocument> solrDocumentQueue =
+
+    // queue of documents to be indexed
+    final private LinkedBlockingQueue<SolrInputDocument> solrDocumentQueue =
         new LinkedBlockingQueue<SolrInputDocument>();
+
+    private SolrServer solrServer;
+    private Thread documentQueueIndexerThread;
     
     private class DocumentQueueIndexer implements Runnable {
         public void run() {
@@ -56,13 +56,16 @@ public class MDB {
         }
     }
     
-    public MDB() throws Exception {
-        solrUrl = new URL(Mecha.getConfig().getString("solr-url"));
-        solrServer = new CommonsHttpSolrServer(solrUrl);
-        log.info("solrUrl = " + solrUrl + " ping: " + solrServer.ping());
+    public MDB() throws Exception { }
+    
+    public void startMDB() throws Exception {
+        solrServer = Mecha.getSolrManager().getCore("index").getServer();
+        log.info("solrServer: " + solrServer.toString());
+        
         documentQueueIndexerThread = 
             new Thread(new DocumentQueueIndexer());
         documentQueueIndexerThread.start();
+        
         log.info("started");
     }
     

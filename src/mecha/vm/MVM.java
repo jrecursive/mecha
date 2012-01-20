@@ -43,7 +43,7 @@ public class MVM {
              * parse
             */
             
-            ListenableDirectedGraph<QueryNode, QueryEdge> ast = 
+            ListenableDirectedGraph<Vertex, Edge> ast = 
                 commandParser.parse("$", cmd);
             
             log.info("ast = " + ast.toString());

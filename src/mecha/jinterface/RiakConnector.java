@@ -33,6 +33,9 @@ public class RiakConnector extends OtpProcess {
         procMgr = new OtpProcessManager(
             Mecha.getConfig().getString("mecha-nodename"),
             Mecha.getConfig().getString("riak-cookie"));
+    }
+    
+    public void startConnector() throws Exception {
         procMgr.spawn("kv_store", this);
     }
 

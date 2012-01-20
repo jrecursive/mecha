@@ -23,30 +23,86 @@ public class Mecha {
     final private SolrManager solrManager;
     final private RiakConnector riakConnector;
     
-    public static void main(String args[]) throws Exception {
-        Mecha mecha = new Mecha();
+    private static Mecha mechaInst;
+    static {
+        try {
+            mechaInst = new Mecha();
+            mechaInst.start();
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            log.info("unable to start mecha");
+            System.exit(-1);
+        }
     }
     
-    public static JSONObject getConfig() throws Exception {
+    public static void main(String args[]) 
+        throws Exception { }
+    
+    private Mecha() throws Exception {
+        log.info("* starting solr cores");
+        solrManager = new SolrManager();
+        
+        log.info("* starting mdb");
+        mdb = new MDB();
+        
+        log.info("* starting query server");
+        server = new Server();
+        
+        log.info("* starting web services");
+        // TODO: jetty ws integ
+        
+        log.info("* starting riak connector");
+        riakConnector = new RiakConnector(mdb);
+    }
+    
+    public void start() throws Exception {
+        startSolrCores();
+        mdb.startMDB();
+        riakConnector.startConnector();
+        server.start();
+    }
+    
+    /* 
+     * getters
+    */
+    
+    public static Mecha get() {
+        return mechaInst;
+    }
+    
+    public static JSONObject getConfig() {
         return config;
     }
     
-    private Mecha() throws Exception {
-        log.info("starting indexes");
-        solrManager = new SolrManager();
-        
-        log.info("starting mdb");
-        mdb = new MDB();
-        
-        log.info("starting query server");
-        server = new Server();
-        server.start();
-        
-        log.info("starting web services");
-        // TODO: jetty ws integ
-        
-        log.info("starting riak connector");
-        riakConnector = new RiakConnector(mdb);
+    public static MDB getMDB() {
+        return get().mdb;
+    }
+    
+    public static Server getServer() {
+        return get().server;
+    }
+    
+    public static SolrManager getSolrManager() {
+        return get().solrManager;
+    }
+    
+    public static RiakConnector getRiakConnector() {
+        return get().riakConnector;
+    }
+    
+    /*
+     * helpers
+    */
+    
+    private static void startSolrCores() throws Exception {
+        JSONArray cores = getConfig().getJSONArray("solr-cores");
+        for(int i=0; i<cores.length(); i++) {
+            String coreName = cores.getString(i);
+            log.info("/ starting core: " + coreName);
+            if (null == get().solrManager.startCore(coreName)) {
+                throw new Exception ("Cannot start solr core '" + coreName);
+            }
+        }
     }
     
     private static JSONObject loadConfig(String configFileStr) {
