@@ -32,6 +32,8 @@
     ## solr-url: deprecated
     ##
     "solr-home": "./solr",
+    "solr-data-dir": "/mecha/index",
+    "solr-temporary-data-dir": "/mecha/tmp",
     "solr-cores": [ "index", "tmp" ],
     "solr-url": "http://127.0.0.1:7331/solr/index",
     

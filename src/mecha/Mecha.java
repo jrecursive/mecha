@@ -95,6 +95,8 @@ public class Mecha {
     */
     
     private static void startSolrCores() throws Exception {
+        System.setProperty("solr.data.dir", getConfig().getString("solr-data-dir"));
+        System.setProperty("solr.tmp.data.dir", getConfig().getString("solr-temporary-data-dir"));
         JSONArray cores = getConfig().getJSONArray("solr-cores");
         for(int i=0; i<cores.length(); i++) {
             String coreName = cores.getString(i);
