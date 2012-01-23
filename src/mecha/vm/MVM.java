@@ -36,17 +36,14 @@ public class MVM {
             CommandParser commandParser = new CommandParser();
             Client client = ctx.getClient();
             
-            // TODO: debug switch
-            commandParser.SHOW_GRAPH = true;
-            
             /*
              * parse
             */
             
-            ListenableDirectedGraph<Vertex, Edge> ast = 
+            JSONObject ast = 
                 commandParser.parse("$", cmd);
             
-            log.info("ast = " + ast.toString());
+            log.info("ast = " + ast.toString(4));
             
             /*
              * optimize
