@@ -12,6 +12,7 @@ import java.net.*;
 import mecha.Mecha;
 import mecha.util.*;
 import mecha.vm.*;
+import mecha.vm.channels.*;
 import mecha.db.MDB;
 
 import org.webbitserver.*;
@@ -23,65 +24,30 @@ import org.json.*;
 public class Server implements WebSocketHandler {
     final private static Logger log = 
         Logger.getLogger(Server.class.getName());
-
-    private String password;
+    
+    final private String password;
+    final private WebServer webServer;
+    
     private int connectionCount;
-    private WebServer webServer;
-    
-    /*
-     * map: names -> channels
-    */
-    static Map<String, PubChannel> channelMap;
-    
+        
     /*
      * map: connections -> clients
     */
-    static Map<WebSocketConnection, Client> clientMap;
-    
-    static {
-        channelMap = new ConcurrentHashMap<String, PubChannel>();
-        clientMap = new ConcurrentHashMap<WebSocketConnection, Client>();
-    }
-    
+    final private Map<WebSocketConnection, Client> clientMap;
+        
     public Server() throws Exception {
         this.password = Mecha.getConfig().getString("password");
-    }
-    
-    public void start() throws Exception {
+        clientMap = new ConcurrentHashMap<WebSocketConnection, Client>();
         webServer = 
             WebServers.createWebServer(Mecha.getConfig().getInt("client-port"))
                 .add(Mecha.getConfig().getString("client-endpoint"), this)
-                .add(new StaticFileHandler(Mecha.getConfig().getString("client-www-root")))
-                .start();
+                .add(new StaticFileHandler(Mecha.getConfig().getString("client-www-root")));
+    }
+    
+    public void start() throws Exception {
+        webServer.start();
         log.info("started");
     }        
-    
-    /**
-     * Sends a message to all subscribers of specified channel
-     *
-     * @param chan  the channel to send msg to
-     * @param msg   the message to send to all subscribers of chan
-     *
-     */
-    private void send(String chan, String msg) throws Exception {
-        PubChannel pchan = channelMap.get(chan);
-        if (pchan == null) {
-            log.info("ERR :no such channel");
-        } else {
-            int recip = 0;
-            JSONObject obmsg = new JSONObject();
-            obmsg.put("channel", chan);
-            obmsg.put("msg", new JSONObject(msg));
-            for(Client client: pchan.members) {
-                WebSocketConnection clientConnection = client.connection.get();
-                if (clientConnection != null) {
-                    clientConnection.send(obmsg.toString());
-                    recip++;
-                }
-            }
-            log.info("send(" + chan + ", " + msg + "): " + recip + " recipients");
-        }
-    }
     
     public void onOpen(WebSocketConnection connection) {
         connectionCount++;
@@ -93,15 +59,18 @@ public class Server implements WebSocketHandler {
         connectionCount--;
         Client cl = clientMap.get(connection);
         if (null != cl) {
-            log.info("client cleanup");
-            for (String chan: cl.subscriptions) {
-                PubChannel pchan = channelMap.get(chan);
-                pchan.members.remove(cl);
+            log.info("* client cleanup: " + connection);
+            for (String chan: cl.getSubscriptions()) {
+                PubChannel pchan = 
+                    Mecha.getChannels().getChannel(chan);
+                if (pchan != null) {
+                    pchan.removeMember(cl);
+                }
                 log.info("removed subscription to " + chan + " for " + cl + " <" + connection + ">");
             }
         }
         clientMap.remove(connection);
-        log.info("WEBSOCKETS: DISCONNECTED: " + connection);
+        log.info("disconnect: " + connection);
     }
     
     public void onMessage(WebSocketConnection connection, String request) {
@@ -121,7 +90,7 @@ public class Server implements WebSocketHandler {
             if (cmd.startsWith("auth")) {
                 String pass = parts[1];
                 if (password.equals(pass)) {
-                    cl.authorized = true;
+                    cl.setAuthorized(true);
                     connection.send("OK");
                     return;
                 } else {
@@ -129,63 +98,53 @@ public class Server implements WebSocketHandler {
                 }
             }
             
-            if (!cl.authorized) {
+            if (!cl.isAuthorized()) {
                 connection.close();
             }
             
             // subscribe <chan>
-            if (cmd.startsWith("sub")) {
+            if (cmd.equals("/sub")) {
                 String chan = parts[1];
                 log.info(connection + ": sub: " + chan);
-                PubChannel pchan = channelMap.get(chan);
-                if (pchan == null) {
-                    pchan = new PubChannel(chan);
-                    channelMap.put(chan, pchan);
-                }
-                pchan.members.add(cl);
-                cl.subscriptions.add(chan);
+                
+                PubChannel pchan = 
+                    Mecha.getChannels().getOrCreateChannel(chan);
+                pchan.addMember(cl);
+                cl.addSubscription(chan);
                 connection.send("OK");
                 
             // unsubscribe <chan>
-            } else if (cmd.startsWith("unsub")) {
+            } else if (cmd.equals("/unsub")) {
                 String chan = parts[1];
                 log.info(connection + ": unsub: " + chan);
-                PubChannel pchan = channelMap.get(chan);
+                PubChannel pchan = 
+                    Mecha.getChannels().getOrCreateChannel(chan);
                 if (pchan == null) {
                     connection.send("ERR :no such channel");
                 } else {
                     pchan.members.remove(cl);
-                    cl.subscriptions.remove(chan);
+                    cl.removeSubscription(chan);
                     connection.send("OK");
                 }
                 
             // publish <chan> <msg>
-            } else if (cmd.startsWith("pub")) {
+            } else if (cmd.equals("!")) {
                 String chan = parts[1];
-                PubChannel pchan = channelMap.get(chan);
+                PubChannel pchan = 
+                    Mecha.getChannels().getChannel(chan);
                 if (pchan == null) {
                     connection.send("ERR :no such channel");
                 } else {
                     String msg = request.substring(request.indexOf(parts[1])+parts[1].length()).trim();
-                    for(Client client: pchan.members) {
-                        if (client != cl) {
-                            WebSocketConnection clientConnection = client.connection.get();
-                            if (clientConnection != null) {
-                                send(chan, msg);
-                            }
-                        }
-                    }
+                    pchan.send(msg);
                     connection.send("OK");
                 }
                
-            // unhandled
+            // execute mecha vm command
             } else {
-                log.info("mvm: execute: " + cl + "/" + cl.ctx + ": " + request);
+                log.info("mvm: execute: " + cl + "/" + cl.ctx() + ": " + request);
                 MVM mvm = new MVM();
-                connection.send(mvm.execute(cl.ctx, request));
-                
-                //log.info("Unknown request: " + request);
-                //connection.send("ERR :unknown request :" + request + "");
+                connection.send(mvm.execute(cl.ctx(), request));
             }
             
         } catch (Exception ex) {

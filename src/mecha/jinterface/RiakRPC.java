@@ -11,6 +11,8 @@ import mecha.Mecha;
 import mecha.util.*;
 
 public class RiakRPC {
+    final private static Logger log = 
+        Logger.getLogger(RiakRPC.class.getName());
 
     final private OtpRPC otpRPC;
     final private ReentrantLock rpcLock = 

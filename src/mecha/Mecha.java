@@ -10,6 +10,7 @@ import mecha.util.*;
 import mecha.server.*;
 import mecha.db.*;
 import mecha.jinterface.*;
+import mecha.vm.channels.*;
 
 public class Mecha {
     final private static Logger log = 
@@ -23,6 +24,7 @@ public class Mecha {
     final private SolrManager solrManager;
     final private RiakConnector riakConnector;
     final private RiakRPC riakRPC;
+    final private Channels channels;
     
     /*
      * startup & init
@@ -44,6 +46,9 @@ public class Mecha {
         throws Exception { }
     
     private Mecha() throws Exception {
+        log.info("* starting channels");
+        channels = new Channels();
+    
         log.info("* establishing riak link");
         riakRPC = new RiakRPC();
         JSONObject riakConfig = config.getJSONObject("riak-config");
@@ -101,6 +106,14 @@ public class Mecha {
     
     public static RiakConnector getRiakConnector() {
         return get().riakConnector;
+    }
+    
+    public static RiakRPC getRiakRPC() {
+        return get().riakRPC;
+    }
+    
+    public static Channels getChannels() {
+        return get().channels;
     }
     
     /*
