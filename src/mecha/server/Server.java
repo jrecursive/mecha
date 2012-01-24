@@ -149,8 +149,7 @@ public class Server implements WebSocketHandler {
             // execute mecha vm command
             } else {
                 log.info("mvm: execute: " + cl + "/" + cl.ctx() + ": " + request);
-                MVM mvm = new MVM();
-                connection.send(mvm.execute(cl.ctx(), request));
+                connection.send(Mecha.getMVM().execute(cl.ctx(), request));
             }
             
         } catch (Exception ex) {

@@ -32,6 +32,18 @@ public class Channels {
         return channelMap.get(channel);
     }
     
+    public Set<String> getChannelNames() {
+        return channelMap.keySet();
+    }
+    
+    public Collection<PubChannel> getAllChannels() {
+        return channelMap.values();
+    }
+    
+    public Set<Map.Entry<String, PubChannel>> getChannelSet() {
+        return channelMap.entrySet();
+    }
+    
     /**
      * Sends a message to all subscribers of specified channel
      *

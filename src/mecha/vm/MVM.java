@@ -27,8 +27,15 @@ public class MVM {
     final private static Logger log = 
         Logger.getLogger(MVM.class.getName());
         
-    ExecutorService functionExecutor = Executors.newCachedThreadPool();
-    PoolFiberFactory fiberFactory = new PoolFiberFactory(functionExecutor);
+    final private ExecutorService functionExecutor;
+    final private PoolFiberFactory fiberFactory;
+    
+    public MVM() {
+        log.info("<new>");
+        functionExecutor = Executors.newCachedThreadPool();
+        fiberFactory = new PoolFiberFactory(functionExecutor);
+        log.info("started");
+    }
     
     public String execute(MVMContext ctx, String cmd) {
         try {

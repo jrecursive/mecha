@@ -10,6 +10,7 @@ import mecha.util.*;
 import mecha.server.*;
 import mecha.db.*;
 import mecha.jinterface.*;
+import mecha.vm.MVM;
 import mecha.vm.channels.*;
 
 public class Mecha {
@@ -19,6 +20,7 @@ public class Mecha {
     final private static JSONObject config
         = Mecha.loadConfig(TextFile.get("config.json"));
     
+    final private MVM mvm;
     final private MDB mdb;
     final private Server server;
     final private SolrManager solrManager;
@@ -51,11 +53,7 @@ public class Mecha {
     
         log.info("* establishing riak link");
         riakRPC = new RiakRPC();
-        JSONObject riakConfig = config.getJSONObject("riak-config");
-        riakConfig.put("local-url", riakRPC.getLocalRiakURL());
-        riakConfig.put("pb-ip", riakRPC.getLocalPBIP());
-        riakConfig.put("pb-port", riakRPC.getLocalPBPort());
-        log.info("# introspected riak configuration: " + riakConfig.toString(2));
+        introspectRiakConfig();
     
         log.info("* starting solr cores");
         solrManager = new SolrManager();
@@ -63,16 +61,36 @@ public class Mecha {
         log.info("* starting mdb");
         mdb = new MDB();
         
-        log.info("* starting query server");
+        log.info("* starting mecha vm");
+        mvm = new MVM();
+        
+        log.info("* starting socket server");
         server = new Server();
         
-        log.info("* starting web services");
+        // log.info("* starting web services");
         // TODO: jetty ws integ
         
         log.info("* starting riak connector");
         riakConnector = new RiakConnector(mdb);
     }
     
+    /*
+     * use jinterface/erlang RPC to introspect
+     *  required riak configuration values.
+    */
+    private void introspectRiakConfig() throws Exception {
+        JSONObject riakConfig = config.getJSONObject("riak-config");
+        riakConfig.put("local-url", riakRPC.getLocalRiakURL());
+        riakConfig.put("pb-ip", riakRPC.getLocalPBIP());
+        riakConfig.put("pb-port", riakRPC.getLocalPBPort());
+        log.info("# introspected riak configuration: " + riakConfig.toString(2));
+    }
+    
+    /*
+     * post-initialization startup for components
+     *  that depend on other components to exist
+     *  and/or be initialized in some way.
+    */
     public void start() throws Exception {
         startSolrCores();
         mdb.startMDB();
@@ -114,6 +132,10 @@ public class Mecha {
     
     public static Channels getChannels() {
         return get().channels;
+    }
+    
+    public static MVM getMVM() {
+        return get().mvm;
     }
     
     /*
