@@ -71,7 +71,4 @@ public class RiakClientModule extends MVMModule {
             log.info("Data message: " + msg.toString(2));
         }
     }
-    
-
-
 }

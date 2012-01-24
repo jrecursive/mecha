@@ -28,17 +28,10 @@ public class ChannelModule extends MVMModule {
     }
     
     public class Subscribe extends MVMFunction {
-        JSONObject state;
-    
         public Subscribe(JSONObject config) throws Exception {
             super(config);
             log.info("constructor: " + config.toString(2));
-            
         }
-        
-        public void control(JSONObject msg) throws Exception {}
-
-        public void data(JSONObject msg) throws Exception {}
     }
 
     public class Unsubscribe extends MVMFunction {
@@ -46,12 +39,6 @@ public class ChannelModule extends MVMModule {
             super(config);
             log.info("constructor: " + config.toString(2));
         }
-        
-        public void control(JSONObject msg) throws Exception {
-            log.info("Control message: " + msg.toString(2));
-        }
-
-        public void data(JSONObject msg) throws Exception {}
     }
 
     public class Publish extends MVMFunction {
@@ -59,13 +46,5 @@ public class ChannelModule extends MVMModule {
             super(config);
             log.info("constructor: " + config.toString(2));
         }
-        
-        public void control(JSONObject msg) throws Exception {
-            log.info("Control message: " + msg.toString(2));
-        }
-
-        public void data(JSONObject msg) throws Exception {}
     }
-
-    
 }

@@ -9,6 +9,7 @@ import org.webbitserver.*;
 import org.webbitserver.handler.*;
 import org.webbitserver.handler.exceptions.*;
 
+import mecha.Mecha;
 import mecha.util.*;
 import mecha.vm.*;
 import mecha.vm.channels.*;
@@ -108,6 +109,10 @@ public class Client implements ChannelConsumer {
     
     public String getId() {
         return id;
+    }
+    
+    public PubChannel getChannel() {
+        return Mecha.getChannels().getChannel(getId());
     }
     
     public WebSocketConnection getConnection() {
