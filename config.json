@@ -22,6 +22,15 @@
     "riak-cookie": "re14ak",
     
     ##
+    ## riak-config: is used by the system at
+    ##  runtime;
+    ##      local-url: e.g., http://0.0.0.0:8098/riak/
+    ##      pb-host: 1.2.3.4
+    ##      pb-port: 9999
+    ##
+    "riak-config": { },
+    
+    ##
     ## data-directory:  where leveldb object store files go
     ## 
     "data-directory": "/mecha/obj",

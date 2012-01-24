@@ -22,6 +22,7 @@ public class Mecha {
     final private Server server;
     final private SolrManager solrManager;
     final private RiakConnector riakConnector;
+    final private RiakRPC riakRPC;
     
     /*
      * startup & init
@@ -43,6 +44,14 @@ public class Mecha {
         throws Exception { }
     
     private Mecha() throws Exception {
+        log.info("* establishing riak link");
+        riakRPC = new RiakRPC();
+        JSONObject riakConfig = config.getJSONObject("riak-config");
+        riakConfig.put("local-url", riakRPC.getLocalRiakURL());
+        riakConfig.put("pb-ip", riakRPC.getLocalPBIP());
+        riakConfig.put("pb-port", riakRPC.getLocalPBPort());
+        log.info("# introspected riak configuration: " + riakConfig.toString(2));
+    
         log.info("* starting solr cores");
         solrManager = new SolrManager();
         
