@@ -5,6 +5,8 @@ import java.util.concurrent.*;
 import java.io.*;
 import java.net.*;
 
+import org.json.*;
+
 import mecha.vm.MVMModule;
 
 public class Channels extends MVMModule {
@@ -13,11 +15,11 @@ public class Channels extends MVMModule {
         super();
     }
         
-    public void load() throws Exception {
+    public void moduleLoad() throws Exception {
     
     }
     
-    public void unload() throws Exception {
+    public void moduleUnload() throws Exception {
     
     }
     
