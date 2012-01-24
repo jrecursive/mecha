@@ -34,6 +34,7 @@ public class Client implements ChannelConsumer {
     */
     final private Set<String> subscriptions;
     final private WeakReference<WebSocketConnection> connection;
+    final private PubChannel clientChannel;
     
     /*
      * Mecha VM
@@ -45,7 +46,7 @@ public class Client implements ChannelConsumer {
     */
     final private String id;
     
-    public Client(WebSocketConnection connection) {
+    public Client(WebSocketConnection connection) throws Exception {
         id = "socket-" +
              HashUtils.sha1(
                 UUID.randomUUID() + "-" +
@@ -61,6 +62,13 @@ public class Client implements ChannelConsumer {
          * MVMContext keeps WeakReference<Client>
         */
         ctx = new MVMContext(this);
+        
+        /*
+         * subscribe to own channel
+        */
+        clientChannel = Mecha.getChannels().getOrCreateChannel(id);
+        clientChannel.addMember(this);
+        addSubscription(id);
     }
     
     /*
@@ -95,6 +103,10 @@ public class Client implements ChannelConsumer {
         subscriptions.remove(channel);
     }
     
+    public PubChannel getChannel() {
+        return clientChannel;
+    }
+    
     /*
      * MVM support
     */
@@ -111,10 +123,6 @@ public class Client implements ChannelConsumer {
         return id;
     }
     
-    public PubChannel getChannel() {
-        return Mecha.getChannels().getChannel(getId());
-    }
-    
     public WebSocketConnection getConnection() {
         return connection.get();
     }
@@ -125,15 +133,15 @@ public class Client implements ChannelConsumer {
     
     public void onMessage(String channel, String message) throws Exception {
         JSONObject messageObj = new JSONObject();
-        messageObj.put("channel", channel);
-        messageObj.put("msg", message);
+        messageObj.put("c", channel);
+        messageObj.put("o", message);
         connection.get().send(messageObj.toString());
     }
     
     public void onMessage(String channel, JSONObject message) throws Exception {
         JSONObject messageObj = new JSONObject();
-        messageObj.put("channel", channel);
-        messageObj.put("msg", message);
+        messageObj.put("c", channel);
+        messageObj.put("o", message);
         connection.get().send(messageObj.toString());
     }
     
