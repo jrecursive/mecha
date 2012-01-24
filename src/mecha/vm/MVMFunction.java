@@ -17,8 +17,21 @@ public abstract class MVMFunction {
     final private static String DATA_CHANNEL       = "d";
     final private static String OBJECT_FIELD       = "o";
     
+    private MVMContext context = null;
+    
     public MVMFunction(JSONObject config) throws Exception {
-        log.info("new " + this.getClass().getName() + "()");
+        log.info("<constructor> " + this.getClass().getName());
+    }
+    
+    protected void setMVMContext(MVMContext context) throws Exception {
+        if (this.context != null) {
+            throw new Exception("context already set!");
+        }
+        this.context = context;
+    }
+    
+    public MVMContext getContext() {
+        return context;
     }
     
     public Callback<JSONObject> getCallback() throws Exception {
@@ -45,8 +58,15 @@ public abstract class MVMFunction {
         };
     }
     
-    public abstract void control(JSONObject msg) throws Exception;
-    public abstract void data(JSONObject msg) throws Exception;
+    public void control(JSONObject msg) throws Exception {
+        log.info("<control> " + this.getClass().getName() + ": " +
+            msg.toString(2));
+    }
+
+    public void data(JSONObject msg) throws Exception {
+        log.info("<data> " + this.getClass().getName() + ": " +
+            msg.toString(2));
+    }
 
     public void info(JSONObject msg) throws Exception {
         log.info("info: " + msg.toString(2));

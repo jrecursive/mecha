@@ -7,17 +7,18 @@ import java.util.concurrent.*;
 import mecha.server.*;
 
 public class MVMContext {    
-    private ConcurrentHashMap<String, Object> vars;
-    private WeakReference<Client> clientRef;
+    final private ConcurrentHashMap<String, Object> vars;
+    final private WeakReference<Client> clientRef;
     
     public MVMContext(Client client) {
-        this.clientRef = new WeakReference<Client>(client);
+        clientRef = new WeakReference<Client>(client);
         vars = new ConcurrentHashMap<String, Object>();
     }
     
     /*
-     * From global scope, MVM user variables.
+     * MVM context-scope variables
     */
+    
     public ConcurrentHashMap<String, Object> getVars() {
         return vars;
     }
@@ -25,12 +26,28 @@ public class MVMContext {
     public <T> T get(String key) {
         return (T)vars.get(key);
     }
-    
+        
     public void put(String key, Object val) {
         vars.put(key, val);
     }
     
+    public void remove(String key) {
+        vars.remove(key);
+    }
+    
+    public void clearVars() {
+        vars.clear();
+    }
+    
+    /*
+     * helpers
+    */
+    
     public Client getClient() {
         return clientRef.get();
+    }
+    
+    public String getClientId() {
+        return clientRef.get().getId();
     }
 }

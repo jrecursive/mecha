@@ -11,13 +11,11 @@ import org.json.*;
 import mecha.vm.MVMModule;
 import mecha.vm.MVMFunction;
 
-public class RiakClient extends MVMModule {
+public class RiakClientModule extends MVMModule {
     final private static Logger log = 
-        Logger.getLogger(RiakClient.class.getName());
+        Logger.getLogger(RiakClientModule.class.getName());
     
-    final private String test = "hi";
-
-    public RiakClient() throws Exception {
+    public RiakClientModule() throws Exception {
         super();
     }
     
@@ -37,7 +35,6 @@ public class RiakClient extends MVMModule {
         
         public void control(JSONObject msg) throws Exception {
             log.info("Control message: " + msg.toString(2));
-            log.info("test = " + test);
         }
 
         public void data(JSONObject msg) throws Exception {
@@ -53,7 +50,6 @@ public class RiakClient extends MVMModule {
         
         public void control(JSONObject msg) throws Exception {
             log.info("Control message: " + msg.toString(2));
-            log.info("test = " + test);
         }
 
         public void data(JSONObject msg) throws Exception {
@@ -69,7 +65,6 @@ public class RiakClient extends MVMModule {
         
         public void control(JSONObject msg) throws Exception {
             log.info("Control message: " + msg.toString(2));
-            log.info("test = " + test);
         }
 
         public void data(JSONObject msg) throws Exception {

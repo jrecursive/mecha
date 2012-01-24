@@ -118,25 +118,25 @@ public class Client implements ChannelConsumer {
      * implementation of ChannelConsumer
     */
     
-    public void onMessage(String message) throws Exception {
+    public void onMessage(String channel, String message) throws Exception {
         JSONObject messageObj = new JSONObject();
         messageObj.put("channel", channel);
         messageObj.put("msg", message);
-        connection.get().send(messageObj);
+        connection.get().send(messageObj.toString());
     }
     
-    public void onMessage(JSONObject message) throws Exception {
+    public void onMessage(String channel, JSONObject message) throws Exception {
         JSONObject messageObj = new JSONObject();
         messageObj.put("channel", channel);
         messageObj.put("msg", message);
-        connection.get().send(messageObj);
+        connection.get().send(messageObj.toString());
     }
     
     /*
      * the byte-based channel requires the sender to
      *  have an implicit understanding with the receivers
     */
-    public void onMessage(byte[] message) throws Exception {
+    public void onMessage(String channel, byte[] message) throws Exception {
         connection.get().send(message);
     }
 }

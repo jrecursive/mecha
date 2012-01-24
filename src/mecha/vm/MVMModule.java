@@ -12,7 +12,7 @@ import org.json.*;
 import mecha.Mecha;
 import mecha.util.*;
 import mecha.db.*;
-import mecha.vm.bifs.RiakClient;
+import mecha.vm.bifs.RiakClientModule;
 
 public abstract class MVMModule {
     final private static Logger log = 
@@ -37,7 +37,7 @@ public abstract class MVMModule {
     }
     
     public static void main(String args[]) throws Exception {
-        RiakClient rc = new RiakClient();
+        RiakClientModule rc = new RiakClientModule();
         MVMFunction fun = rc.newInstanceOf("Get", new JSONObject());
         fun.control(new JSONObject());
         fun.data(new JSONObject());

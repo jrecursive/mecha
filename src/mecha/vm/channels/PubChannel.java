@@ -28,21 +28,29 @@ public class PubChannel {
         members.remove(cc);
     }
     
+    public void removeAllMembers() {
+        members.clear();
+    }
+    
+    public Set<ChannelConsumer> getMembers() {
+        return members;
+    }
+    
     public void send(String message) throws Exception {
         for(ChannelConsumer cc : members) {
-            cc.onMessage(message);
+            cc.onMessage(name, message);
         }
     }
     
     public void send(JSONObject message) throws Exception {
         for(ChannelConsumer cc : members) {
-            cc.onMessage(message);
+            cc.onMessage(name, message);
         }
     }
 
     public void send(byte[] message) throws Exception {
         for(ChannelConsumer cc : members) {
-            cc.onMessage(message);
+            cc.onMessage(name, message);
         }
     }
 

@@ -6,10 +6,10 @@ import org.json.*;
 
 public interface ChannelConsumer {
     
-    public void onMessage(String message) throws Exception;
+    public void onMessage(String channel, String message) throws Exception;
     
-    public void onMessage(JSONObject message) throws Exception;
+    public void onMessage(String channel, JSONObject message) throws Exception;
     
-    public void onMessage(byte[] message) throws Exception;
+    public void onMessage(String channel, byte[] message) throws Exception;
     
 }

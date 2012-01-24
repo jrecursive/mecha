@@ -32,12 +32,15 @@ public class Server implements WebSocketHandler {
         
     /*
      * map: connections -> clients
+     * map: client ids -> clients
     */
     final private Map<WebSocketConnection, Client> clientMap;
+    final private Map<String, Client> clientIdMap;
         
     public Server() throws Exception {
         this.password = Mecha.getConfig().getString("password");
         clientMap = new ConcurrentHashMap<WebSocketConnection, Client>();
+        clientIdMap = new ConcurrentHashMap<String, Client>();
         webServer = 
             WebServers.createWebServer(Mecha.getConfig().getInt("client-port"))
                 .add(Mecha.getConfig().getString("client-endpoint"), this)
@@ -53,11 +56,13 @@ public class Server implements WebSocketHandler {
         connectionCount++;
         Client cl = new Client(connection);
         clientMap.put(connection, cl);
+        clientIdMap.put(cl.getId(), cl);
     }
     
     public void onClose(WebSocketConnection connection) {
         connectionCount--;
         Client cl = clientMap.get(connection);
+        clientIdMap.remove(cl.getId());
         if (null != cl) {
             log.info("* client cleanup: " + connection);
             for (String chan: cl.getSubscriptions()) {
@@ -66,7 +71,8 @@ public class Server implements WebSocketHandler {
                 if (pchan != null) {
                     pchan.removeMember(cl);
                 }
-                log.info("removed subscription to " + chan + " for " + cl + " <" + connection + ">");
+                log.info("removed subscription to " + chan + 
+                    " for " + cl + " <" + connection + ">");
             }
         }
         clientMap.remove(connection);
@@ -158,6 +164,14 @@ public class Server implements WebSocketHandler {
     
     public void onPong(WebSocketConnection connection, String message) {
         log.info("onPong(" + connection + ", " + message + ")");
+    }
+    
+    /*
+     * helpers
+    */
+    
+    public Client getClient(String clientId) {
+        return clientIdMap.get(clientId);
     }
 }
 
