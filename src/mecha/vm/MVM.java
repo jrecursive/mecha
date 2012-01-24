@@ -2,6 +2,7 @@ package mecha.vm;
 
 import java.util.*;
 import java.util.logging.*;
+import java.util.concurrent.*;
 import java.io.*;
 import java.net.*;
 
@@ -10,11 +11,11 @@ import org.apache.lucene.queryParser.*;
 import org.apache.lucene.analysis.*;
 import org.apache.lucene.util.Version;
 
-import org.json.*;
+import org.jetlang.channels.*;
+import org.jetlang.core.*;
+import org.jetlang.fibers.*;
 
-import org.jgrapht.*;
-import org.jgrapht.graph.*;
-import org.jgrapht.ext.*;
+import org.json.*;
 
 import mecha.Mecha;
 import mecha.db.*;
@@ -25,6 +26,9 @@ import mecha.vm.parser.*;
 public class MVM {
     final private static Logger log = 
         Logger.getLogger(MVM.class.getName());
+        
+    ExecutorService functionExecutor = Executors.newCachedThreadPool();
+    PoolFiberFactory fiberFactory = new PoolFiberFactory(functionExecutor);
     
     public String execute(MVMContext ctx, String cmd) {
         try {
