@@ -50,7 +50,7 @@ public class Mecha {
     private Mecha() throws Exception {
         log.info("* starting channels");
         channels = new Channels();
-    
+
         log.info("* establishing riak link");
         riakRPC = new RiakRPC();
         introspectRiakConfig();

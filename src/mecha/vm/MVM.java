@@ -44,7 +44,7 @@ public class MVM {
              * setup
             */
             
-            CommandParser commandParser = new CommandParser();
+            CommandParser1 commandParser = new CommandParser1();
             Client client = ctx.getClient();
             
             /*
@@ -52,7 +52,7 @@ public class MVM {
             */
             
             JSONObject ast = 
-                commandParser.parse("$", cmd);
+                commandParser.parse(cmd);
             
             log.info("ast = " + ast.toString(4));
             
