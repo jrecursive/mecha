@@ -4,9 +4,9 @@ import java.util.*;
 import java.util.logging.*;
 import org.json.*;
 
-public class CommandParser1 {
+public class MVMParser {
     final private static Logger log = 
-        Logger.getLogger(CommandParser1.class.getName());
+        Logger.getLogger(MVMParser.class.getName());
     
     final private static String OPERATOR_FIELD = "$";
 	

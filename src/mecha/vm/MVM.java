@@ -46,9 +46,12 @@ public class MVM {
      * e.g., "mecha.vm.bifs.RiakClientModule" -> RiakClientModule instance.
     */
     final private ConcurrentHashMap<String, MVMModule>
-        moduleInstanceMap;
+        moduleMap;
     
     public MVM() {
+        verbMap = new ConcurrentHashMap<String, RegisteredFunction>();
+        moduleMap = new ConcurrentHashMap<String, MVMModule>();
+    
         functionExecutor = Executors.newCachedThreadPool();
         fiberFactory = new PoolFiberFactory(functionExecutor);
     }
