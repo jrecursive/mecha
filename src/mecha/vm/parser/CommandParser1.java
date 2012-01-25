@@ -155,8 +155,34 @@ public class CommandParser1 {
                 }
             }
         }
+        obj = postProcess(obj);
         return obj;
     }
+    
+    private JSONObject postProcess(JSONObject obj) throws Exception {
+        JSONObject obj1 = new JSONObject();
+        
+        for(String f : JSONObject.getNames(obj)) {
+            JSONArray ar = obj.getJSONArray(f);
+            if (ar.length() == 1) {
+                if (ar.get(0) instanceof JSONObject) {
+                    JSONObject o = ar.getJSONObject(0);
+                    if (JSONObject.getNames(o).length == 1 &&
+                        o.has("$")) {
+                        obj1.put(f, o.get("$"));
+                    } else {
+                        obj1.put(f, o);
+                    }
+                } else {
+                    obj1.put(f, ar.get(0));
+                }
+            } else {
+                obj1.put(f, ar);
+            }
+        }
+        return obj1;
+    }
+        
 
     private void objPut(JSONObject obj,
                         String field,
