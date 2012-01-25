@@ -12,8 +12,13 @@ public class MVMParser {
 	
 	public JSONObject parse(String query) throws Exception {
         query = query.trim();
-        JSONObject qry = new JSONObject();
-        return process(query, qry);
+        /*
+         * strip enclosing (but useless) parentheses.
+        */
+        if (query.substring(0,1).equals("(")) {
+            query = query.substring(1, query.length()-1);
+        }
+        return process(query, new JSONObject());
     }
     
     private JSONObject process(String q, JSONObject obj) throws Exception {
@@ -163,6 +168,10 @@ public class MVMParser {
         JSONObject obj1 = new JSONObject();
         
         for(String f : JSONObject.getNames(obj)) {
+            if (f.equals("$args")) {
+                obj1.put(f, obj.get(f));
+                continue;
+            }
             JSONArray ar = obj.getJSONArray(f);
             if (ar.length() == 1) {
                 if (ar.get(0) instanceof JSONObject) {

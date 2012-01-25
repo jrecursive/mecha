@@ -72,8 +72,87 @@ public class MVM {
             
             JSONObject ast = 
                 mvmParser.parse(cmd);
-            
             log.info("ast = " + ast.toString(4));
+            
+            String verb = null;
+            String operator = null;
+            
+            /*
+             * process "native" operations:
+             * 
+             * register <namespace> <module-class> <verbs>
+             *  e.g., register namespace:$ module-class:mecha.vm.bifs.RiakClientModule verbs:(get:Get put:Put delete:Delete)
+             *
+             * "=" assignment
+             *  e.g., a = (q bucket:users filter:"name_s:j*")
+             *
+             * "<-" & "->" wiring
+             *  e.g., c <- a b
+             *
+             * "!" control messaging
+             *  e.g., c ! (start)
+             *
+            */
+            
+            /*
+             * Native multi-part verb + operator + [args .. ] operations.
+             * 
+             * if "$" field is a list, check for "=", "<-", "->", "!" in the 1st position
+            */
+            
+            if (isList(ast, "$")) {
+                
+                /*
+                 * 1st position operator-driven natives
+                 *  e.g., !, ->, <-
+                */
+                operator = this.<String>getNth(ast, "$", 1);
+                log.info("verb: " + verb + ", operator: " + operator);
+                
+                /*
+                 * A -> B 
+                 *  "a flows into b"
+                */
+                if (operator.equals("->")) {
+                    String from = this.<String>getNth(ast, "$", 0);
+                    String to   = this.<String>getNth(ast, "$", 2);
+                    nativeFlow(ctx, from, to);
+                }
+                                
+                /*
+                 * a ! (start) 
+                 *  "send a the control message (start)
+                */
+                if (operator.equals("!")) {
+                    String dest = this.<String>getNth(ast, "$", 0);
+                    nativeControlMessage(ctx, dest, this.<JSONObject>getNth(ast, "$args", 0));
+                }
+                
+                /*
+                 * a = (query bucket:users filter:"name_s:j*")
+                 *  "assign a the expression (query ... )"
+                */
+                if (operator.equals("=")) {
+                    String var = this.<String>getNth(ast, "$", 0);
+                    nativeAssignment(ctx, var, this.<JSONObject>getNth(ast, "$args", 0));
+                }
+                
+            /*
+             * Native single-verb + [args .. ] operations.
+            */
+            } else {
+                verb = this.<String>get(ast, "$");
+                log.info("verb: " + verb);
+                
+                if (verb.equals("register")) {
+                    nativeRegister(ctx, ast);
+                }
+                
+                if (verb.equals("dump-vars")) {
+                    nativeVars(ctx);
+                }
+                
+            }
             
             /*
              * optimize
@@ -120,5 +199,46 @@ public class MVM {
         
         return "x"; // tmp
     }
+    
+    /*
+     * native verb implementations
+    */
+    
+    private void nativeFlow(MVMContext ctx, String from, String to) throws Exception {
+        log.info("nativeFlow: from: " + from + " to: " + to);
+    }
+    
+    private void nativeControlMessage(MVMContext ctx, String dest, JSONObject msg) throws Exception {
+        log.info("nativeControlMessage: dest: " + dest + " msg: " + msg);
+    }
+    
+    private void nativeAssignment(MVMContext ctx, String var, JSONObject ast) throws Exception {
+        log.info("nativeAssignment: var: " + var + " ast: " + ast);
+    }
+    
+    private void nativeRegister(MVMContext ctx, JSONObject ast) throws Exception {
+        log.info("nativeRegister: ast: " + ast);
+    }
+    
+    private void nativeVars (MVMContext ctx) throws Exception {
+        log.info("nativeVars");
+    }
+    
+    /*
+     * helpers
+    */
+    
+    private boolean isList(JSONObject obj, String field) throws Exception {
+        if (obj.get(field) instanceof JSONArray)
+            return true;
+        return false;
+    }
+    
+    private <T> T getNth(JSONObject obj, String field, int n) throws Exception {
+        return (T) obj.getJSONArray(field).get(n);
+    }
 
+    private <T> T get(JSONObject obj, String field) throws Exception {
+        return (T) obj.get(field);
+    }
 }
