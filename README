@@ -1154,4 +1154,40 @@ Jan 24, 2012 6:22:06 PM org.apache.solr.core.QuerySenderListener newSearcher
 INFO: QuerySenderListener done.
 Jan 24, 2012 6:22:06 PM mecha.server.Server start
 INFO: started
+mecha-cli> intersect field:ssn_s $query:((q bucket:users query:"name:j*" $to:(q bucket:to extract-field:lol)) (q bucket:salaries query:"name:j* supervisor_s:lolkins")) #project:(name, ssn_s, salary_i)
+
+Jan 24, 2012 6:25:19 PM mecha.vm.MVM execute
+INFO: ast = {"_ARGS": [{
+    "$": "intersect",
+    "_ARGS": [
+        {"_ARGS": [
+            {
+                "$query": "q",
+                "_ARGS": [{
+                    "$to": "q",
+                    "_ARGS": [],
+                    "bucket": "to",
+                    "extract-field": "lol"
+                }],
+                "bucket": "users",
+                "query": "name:j*"
+            },
+            {
+                "$query": "q",
+                "_ARGS": [],
+                "bucket": "salaries",
+                "query": "name:j* supervisor_s:lolkins"
+            }
+        ]},
+        {
+            "#project": [
+                "name,",
+                "ssn_s,",
+                "salary_i"
+            ],
+            "_ARGS": []
+        }
+    ],
+    "field": "ssn_s"
+}]}
 
