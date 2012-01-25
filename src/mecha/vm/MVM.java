@@ -30,11 +30,27 @@ public class MVM {
     final private ExecutorService functionExecutor;
     final private PoolFiberFactory fiberFactory;
     
+    /*
+     * Namespaced verb to RegisteredFunction (which describes
+     *  the owning module's class name, etc.)
+     *
+     * e.g., "riak.get" -> RegisteredFunction
+    */
+    final private ConcurrentHashMap<String, RegisteredFunction>
+        verbMap;
+        
+    /*
+     * Maps the full class name of a module to the initialized
+     *  instance of that module.
+     *
+     * e.g., "mecha.vm.bifs.RiakClientModule" -> RiakClientModule instance.
+    */
+    final private ConcurrentHashMap<String, MVMModule>
+        moduleInstanceMap;
+    
     public MVM() {
-        log.info("<new>");
         functionExecutor = Executors.newCachedThreadPool();
         fiberFactory = new PoolFiberFactory(functionExecutor);
-        log.info("started");
     }
     
     public String execute(MVMContext ctx, String cmd) {
@@ -44,7 +60,7 @@ public class MVM {
              * setup
             */
             
-            CommandParser1 commandParser = new CommandParser1();
+            MVMParser mvmParser = new MVMParser();
             Client client = ctx.getClient();
             
             /*
@@ -52,7 +68,7 @@ public class MVM {
             */
             
             JSONObject ast = 
-                commandParser.parse(cmd);
+                mvmParser.parse(cmd);
             
             log.info("ast = " + ast.toString(4));
             
