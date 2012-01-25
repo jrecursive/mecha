@@ -2,21 +2,7 @@ package mecha.vm.parser;
 
 import java.util.*;
 import java.util.logging.*;
-import java.io.*;
-import java.net.*;
-
-import org.apache.lucene.search.*;
-import org.apache.lucene.search.spans.*;
-import org.apache.lucene.queryParser.*;
-import org.apache.lucene.analysis.*;
-import org.apache.lucene.util.Version;
-import org.apache.lucene.index.Term;
-
 import org.json.*;
-
-import org.jgrapht.*;
-import org.jgrapht.graph.*;
-import org.jgrapht.ext.*;
 
 public class CommandParser1 {
     final private static Logger log = 
