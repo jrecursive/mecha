@@ -26,7 +26,10 @@ import mecha.vm.parser.*;
 public class MVM {
     final private static Logger log = 
         Logger.getLogger(MVM.class.getName());
-        
+    
+    final private static String SYSTEM_NAMESPACE = "$";
+    final private static String NS_SEP = ".";
+    
     /*
      * Jetlang
     */    
@@ -51,28 +54,68 @@ public class MVM {
     final private ConcurrentHashMap<String, MVMModule>
         moduleMap;
     
-    public MVM() {
+    public MVM() throws Exception {
         verbMap = new ConcurrentHashMap<String, RegisteredFunction>();
         moduleMap = new ConcurrentHashMap<String, MVMModule>();
     
         functionExecutor = Executors.newCachedThreadPool();
         fiberFactory = new PoolFiberFactory(functionExecutor);
+        
+        bootstrap();
     }
     
+    private void bootstrap() throws Exception {
+        exec(null, "./mvm/bootstrap.mvm");
+    }
+    
+    private void exec(MVMContext ctx, String filename) throws Exception {
+        exec(ctx, new File(filename));
+    }
+        
+    private void exec(MVMContext ctx, File file) throws Exception {
+        log.info("exec (" + file + ") context: " + ctx);
+        BufferedReader input =  new BufferedReader(new FileReader(file));
+        try {
+            String line = null;
+            while ((line = input.readLine()) != null) {
+                execute(null, line);
+            }
+        } finally {
+            input.close();
+        }
+    }
+    
+    /*
+     * Entry point for all MVM commands.
+     *
+     * Returns null on success; any other value is 
+     *  an error.
+     *
+     * TODO: Change interface; throw exception?
+     *       Return machine-readable JSONObject
+     *        representation of error?
+     *
+    */
     public String execute(MVMContext ctx, String cmd) {
         try {
         
             /*
-             * setup
+             * filter blank lines & comments
             */
+            cmd = cmd.trim();
             
-            MVMParser mvmParser = new MVMParser();
-            Client client = ctx.getClient();
+            if (cmd.equals("")) {
+                return null;
+            }
+            if (cmd.startsWith("##")) {
+                log.info(cmd);
+                return null;
+            }
             
             /*
              * parse
             */
-            
+            MVMParser mvmParser = new MVMParser();
             JSONObject ast = 
                 mvmParser.parse(cmd);
             log.info("ast = " + ast.toString(4));
@@ -199,30 +242,103 @@ public class MVM {
                 return "ERROR :" + ex1.toString() + " ON :" + cmd;
             }
         }
-        
-        return "x"; // tmp
+        return null;
     }
     
     /*
-     * native verb implementations
+     * "built-in" or "native" verb implementations
     */
     
+    /*
+     * Wire two assigned module:verb instances together as
+     *  a producer-consumer relationship via the current Flow
+     *  in ctx.
+    */
     private void nativeFlow(MVMContext ctx, String from, String to) throws Exception {
         log.info("nativeFlow: from: " + from + " to: " + to);
     }
     
+    /*
+     * Send an arbitrary control message to an assigned var (pointing
+     *  to an instance of a module:verb).
+    */
     private void nativeControlMessage(MVMContext ctx, String dest, JSONObject msg) throws Exception {
         log.info("nativeControlMessage: dest: " + dest + " msg: " + msg);
     }
     
+    /*
+     * Perform "a = (expr ...)" assignment to ctx.
+    */
     private void nativeAssignment(MVMContext ctx, String var, JSONObject ast) throws Exception {
         log.info("nativeAssignment: var: " + var + " ast: " + ast);
     }
     
+    /* 
+     * Register a class and its inner classes as a module and verbs.
+     *
+     * AST reference:
+     * INFO: ast = {
+     *   "$" : "register",
+     *   "namespace" : "$",
+     *   "module-class" : "mecha.vm.bifs.RiakClientModule",
+     *   "verbs" : {
+     *     "get" : "Get",
+     *     "put" : "Put",
+     *     "delete" : "Delete"
+     *   }
+     * }
+     *
+    */
     private void nativeRegister(MVMContext ctx, JSONObject ast) throws Exception {
         log.info("nativeRegister: ast: " + ast);
+        
+        MVMModule moduleInstance;
+        String moduleClassName = ast.getString("module-class");
+        String namespace = ast.getString("namespace");
+        if (namespace.equals(SYSTEM_NAMESPACE)) {
+            namespace = "";
+        }
+
+        if (!moduleMap.containsKey(moduleClassName)) {
+            log.info("newModuleInstance(" + moduleClassName + ")");
+            moduleInstance = MVMModule.newModuleInstance(moduleClassName);
+            log.info(moduleClassName + ": moduleLoad()");
+            moduleInstance.moduleLoad();
+            moduleMap.put(moduleClassName, moduleInstance);
+        } else {
+            log.info(moduleClassName + ": using existing module instance.");
+            moduleInstance = moduleMap.get(moduleClassName);
+        }
+        
+        JSONObject verbs = ast.getJSONObject("verbs");
+        for(String verb : verbs.getKeys()) {
+            String verbClassName = verbs.getString(verb);
+            
+            String namespacedVerb;
+            if (namespace.equals("")) {
+                namespacedVerb = verb;
+            } else {
+                namespacedVerb = namespace + NS_SEP + verb;
+            }
+            if (!verbMap.containsKey(namespacedVerb)) {
+                log.info("register: " + moduleClassName + ": " + 
+                    namespacedVerb + " -> " + verbClassName);
+                RegisteredFunction verbFun = 
+                    new RegisteredFunction(namespacedVerb,
+                                           verbClassName,
+                                           moduleClassName);
+                verbMap.put(namespacedVerb, verbFun);
+            } else {
+                log.info("ALREADY REGISTERED: " + moduleClassName + ": " + 
+                    namespacedVerb + " -> " + 
+                    (verbMap.get(namespacedVerb)).getVerbClassName());
+            }
+        }
     }
     
+    /*
+     * Dump context vars.
+    */
     private void nativeVars (MVMContext ctx) throws Exception {
         log.info("nativeVars");
     }

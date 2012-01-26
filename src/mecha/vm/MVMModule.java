@@ -27,7 +27,7 @@ public abstract class MVMModule {
     public abstract void moduleLoad() throws Exception;
     public abstract void moduleUnload() throws Exception;
     
-    public MVMFunction newInstanceOf(String funName, JSONObject initialState) throws Exception {
+    public MVMFunction newFunctionInstance(String funName, JSONObject initialState) throws Exception {
         final String funClassName =
             thisClassName + "$" + funName;
         Class funClass = Class.forName(funClassName);
@@ -36,13 +36,20 @@ public abstract class MVMModule {
         return (MVMFunction) funClass.getConstructor(argTypes).newInstance(args);
     }
     
+    public static MVMModule newModuleInstance(String moduleClassName) throws Exception {
+        Class moduleClass = Class.forName(moduleClassName);
+        Class[] argTypes = { };
+        Object[] args = { };
+        return (MVMModule) moduleClass.getConstructor(argTypes).newInstance(args);
+    }
+    
     public static void main(String args[]) throws Exception {
         RiakClientModule rc = new RiakClientModule();
-        MVMFunction fun = rc.newInstanceOf("Get", new JSONObject());
+        MVMFunction fun = rc.newFunctionInstance("Get", new JSONObject());
         fun.control(new JSONObject());
         fun.data(new JSONObject());
         
-        rc.newInstanceOf("Put", new JSONObject()).control(new JSONObject());
+        rc.newFunctionInstance("Put", new JSONObject()).control(new JSONObject());
     }
     
 }

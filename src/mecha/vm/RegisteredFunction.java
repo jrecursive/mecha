@@ -5,21 +5,21 @@ import java.util.*;
 public class RegisteredFunction {
     
     final private String verb;
-    final private String verbInnerClassName;
-    final private String owningModuleClassName;
+    final private String verbClassName;
+    final private String moduleClassName;
     
     public RegisteredFunction(String verb,
-                              String verbInnerClassName,
-                              String owningModuleClassName) {
+                              String verbClassName,
+                              String moduleClassName) {
         this.verb = verb;
-        this.verbInnerClassName = verbInnerClassName;
-        this.owningModuleClassName = owningModuleClassName;
+        this.verbClassName = verbClassName;
+        this.moduleClassName = moduleClassName;
     }
     
     public String getVerb() { return verb; }
     
-    public String getVerbClassName() { return verbInnerClassName; }
+    public String getVerbClassName() { return verbClassName; }
     
-    public String getModuleClassName() { return owningModuleClassName; }
+    public String getModuleClassName() { return moduleClassName; }
     
 }
