@@ -8,8 +8,7 @@ import java.net.*;
 
 import mecha.json.*;
 
-import mecha.vm.MVMModule;
-import mecha.vm.MVMFunction;
+import mecha.vm.*;
 
 public class ChannelModule extends MVMModule {
     final private static Logger log = 
@@ -28,22 +27,22 @@ public class ChannelModule extends MVMModule {
     }
     
     public class Subscribe extends MVMFunction {
-        public Subscribe(JSONObject config) throws Exception {
-            super(config);
+        public Subscribe(MVMContext ctx, JSONObject config) throws Exception {
+            super(ctx, config);
             log.info("constructor: " + config.toString(2));
         }
     }
 
     public class Unsubscribe extends MVMFunction {
-        public Unsubscribe(JSONObject config) throws Exception {
-            super(config);
+        public Unsubscribe(MVMContext ctx, JSONObject config) throws Exception {
+            super(ctx, config);
             log.info("constructor: " + config.toString(2));
         }
     }
 
     public class Publish extends MVMFunction {
-        public Publish(JSONObject config) throws Exception {
-            super(config);
+        public Publish(MVMContext ctx, JSONObject config) throws Exception {
+            super(ctx, config);
             log.info("constructor: " + config.toString(2));
         }
     }

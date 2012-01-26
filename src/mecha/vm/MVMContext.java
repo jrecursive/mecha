@@ -4,15 +4,15 @@ import java.lang.ref.*;
 import java.util.*;
 import java.util.concurrent.*;
 
-import org.jgrapht.*;
-import org.jgrapht.graph.*;
-
 import mecha.server.*;
+import mecha.vm.flows.*;
 
 public class MVMContext {    
     final private ConcurrentHashMap<String, Object> vars;
     final private WeakReference<Client> clientRef;
     
+    private Flow flow = new Flow();
+
     public MVMContext(Client client) {
         clientRef = new WeakReference<Client>(client);
         vars = new ConcurrentHashMap<String, Object>();
@@ -43,6 +43,18 @@ public class MVMContext {
     }
     
     /*
+     * flow
+    */
+    
+    public void clearFlow() {
+        flow = new Flow();
+    }
+    
+    public Flow getFlow() {
+        return flow;
+    }
+    
+    /*
      * helpers
     */
     
@@ -53,4 +65,6 @@ public class MVMContext {
     public String getClientId() {
         return clientRef.get().getId();
     }
+    
+    
 }

@@ -8,8 +8,7 @@ import java.util.logging.*;
 
 import mecha.json.*;
 
-import mecha.vm.MVMModule;
-import mecha.vm.MVMFunction;
+import mecha.vm.*;
 
 public class RiakClientModule extends MVMModule {
     final private static Logger log = 
@@ -28,8 +27,8 @@ public class RiakClientModule extends MVMModule {
     }
     
     public class Get extends MVMFunction {
-        public Get(JSONObject config) throws Exception {
-            super(config);
+        public Get(MVMContext ctx, JSONObject config) throws Exception {
+            super(ctx, config);
             log.info("constructor: " + config.toString(2));
         }
         
@@ -43,8 +42,8 @@ public class RiakClientModule extends MVMModule {
     }
     
     public class Put extends MVMFunction {
-        public Put(JSONObject config) throws Exception {
-            super(config);
+        public Put(MVMContext ctx, JSONObject config) throws Exception {
+            super(ctx, config);
             log.info("constructor: " + config.toString(2));
         }
         
@@ -58,8 +57,8 @@ public class RiakClientModule extends MVMModule {
     }
     
     public class Delete extends MVMFunction {
-        public Delete(JSONObject config) throws Exception {
-            super(config);
+        public Delete(MVMContext ctx, JSONObject config) throws Exception {
+            super(ctx, config);
             log.info("constructor: " + config.toString(2));
         }
         

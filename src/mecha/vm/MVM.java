@@ -27,6 +27,9 @@ public class MVM {
     final private static Logger log = 
         Logger.getLogger(MVM.class.getName());
         
+    /*
+     * Jetlang
+    */    
     final private ExecutorService functionExecutor;
     final private PoolFiberFactory fiberFactory;
     
@@ -86,7 +89,7 @@ public class MVM {
              * "=" assignment
              *  e.g., a = (q bucket:users filter:"name_s:j*")
              *
-             * "<-" & "->" wiring
+             * "->" wiring
              *  e.g., c <- a b
              *
              * "!" control messaging
@@ -121,7 +124,7 @@ public class MVM {
                                 
                 /*
                  * a ! (start) 
-                 *  "send a the control message (start)
+                 *  "send a the control message (start)"
                 */
                 if (operator.equals("!")) {
                     String dest = this.<String>getNth(ast, "$", 0);
@@ -169,7 +172,7 @@ public class MVM {
         /*
          * An error occurred somewhere in the
          *  processing of a command.  Since MVM is
-         *  based on a plugin-driven system, it
+         *  a plugin-driven system, it
          *  could've been thrown in a lot of unknown
          *  places without context.  Report what we
          *  can say definitively in a format that is
@@ -240,5 +243,14 @@ public class MVM {
 
     private <T> T get(JSONObject obj, String field) throws Exception {
         return (T) obj.get(field);
+    }
+    
+    /*
+     * flow
+    */
+    
+    private String guid() throws Exception {
+        String nodeId = Mecha.getConfig().getString("riak-nodename");
+        return nodeId + "/" + UUID.randomUUID();
     }
 }

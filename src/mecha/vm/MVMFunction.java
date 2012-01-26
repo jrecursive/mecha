@@ -11,23 +11,33 @@ import mecha.json.*;
 public abstract class MVMFunction {
     final private static Logger log = 
         Logger.getLogger(MVMFunction.class.getName());
-        
+    
+    /*
+     * Flags to denote message typing & content, e.g.,
+     *  control, data, etc.
+    */
     final private static String MESSAGE_TYPE_FIELD = "t";
     final private static String CONTROL_CHANNEL    = "c";
     final private static String DATA_CHANNEL       = "d";
     final private static String OBJECT_FIELD       = "o";
     
-    private MVMContext context = null;
+    /*
+     * to be returned via overridden getAffinity()
+     *  method.
+    */
+    final private static int NO_AFFINITY        = 0;
+    final private static int PRODUCER_AFFINITY  = 1;
+    final private static int CONSUMER_AFFINITY  = 2;
     
-    public MVMFunction(JSONObject config) throws Exception {
-        log.info("<constructor> " + this.getClass().getName());
-    }
+    /*
+     * Context with which the instance of the function was constructed.
+    */
+    final private MVMContext context;
     
-    protected void setMVMContext(MVMContext context) throws Exception {
-        if (this.context != null) {
-            throw new Exception("context already set!");
-        }
+    public MVMFunction(MVMContext context, 
+                       JSONObject config) throws Exception {
         this.context = context;
+        log.info("<constructor> " + this.getClass().getName());
     }
     
     public MVMContext getContext() {
