@@ -6,7 +6,7 @@ import java.util.logging.*;
 import org.jetlang.channels.*;
 import org.jetlang.core.Callback;
 
-import org.json.*;
+import mecha.json.*;
 
 public abstract class MVMFunction {
     final private static Logger log = 

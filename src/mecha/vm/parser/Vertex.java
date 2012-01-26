@@ -1,7 +1,7 @@
 package mecha.vm.parser;
 
 import java.util.logging.*;
-import org.json.*;
+import mecha.json.*;
 
 public class Vertex extends JSONObject {	
     final private static Logger log = 
@@ -27,7 +27,7 @@ public class Vertex extends JSONObject {
 		super.put(k,v);
 	}
 	
-	public String toString(int d) throws org.json.JSONException {
+	public String toString(int d) throws Exception {
 		return super.toString(4).replaceAll("\"", "\\\"");
 	}
 

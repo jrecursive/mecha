@@ -14,7 +14,7 @@ import mecha.util.*;
 import mecha.vm.*;
 import mecha.vm.channels.*;
 
-import org.json.*;
+import mecha.json.*;
 
 /*
  * client record

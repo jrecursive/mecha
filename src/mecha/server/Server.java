@@ -19,7 +19,7 @@ import org.webbitserver.*;
 import org.webbitserver.handler.*;
 import org.webbitserver.handler.exceptions.*;
 
-import org.json.*;
+import mecha.json.*;
 
 public class Server implements WebSocketHandler {
     final private static Logger log = 
@@ -53,10 +53,14 @@ public class Server implements WebSocketHandler {
     }        
     
     public void onOpen(WebSocketConnection connection) {
-        connectionCount++;
-        Client cl = new Client(connection);
-        clientMap.put(connection, cl);
-        clientIdMap.put(cl.getId(), cl);
+        try {
+            connectionCount++;
+            Client cl = new Client(connection);
+            clientMap.put(connection, cl);
+            clientIdMap.put(cl.getId(), cl);
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
     }
     
     public void onClose(WebSocketConnection connection) {

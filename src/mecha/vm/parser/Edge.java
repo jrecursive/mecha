@@ -2,7 +2,7 @@ package mecha.vm.parser;
 
 import java.util.logging.*;
 import org.jgrapht.graph.DefaultEdge;
-import org.json.*;
+import mecha.json.*;
 
 public class Edge<V> extends DefaultEdge {
     final private static Logger log = 
@@ -44,7 +44,7 @@ public class Edge<V> extends DefaultEdge {
         return (T) data.get(k);
     }
 	
-	public String toString(int d) throws org.json.JSONException {
+	public String toString(int d) throws Exception {
 		return data.toString(4).replaceAll("\"", "\\\"");
 	}
 

@@ -5,7 +5,7 @@ import java.util.logging.*;
 import java.util.concurrent.locks.ReentrantLock;
 
 import com.ericsson.otp.erlang.*;
-import org.json.*;
+import mecha.json.*;
 
 import mecha.Mecha;
 import mecha.util.*;

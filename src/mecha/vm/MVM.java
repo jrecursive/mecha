@@ -15,7 +15,7 @@ import org.jetlang.channels.*;
 import org.jetlang.core.*;
 import org.jetlang.fibers.*;
 
-import org.json.*;
+import mecha.json.*;
 
 import mecha.Mecha;
 import mecha.db.*;
@@ -229,7 +229,7 @@ public class MVM {
     */
     
     private boolean isList(JSONObject obj, String field) throws Exception {
-        if (obj.get(field) instanceof JSONArray)
+        if (obj.get(field) instanceof ArrayList)
             return true;
         return false;
     }

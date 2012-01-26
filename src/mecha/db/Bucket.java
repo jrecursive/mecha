@@ -9,7 +9,7 @@ import org.fusesource.leveldbjni.*;
 import static org.fusesource.leveldbjni.DB.*;
 import org.apache.solr.client.solrj.*;
 import org.apache.solr.common.*;
-import org.json.*;
+import mecha.json.*;
 
 import mecha.Mecha;
 import mecha.util.*;

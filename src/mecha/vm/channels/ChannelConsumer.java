@@ -2,7 +2,7 @@ package mecha.vm.channels;
 
 import java.util.*;
 
-import org.json.*;
+import mecha.json.*;
 
 public interface ChannelConsumer {
     

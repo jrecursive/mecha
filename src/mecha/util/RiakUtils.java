@@ -4,7 +4,7 @@ import java.io.*;
 import java.util.logging.*;
 import java.net.*;
 
-import org.json.*;
+import mecha.json.*;
 
 public class RiakUtils {
     final private static Logger log = 

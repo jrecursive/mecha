@@ -9,7 +9,7 @@ import org.apache.solr.client.solrj.*;
 import org.apache.solr.common.*;
 import org.apache.solr.client.solrj.impl.*;
 import org.apache.solr.client.solrj.response.UpdateResponse;
-import org.json.*;
+import mecha.json.*;
 
 import mecha.Mecha;
 import mecha.util.*;

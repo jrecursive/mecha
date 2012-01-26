@@ -2,7 +2,7 @@ package mecha.vm.parser;
 
 import java.util.*;
 import java.util.logging.*;
-import org.json.*;
+import mecha.json.*;
 
 public class MVMParser {
     final private static Logger log = 
@@ -176,7 +176,7 @@ public class MVMParser {
             if (ar.length() == 1) {
                 if (ar.get(0) instanceof JSONObject) {
                     JSONObject o = ar.getJSONObject(0);
-                    if (JSONObject.getNames(o).length == 1 &&
+                    if (JSONObject.getNames(o).size() == 1 &&
                         o.has("$")) {
                         obj1.put(f, o.get("$"));
                     } else {

@@ -3,7 +3,7 @@ package mecha.vm.channels;
 import java.util.*;
 import java.util.logging.*;
 
-import org.json.*;
+import mecha.json.*;
 
 /*
  * messaging channel

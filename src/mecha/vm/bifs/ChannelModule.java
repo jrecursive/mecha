@@ -6,7 +6,7 @@ import java.util.logging.*;
 import java.io.*;
 import java.net.*;
 
-import org.json.*;
+import mecha.json.*;
 
 import mecha.vm.MVMModule;
 import mecha.vm.MVMFunction;

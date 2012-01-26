@@ -4,7 +4,7 @@ import java.util.*;
 import java.util.logging.*;
 import java.util.concurrent.*;
 
-import org.json.*;
+import mecha.json.*;
 
 import mecha.util.*;
 import mecha.server.*;
@@ -17,8 +17,7 @@ public class Mecha {
     final private static Logger log = 
         Logger.getLogger(Mecha.class.getName());
 
-    final private static JSONObject config
-        = Mecha.loadConfig(TextFile.get("config.json"));
+    final public static JSONObject config;
     
     final private MVM mvm;
     final private MDB mdb;
@@ -34,6 +33,8 @@ public class Mecha {
     
     private static Mecha mechaInst;
     static {
+        log.info("* reading config.json");
+        config = loadConfig(TextFile.get("config.json"));
         try {
             mechaInst = new Mecha();
             mechaInst.start();
@@ -107,7 +108,7 @@ public class Mecha {
     }
     
     public static JSONObject getConfig() {
-        return config;
+        return get().config;
     }
     
     public static MDB getMDB() {

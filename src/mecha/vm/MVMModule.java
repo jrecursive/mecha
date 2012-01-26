@@ -7,7 +7,7 @@ import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import com.ericsson.otp.erlang.*;
 
-import org.json.*;
+import mecha.json.*;
 
 import mecha.Mecha;
 import mecha.util.*;

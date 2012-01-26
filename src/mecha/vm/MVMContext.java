@@ -4,6 +4,9 @@ import java.lang.ref.*;
 import java.util.*;
 import java.util.concurrent.*;
 
+import org.jgrapht.*;
+import org.jgrapht.graph.*;
+
 import mecha.server.*;
 
 public class MVMContext {    
