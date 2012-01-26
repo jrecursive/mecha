@@ -16,4 +16,10 @@ public class RegisteredFunction {
         this.owningModuleClassName = owningModuleClassName;
     }
     
+    public String getVerb() { return verb; }
+    
+    public String getVerbClassName() { return verbInnerClassName; }
+    
+    public String getModuleClassName() { return owningModuleClassName; }
+    
 }
