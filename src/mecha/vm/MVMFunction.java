@@ -44,7 +44,18 @@ public abstract class MVMFunction {
         return context;
     }
     
-    public Callback<JSONObject> getCallback() throws Exception {
+    /*
+     * Override this function to provide a different
+     *  affinity value.
+    */
+    public int getAffinity() {
+        return NO_AFFINITY;
+    }
+    
+    /*
+     * Used to schedule jetlang task.
+    */
+    protected Callback<JSONObject> getCallback() throws Exception {
         return new Callback<JSONObject>() {
             public void onMessage(JSONObject message) {
                 try {
@@ -68,6 +79,10 @@ public abstract class MVMFunction {
         };
     }
     
+    /* 
+     * Override control, data, and info to handle each
+     *  message type.
+    */
     public void control(JSONObject msg) throws Exception {
         log.info("<control> " + this.getClass().getName() + ": " +
             msg.toString(2));

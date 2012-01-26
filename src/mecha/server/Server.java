@@ -25,9 +25,10 @@ public class Server implements WebSocketHandler {
     final private static Logger log = 
         Logger.getLogger(Server.class.getName());
     
+    final private static String OK_RESPONSE = ":OK ";
+    
     final private String password;
     final private WebServer webServer;
-    
     private int connectionCount;
         
     /*
@@ -153,7 +154,12 @@ public class Server implements WebSocketHandler {
             // execute mecha vm command
             } else {
                 log.info("mvm: execute: " + cl + "/" + cl.ctx() + ": " + request);
-                connection.send(Mecha.getMVM().execute(cl.ctx(), request));
+                String response = Mecha.getMVM().execute(cl.ctx(), request);
+                if (response == null) {
+                    connection.send(OK_RESPONSE + HashUtils.sha1(request));
+                } else {
+                    connection.send(response);
+                }
             }
             
         } catch (Exception ex) {

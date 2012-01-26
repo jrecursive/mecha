@@ -169,7 +169,7 @@ public class MVM {
                  * a ! (start) 
                  *  "send a the control message (start)"
                 */
-                if (operator.equals("!")) {
+                else if (operator.equals("!")) {
                     String dest = this.<String>getNth(ast, "$", 0);
                     nativeControlMessage(ctx, dest, this.<JSONObject>getNth(ast, "$args", 0));
                 }
@@ -178,40 +178,43 @@ public class MVM {
                  * a = (query bucket:users filter:"name_s:j*")
                  *  "assign a the expression (query ... )"
                 */
-                if (operator.equals("=")) {
+                else if (operator.equals("=")) {
                     String var = this.<String>getNth(ast, "$", 0);
                     nativeAssignment(ctx, var, this.<JSONObject>getNth(ast, "$args", 0));
                 }
                 
+                /*
+                 * Unknown multi-part verb pattern
+                */
+                else {
+                    throw new Exception("Unknown multi-part verb pattern");
+                }
+            }
+                
             /*
-             * Native single-verb + [args .. ] operations.
+             * Single-verb + [args .. ] operations.
             */
-            } else {
+            else {
                 verb = this.<String>get(ast, "$");
                 log.info("verb: " + verb);
                 
+                /*
+                 * Native built-in verbs
+                */
                 if (verb.equals("register")) {
                     nativeRegister(ctx, ast);
-                }
-                
-                if (verb.equals("dump-vars")) {
+                } else if (verb.equals("dump-vars")) {
                     nativeVars(ctx);
-                }
+                } 
                 
+                /*
+                 * Dynamic invocation
+                */
+                else {
+                    dynamicInvoke(ctx, verb, ast);
+                }
             }
             
-            /*
-             * optimize
-            */
-            
-            /*
-             * execute
-            */
-            
-            /*
-             * report result
-            */
-        
         /*
          * An error occurred somewhere in the
          *  processing of a command.  Since MVM is
@@ -243,6 +246,33 @@ public class MVM {
             }
         }
         return null;
+    }
+    
+    /*
+     * Dynamic invoker
+    */
+    private void dynamicInvoke(MVMContext ctx, 
+                               String verb, 
+                               JSONObject ast) throws Exception {
+        log.info("dynamicInvoke: ctx: " + ctx + " verb: " + verb + " ast: " + ast.toString(2));
+        MVMFunction fun = newFunctionInstance(ctx, verb, ast);
+    }
+    
+    /*
+     * Module & verb helpers
+    */
+    
+    private MVMFunction newFunctionInstance(MVMContext ctx, 
+                                            String namespacedVerb, 
+                                            JSONObject config) throws Exception {
+        log.info("newFunctionInstance: " + namespacedVerb);
+        if (!verbMap.containsKey(namespacedVerb)) {
+            log.info("Unknown namespaced verb: " + namespacedVerb);
+            return null;
+        }
+        RegisteredFunction regFun = verbMap.get(namespacedVerb);
+        MVMModule mod = moduleMap.get(regFun.getModuleClassName());
+        return mod.newFunctionInstance(ctx, regFun.getVerbClassName(), config);
     }
     
     /*
