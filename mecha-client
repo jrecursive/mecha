@@ -1,0 +1,2 @@
+java -cp lib/*:bin mecha.client.MechaCLI ws://127.0.0.1:10102/mecha me3ch4a
+
