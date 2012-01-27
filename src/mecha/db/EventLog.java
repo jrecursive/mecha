@@ -4,9 +4,9 @@ import java.util.*;
 import java.util.concurrent.*;
 import java.io.*;
 
-public class IndexCommitLog {
+public class EventLog {
     
-    public IndexCommitLog() {
+    public EventLog() {
     
     }
     

@@ -56,6 +56,7 @@ public class Mecha {
         introspectRiakConfig();
     
         log.info("* starting solr cores");
+        Logger.getLogger("org.apache.solr").setLevel(Level.SEVERE);
         solrManager = new SolrManager();
         
         log.info("* starting mdb");
@@ -244,5 +245,29 @@ public class Mecha {
     */
     public static String getGuidType(String guid) throws Exception {
         return guid.split(GUID_SEP)[2];
+    }
+
+    /*
+     * Shutdown hook.
+    */  
+    
+    static {
+        Runtime.getRuntime().addShutdownHook(
+            new Thread() {
+                public void run() {
+                    System.out.println("* shutting down...");
+                    try {
+                        System.out.println("* shutting down riak link");
+                        System.out.println("* terminating socket server");
+                        System.out.println("* terminating mvm");
+                        System.out.println("* shutting down mdb");
+                        System.out.println("* shutting down solr");
+                        System.out.println("* shutdown complete");
+                    } catch (Exception ex) {
+                        ex.printStackTrace();
+                        log.info("* Error shutting down!  Repair will run on next start.");
+                    }
+                }
+            });
     }
 }
