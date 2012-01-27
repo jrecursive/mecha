@@ -111,7 +111,7 @@ public class Client implements ChannelConsumer {
      * MVM support
     */
     
-    public MVMContext ctx() {
+    public MVMContext getContext() {
         return ctx;
     }
     

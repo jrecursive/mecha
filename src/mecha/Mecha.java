@@ -192,4 +192,57 @@ public class Mecha {
         }
         return null;
     }
+    
+    /*
+     * Widely used mechanism to generate cluster-wide (globally)
+     *  unique identifiers.
+    */
+    final private static String GENERIC_GUID_TYPE = "guid";
+    final private static String GUID_SEP = "/";
+    
+    /*
+     * Generate an "untyped" (or "generic") guid.
+    */
+    public static String guid() throws Exception {
+        return guid(GENERIC_GUID_TYPE);
+    }
+    
+    /*
+     * Generate a guid of a type that reflects the supplied
+     *  class.
+    */
+    public static String guid(Class c) throws Exception {
+        return guid(c.getName());
+    }
+    
+    /*
+     * Generate a "typed" guid.
+     *
+     * Currently the "host" portion of the guid is based on
+     *  the protocol buffers IP configured for use within riak.
+     *  This is in general the IP we want to use as it indicates
+     *  the network address(es) we want to use for messaging
+     *  between Mecha instances "java-side".
+     *
+    */
+    public static String guid(String guidType) throws Exception {
+        String nodeId = Mecha.getConfig()
+                             .getJSONObject("riak-config")
+                             .getString("pb-ip");
+        return nodeId + GUID_SEP + UUID.randomUUID() + GUID_SEP + guidType;
+    }
+    
+    /*
+     * Get the host from which the supplied guid originated.
+    */
+    public static String getGuidHost(String guid) throws Exception {
+        return guid.split(GUID_SEP)[0];
+    }
+    
+    /*
+     * Get the type of the guid supplied.
+    */
+    public static String getGuidType(String guid) throws Exception {
+        return guid.split(GUID_SEP)[2];
+    }
 }

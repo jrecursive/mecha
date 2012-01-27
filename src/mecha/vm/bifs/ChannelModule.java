@@ -27,22 +27,22 @@ public class ChannelModule extends MVMModule {
     }
     
     public class Subscribe extends MVMFunction {
-        public Subscribe(MVMContext ctx, JSONObject config) throws Exception {
-            super(ctx, config);
+        public Subscribe(String refId, MVMContext ctx, JSONObject config) throws Exception {
+            super(refId, ctx, config);
             log.info("constructor: " + config.toString(2));
         }
     }
 
     public class Unsubscribe extends MVMFunction {
-        public Unsubscribe(MVMContext ctx, JSONObject config) throws Exception {
-            super(ctx, config);
+        public Unsubscribe(String refId, MVMContext ctx, JSONObject config) throws Exception {
+            super(refId, ctx, config);
             log.info("constructor: " + config.toString(2));
         }
     }
 
     public class Publish extends MVMFunction {
-        public Publish(MVMContext ctx, JSONObject config) throws Exception {
-            super(ctx, config);
+        public Publish(String refId, MVMContext ctx, JSONObject config) throws Exception {
+            super(refId, ctx, config);
             log.info("constructor: " + config.toString(2));
         }
     }

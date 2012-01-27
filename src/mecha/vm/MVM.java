@@ -22,6 +22,7 @@ import mecha.db.*;
 import mecha.util.*;
 import mecha.server.*;
 import mecha.vm.parser.*;
+import mecha.vm.flows.*;
 
 public class MVM {
     final private static Logger log = 
@@ -29,10 +30,10 @@ public class MVM {
     
     final private static String SYSTEM_NAMESPACE = "$";
     final private static String NS_SEP = ".";
-    
+        
     /*
      * Jetlang
-    */    
+    */
     final private ExecutorService functionExecutor;
     final private PoolFiberFactory fiberFactory;
     
@@ -162,7 +163,7 @@ public class MVM {
                 if (operator.equals("->")) {
                     String from = this.<String>getNth(ast, "$", 0);
                     String to   = this.<String>getNth(ast, "$", 2);
-                    nativeFlow(ctx, from, to);
+                    nativeFlowAddEdge(ctx, from, to);
                 }
                                 
                 /*
@@ -204,11 +205,13 @@ public class MVM {
                 if (verb.equals("register")) {
                     nativeRegister(ctx, ast);
                 } else if (verb.equals("dump-vars")) {
-                    nativeVars(ctx);
-                } 
+                    nativeDumpVars(ctx);
+                } else if (verb.equals("reset")) {
+                    nativeReset(ctx);
+                }
                 
                 /*
-                 * Dynamic invocation
+                 * "Auto-wired" invocation
                 */
                 else {
                     dynamicInvoke(ctx, verb, ast);
@@ -249,13 +252,19 @@ public class MVM {
     }
     
     /*
-     * Dynamic invoker
+     * Dynamic invoker.  Returns the assigned refId.
     */
-    private void dynamicInvoke(MVMContext ctx, 
-                               String verb, 
-                               JSONObject ast) throws Exception {
-        log.info("dynamicInvoke: ctx: " + ctx + " verb: " + verb + " ast: " + ast.toString(2));
-        MVMFunction fun = newFunctionInstance(ctx, verb, ast);
+    private String dynamicInvoke(MVMContext ctx, 
+                                 String verb, 
+                                 JSONObject ast) throws Exception {
+        String refId = Mecha.guid(MVM.class);
+        log.info("dynamicInvoke: refId: " + refId + " ctx: " + ctx + 
+            " verb: " + verb + " ast: " + ast.toString(2));
+        newFunctionInstance(ctx, verb, refId, ast);
+        /*
+         * TODO: auto-wire & trigger.
+        */
+        return refId;
     }
     
     /*
@@ -264,6 +273,7 @@ public class MVM {
     
     private MVMFunction newFunctionInstance(MVMContext ctx, 
                                             String namespacedVerb, 
+                                            String refId, 
                                             JSONObject config) throws Exception {
         log.info("newFunctionInstance: " + namespacedVerb);
         if (!verbMap.containsKey(namespacedVerb)) {
@@ -272,7 +282,7 @@ public class MVM {
         }
         RegisteredFunction regFun = verbMap.get(namespacedVerb);
         MVMModule mod = moduleMap.get(regFun.getModuleClassName());
-        return mod.newFunctionInstance(ctx, regFun.getVerbClassName(), config);
+        return mod.newFunctionInstance(ctx, regFun.getVerbClassName(), refId, config);
     }
     
     /*
@@ -283,9 +293,28 @@ public class MVM {
      * Wire two assigned module:verb instances together as
      *  a producer-consumer relationship via the current Flow
      *  in ctx.
+     *
+     * Returns a cluster-wide (globally) unique refId.
+     *
     */
-    private void nativeFlow(MVMContext ctx, String from, String to) throws Exception {
-        log.info("nativeFlow: from: " + from + " to: " + to);
+    private String nativeFlowAddEdge(MVMContext ctx, String from, String to) throws Exception {
+        log.info("nativeFlowAddEdge: from: " + from + " to: " + to);
+        
+        String fromRefId = ctx.<String>get(from);
+        String toRefId = ctx.<String>get(to);
+        
+        String edgeRefId = Mecha.guid(Edge.class);
+        JSONObject edgeData = newFlowDataObject(ctx);
+        edgeData.put(Flow.REF_ID, edgeRefId);
+        edgeData.put("source-vertex", from);
+        edgeData.put("target-vertex", to);
+        ctx.getFlow().addEdge(edgeRefId,
+                              edgeData,
+                              fromRefId,
+                              toRefId,
+                              Flow.FLOW_EDGE_REL,
+                              0.0);
+        return edgeRefId;
     }
     
     /*
@@ -299,8 +328,38 @@ public class MVM {
     /*
      * Perform "a = (expr ...)" assignment to ctx.
     */
-    private void nativeAssignment(MVMContext ctx, String var, JSONObject ast) throws Exception {
+    private String nativeAssignment(MVMContext ctx, String var, JSONObject ast) throws Exception {
         log.info("nativeAssignment: var: " + var + " ast: " + ast);
+        
+        String vertexRefId = Mecha.guid(Vertex.class);
+        JSONObject vertexData = newFlowDataObject(ctx);
+        vertexData.put(Flow.REF_ID, vertexRefId);
+        vertexData.put(Flow.CTX_VAR, var);
+        vertexData.put(Flow.EXPR, ast);
+        ctx.getFlow().addVertex(vertexRefId, vertexData);
+        
+        /*
+         * Map var assignment to underling vertex refId.
+        */
+        ctx.put(var, vertexRefId);
+        
+        /*
+         * TODO: create MVMFunction instance,
+         *       create jetlang Fiber, MessageChannel
+         *       & assign weakly to MVMFunction instance.
+        */
+        return vertexRefId;
+    }
+    
+    /*
+     * Flow helpers
+    */
+    
+    private JSONObject newFlowDataObject(MVMContext ctx) throws Exception {
+        JSONObject data = new JSONObject();
+        data.put(Flow.CLIENT_ID, ctx.getClientId());
+        data.put(Flow.CONTEXT_REF_ID, ctx.getRefId());
+        return data;
     }
     
     /* 
@@ -369,8 +428,23 @@ public class MVM {
     /*
      * Dump context vars.
     */
-    private void nativeVars (MVMContext ctx) throws Exception {
+    private void nativeDumpVars(MVMContext ctx) throws Exception {
         log.info("nativeVars");
+        
+        JSONObject vars = new JSONObject();
+        for(String k : ctx.getVars().keySet()) {
+            vars.put(k, ctx.get(k));
+        }
+        ctx.send(vars);
+        
+    }
+    
+    /*
+     * Clear all assignments & create a new, empty flow.
+    */
+    private void nativeReset(MVMContext ctx) throws Exception {
+        log.info("nativeReset");
+        ctx.reset();
     }
     
     /*
@@ -395,8 +469,5 @@ public class MVM {
      * flow
     */
     
-    private String guid() throws Exception {
-        String nodeId = Mecha.getConfig().getString("riak-nodename");
-        return nodeId + "/" + UUID.randomUUID();
-    }
+    
 }

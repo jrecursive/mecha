@@ -17,20 +17,24 @@ public class Flow {
         Logger.getLogger(Flow.class.getName());
     
     /*
-     * Used as labels in data payloads for
-     *  Vertex, Edge classes.
+     * Used as fields in data payloads for
+     *  vertices & edges
     */
-    final public static String REF_ID = "ref_id";
+    final public static String CLIENT_ID = "cid";
+    final public static String REF_ID = "refid";
+    final public static String CONTEXT_REF_ID = "ctx-refid";
     final public static String EXPR = "expr";
+    final public static String CTX_VAR = "ctx-var";
     
     /*
-     * jgrapht
+     * Edge labels
+    */
+    final public static String FLOW_EDGE_REL = "flows-to";
+    
+    /*
+     * Flow graph
     */
     final private ListenableDirectedWeightedGraph<Vertex, Edge> graph;
-    
-    /*
-     * direct access graph objects
-    */
     final private ConcurrentHashMap<String, Vertex> vertices;
     final private ConcurrentHashMap<String, Edge> edges;
     
@@ -54,6 +58,9 @@ public class Flow {
         return vertices.get(refId);
     }
     
+    public boolean removeVertex(String refId) throws Exception {
+        return removeVertex(getVertex(refId));
+    }
     
     public boolean removeVertex(Vertex vertex) throws Exception {
         if (graph.removeVertex(vertex)) {

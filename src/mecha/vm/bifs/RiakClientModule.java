@@ -27,8 +27,8 @@ public class RiakClientModule extends MVMModule {
     }
     
     public class Get extends MVMFunction {
-        public Get(MVMContext ctx, JSONObject config) throws Exception {
-            super(ctx, config);
+        public Get(String refId, MVMContext ctx, JSONObject config) throws Exception {
+            super(refId, ctx, config);
             log.info("constructor: " + config.toString(2));
         }
         
@@ -42,8 +42,8 @@ public class RiakClientModule extends MVMModule {
     }
     
     public class Put extends MVMFunction {
-        public Put(MVMContext ctx, JSONObject config) throws Exception {
-            super(ctx, config);
+        public Put(String refId, MVMContext ctx, JSONObject config) throws Exception {
+            super(refId, ctx, config);
             log.info("constructor: " + config.toString(2));
         }
         
@@ -57,8 +57,8 @@ public class RiakClientModule extends MVMModule {
     }
     
     public class Delete extends MVMFunction {
-        public Delete(MVMContext ctx, JSONObject config) throws Exception {
-            super(ctx, config);
+        public Delete(String refId, MVMContext ctx, JSONObject config) throws Exception {
+            super(refId, ctx, config);
             log.info("constructor: " + config.toString(2));
         }
         

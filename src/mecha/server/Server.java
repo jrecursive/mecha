@@ -57,6 +57,13 @@ public class Server implements WebSocketHandler {
         try {
             connectionCount++;
             Client cl = new Client(connection);
+            
+            /*
+             * Reset begins a new "query" and assigns it a cluster-wide
+             *  (globally) unique refId.
+            */
+            cl.getContext().reset();
+            
             clientMap.put(connection, cl);
             clientIdMap.put(cl.getId(), cl);
         } catch (Exception ex) {
@@ -153,8 +160,8 @@ public class Server implements WebSocketHandler {
                
             // execute mecha vm command
             } else {
-                log.info("mvm: execute: " + cl + "/" + cl.ctx() + ": " + request);
-                String response = Mecha.getMVM().execute(cl.ctx(), request);
+                log.info("mvm: execute: " + cl + "/" + cl.getContext() + ": " + request);
+                String response = Mecha.getMVM().execute(cl.getContext(), request);
                 if (response == null) {
                     connection.send(OK_RESPONSE + HashUtils.sha1(request));
                 } else {

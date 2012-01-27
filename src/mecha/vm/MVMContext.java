@@ -4,18 +4,24 @@ import java.lang.ref.*;
 import java.util.*;
 import java.util.concurrent.*;
 
+import mecha.Mecha;
 import mecha.server.*;
+import mecha.json.*;
+import mecha.vm.*;
 import mecha.vm.flows.*;
 
 public class MVMContext {    
     final private ConcurrentHashMap<String, Object> vars;
     final private WeakReference<Client> clientRef;
     
-    private Flow flow = new Flow();
+    private Flow flow;
+    private String refId;
 
-    public MVMContext(Client client) {
+    public MVMContext(Client client) throws Exception {
         clientRef = new WeakReference<Client>(client);
         vars = new ConcurrentHashMap<String, Object>();
+        flow = new Flow();
+        refId = Mecha.guid(MVMContext.class);
     }
     
     /*
@@ -66,5 +72,25 @@ public class MVMContext {
         return clientRef.get().getId();
     }
     
+    public String getRefId() {
+        return refId;
+    }
+    
+    /*
+     * Context-specific messaging
+    */
+    
+    public void send(JSONObject msg) throws Exception {
+        getClient().getChannel().send(msg);
+    }
+    
+    /*
+     * Clear all assignments (vars) and create a new empty flow.
+    */
+    
+    public void reset() {
+        clearVars();
+        clearFlow();
+    }
     
 }

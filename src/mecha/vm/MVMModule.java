@@ -29,12 +29,13 @@ public abstract class MVMModule {
     
     public MVMFunction newFunctionInstance(MVMContext ctx,
                                            String funName, 
+                                           String refId, 
                                            JSONObject initialState) throws Exception {
         final String funClassName =
             thisClassName + "$" + funName;
         Class funClass = Class.forName(funClassName);
-        Class[] argTypes = { this.getClass(), MVMContext.class, JSONObject.class };
-        Object[] args = { this, ctx, initialState };
+        Class[] argTypes = { this.getClass(), String.class, MVMContext.class, JSONObject.class };
+        Object[] args = { this, refId, ctx, initialState };
         return (MVMFunction) funClass.getConstructor(argTypes).newInstance(args);
     }
     
@@ -47,11 +48,11 @@ public abstract class MVMModule {
     
     public static void main(String args[]) throws Exception {
         RiakClientModule rc = new RiakClientModule();
-        MVMFunction fun = rc.newFunctionInstance(null, "Get", new JSONObject());
+        MVMFunction fun = rc.newFunctionInstance(null, "Get", "stub-refId-0", new JSONObject());
         fun.control(new JSONObject());
         fun.data(new JSONObject());
         
-        rc.newFunctionInstance(null, "Put", new JSONObject()).control(new JSONObject());
+        rc.newFunctionInstance(null, "Put", "stub-refId-1", new JSONObject()).control(new JSONObject());
     }
     
 }
