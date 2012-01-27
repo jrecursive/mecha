@@ -56,7 +56,7 @@ public class Mecha {
         introspectRiakConfig();
     
         log.info("* starting solr cores");
-        Logger.getLogger("org.apache.solr").setLevel(Level.SEVERE);
+        Logger.getLogger("org.apache.solr").setLevel(Level.WARNING);
         solrManager = new SolrManager();
         
         log.info("* starting mdb");

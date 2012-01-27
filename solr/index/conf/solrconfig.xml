@@ -41,30 +41,11 @@
          <maxDocs>100000</maxDocs>
          <maxTime>120000</maxTime> 
        </autoCommit>
-    <!-- Update Related Event Listeners
-         
-         Various IndexWriter related events can trigger Listeners to
-         take actions.
-
-         postCommit - fired after every commit or optimize command
-         postOptimize - fired after every optimize command
-      -->
-    <!-- The RunExecutableListener executes an external command from a
-         hook such as postCommit or postOptimize.
-         
-         exe - the name of the executable to run
-         dir - dir to use as the current working directory. (default=".")
-         wait - the calling thread waits until the executable returns. 
-                (default="true")
-         args - the arguments to pass to the program.  (default is none)
-         env - environment variables to set.  (default is none)
-      -->
-    <!-- This example shows how RunExecutableListener could be used
-         with the script based replication...
-         http://wiki.apache.org/solr/CollectionDistribution
-      -->
-    <!--
-       <listener event="postCommit" class="solr.RunExecutableListener">
+      <listener event="postCommit" class="mecha.db.SolrEventHandlers">
+      </listener>
+      
+      <!--
+       <listener event="postCommit" class="solr.RunExecutableListener">  
          <str name="exe">solr/bin/snapshooter</str>
          <str name="dir">.</str>
          <bool name="wait">true</bool>
@@ -91,12 +72,13 @@
                    size="512"
                    initialSize="512"
                    autowarmCount="0"/>
-    <!--
-       <fieldValueCache class="solr.FastLRUCache"
-                        size="512"
-                        autowarmCount="128"
-                        showItems="32" />
-      -->
+                   
+    <fieldValueCache class="solr.FastLRUCache"
+                    size="16384"
+                    initialSize="4096"
+                    autowarmCount="4096" />
+                    
+                    <!-- showItems="32" /> -->
 
     <enableLazyFieldLoading>true</enableLazyFieldLoading>
 
@@ -126,8 +108,8 @@
         then documents 0 through 49 will be collected and cached.  Any further
         requests in that range can be satisfied via the cache.  
      -->
-   <queryResultWindowSize>100</queryResultWindowSize>
-
+   <queryResultWindowSize>500</queryResultWindowSize>
+    
    <!-- Maximum number of documents to cache for any entry in the
         queryResultCache. 
      -->
@@ -152,20 +134,9 @@
     <!-- QuerySenderListener takes an array of NamedList and executes a
          local query request for each NamedList in sequence. 
       -->
-    <listener event="newSearcher" class="solr.QuerySenderListener">
-      <arr name="queries">
-        <!--
-           <lst><str name="q">solr</str><str name="sort">price asc</str></lst>
-           <lst><str name="q">rocks</str><str name="sort">weight asc</str></lst>
-          -->
-      </arr>
+    <listener event="newSearcher" class="mecha.db.SolrEventHandlers">
     </listener>
-    <listener event="firstSearcher" class="solr.QuerySenderListener">
-      <arr name="queries">
-        <lst>
-          <str name="q">static firstSearcher warming in solrconfig.xml</str>
-        </lst>
-      </arr>
+    <listener event="firstSearcher" class="mecha.db.SolrEventHandlers">
     </listener>
 
     <!-- Use Cold Searcher
