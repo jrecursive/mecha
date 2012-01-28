@@ -157,14 +157,37 @@ public abstract class MVMFunction {
     }
     
     /*
-     * Broadcast a message to all outgoingChannels.
+     * Broadcast a data message to all outgoingChannels.
     */
-    public void sendData(JSONObject msg) throws Exception {
+    public void broadcastData(JSONObject msg) throws Exception {
         for(PubChannel channel : outgoingChannels) {
             channel.send(msg);
         }
     }
     
+    /*
+     * Broadcast a control message to all outgoingChannels.
+     *
+     * 
+     *
+    */
+    public void broadcastControl(JSONObject msg) throws Exception {
+        for(PubChannel channel : outgoingChannels) {
+            PubChannel dataChannel = 
+                Mecha.getChannels().getChannel(
+                    deriveControlChannelName(channel.getName()));
+            dataChannel.send(msg);
+        }
+    }
+
+    /*
+     * Send a data message to a specific channel.
+    */
+    public void sendData(String channel, JSONObject obj) throws Exception {
+        PubChannel dataChannel = Mecha.getChannels().getChannel(channel);
+        dataChannel.send(obj);
+    }
+        
     /*
      * Send a control message to a specific channel.
      *
@@ -203,6 +226,18 @@ public abstract class MVMFunction {
 
     public void info(JSONObject msg) throws Exception {
         log.info("info: " + msg.toString(2));
+    }
+    
+    /*
+     * Override start & cancel to handle "baked-in" control
+     *  operations.
+    */
+    public void start() throws Exception {
+        log.info("start");
+    }
+    
+    public void cancel() throws Exception {
+        log.info("cancel");
     }
     
     /*
