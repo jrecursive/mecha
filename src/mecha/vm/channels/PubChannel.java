@@ -53,5 +53,9 @@ public class PubChannel {
             cc.onMessage(name, message);
         }
     }
+    
+    public String getName() {
+        return name;
+    }
 
 }

@@ -7,7 +7,8 @@ import java.io.*;
 public class EventLog {
     
     public EventLog() {
-    
+        
+        
     }
     
 }

@@ -15,25 +15,36 @@ public class Slab {
     final public static boolean O_READONLY = true;
     final public static boolean O_READWRITE = false;
     
-    private final String filename;
-    private RandomAccessFile raf;
-    private final CRC32 crc = new CRC32();
+    final private String filename;
+    final private RandomAccessFile raf;
+    final private CRC32 crc = new CRC32();
     
     final static private int REC_BUF_SZ = 262144;
-    private final byte[] cTmp = new byte[REC_BUF_SZ];
-    private final Inflater decompressor = new Inflater();
-    private final Deflater compressor = new Deflater();
+    final private byte[] cTmp = new byte[REC_BUF_SZ];
+    final private Inflater decompressor = new Inflater();
+    final private Deflater compressor = new Deflater();
+    final private boolean useCompression;
 
     public Slab(String fn) throws Exception {
-        this.filename = fn;
-        raf = new RandomAccessFile(fn, "r");
-        initCompression();
+        this(fn, false);
     }
     
     public Slab(String fn, String mode) throws Exception {
+        this(fn, false, mode);
+    }
+
+    public Slab(String fn, boolean useCompression) throws Exception {
         this.filename = fn;
+        this.useCompression = useCompression;
+        raf = new RandomAccessFile(fn, "r");
+        if (useCompression) initCompression();
+    }
+    
+    public Slab(String fn, boolean useCompression, String mode) throws Exception {
+        this.filename = fn;
+        this.useCompression = useCompression;
         raf = new RandomAccessFile(fn, mode);
-        initCompression();
+        if (useCompression) initCompression();
     }
     
     public synchronized byte[] get(long key) throws Exception {
@@ -63,7 +74,11 @@ public class Slab {
 
     public String getString(long key) throws Exception {
         byte[] bytes = get(key);
-        return decompress(bytes);
+        if (useCompression) {
+            return decompress(bytes);
+        } else {
+            return new String(bytes);
+        }
     }
     
     public JSONObject getObject(long key) throws Exception {
@@ -73,9 +88,14 @@ public class Slab {
     }
 
     public synchronized long append(byte[] record) throws Exception {
+        byte[] cRec;
         long key = raf.length();
         raf.seek(key);
-        byte[] cRec = compress(record);
+        if (useCompression) {
+            cRec = compress(record);
+        } else {
+            cRec = record;
+        }
         int rLen = cRec.length;
         byte[] rLen_b = new byte[4];
         rLen_b[3] = (byte) (0xFF & (rLen >> 24));
@@ -296,10 +316,6 @@ public class Slab {
         
         return recnum;
     }
-
-    /*
-     * test
-    */
 
     public static void main(String args[]) throws Exception {
         Slab slab = new Slab("/c/slabs/consolidated.research.slab");

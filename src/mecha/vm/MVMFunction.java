@@ -73,7 +73,11 @@ public abstract class MVMFunction {
     /*
      * Handler for jetlang messages via ProxyChannelConsumer.
     */
-    final private Callback<JSONObject> proxyChannelCallback;
+    final private static String CONTROL_CHANNEL_SUFFIX = "-c";
+    final private Callback<JSONObject> dataChannelCallback;
+    final private Callback<JSONObject> controlChannelCallback;
+    final private String dataChannelName;
+    final private String controlChannelName;
     
     public MVMFunction(String refId,
                        MVMContext context, 
@@ -84,27 +88,28 @@ public abstract class MVMFunction {
         incomingChannels = new HashSet<PubChannel>();
         outgoingChannels = new HashSet<PubChannel>();
         
-        proxyChannelCallback = new Callback<JSONObject>() {
+        dataChannelName = refId;
+        dataChannelCallback = new Callback<JSONObject>() {
             public void onMessage(JSONObject message) {
                 try {
-                    if (message.has(MESSAGE_TYPE_FIELD)) {
-                        if (message.getString(MESSAGE_TYPE_FIELD)
-                                   .equals(CONTROL_CHANNEL)) {
-                            control(message.getJSONObject(OBJECT_FIELD));
-                        } else if (message.getString(MESSAGE_TYPE_FIELD)
-                                          .equals(DATA_CHANNEL)) {
-                            data(message.getJSONObject(OBJECT_FIELD));
-                        } else {
-                            info(message);
-                        }
-                    } else {
-                        info(message);
-                    }
+                    data(message);
                 } catch (Exception ex) {
                     ex.printStackTrace();
                 }
             }
         };
+        
+        controlChannelName = deriveControlChannelName(refId);
+        controlChannelCallback = new Callback<JSONObject>() {
+            public void onMessage(JSONObject message) {
+                try {
+                    data(message);
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                }
+            }
+        };
+                
         log.info("<constructor> " + this.getClass().getName());
     }
     
@@ -115,6 +120,26 @@ public abstract class MVMFunction {
     /*
      * Channels
     */
+    public String getDataChannelName() {
+        return dataChannelName;
+    }
+    
+    public String getControlChannelName() {
+        return controlChannelName;
+    }
+    
+    public PubChannel getDataChannel() {
+        return Mecha.getChannels().getChannel(getDataChannelName());
+    }
+
+    public PubChannel getControlChannel() {
+        return Mecha.getChannels().getChannel(getControlChannelName());
+    }
+
+    protected static String deriveControlChannelName(String dataChannelName) {
+        return dataChannelName + CONTROL_CHANNEL_SUFFIX;
+    }    
+    
     public void addIncomingChannel(PubChannel channel) {
         incomingChannels.add(channel);
     }
@@ -134,8 +159,7 @@ public abstract class MVMFunction {
     /*
      * Broadcast a message to all outgoingChannels.
     */
-    public void sendData(JSONObject obj) throws Exception {
-        JSONObject msg = newDataMessage(obj);
+    public void sendData(JSONObject msg) throws Exception {
         for(PubChannel channel : outgoingChannels) {
             channel.send(msg);
         }
@@ -143,50 +167,24 @@ public abstract class MVMFunction {
     
     /*
      * Send a control message to a specific channel.
+     *
+     * channel: assumes data channel name (automatically
+     *  derives control channel name).
     */
     public void sendControl(String channel, JSONObject obj) throws Exception {
-        sendControl(Mecha.getChannels().getChannel(channel), obj);
-    }
-    
-    public void sendControl(PubChannel channel, JSONObject obj) throws Exception {
-        JSONObject msg = newControlMessage(obj);
-        channel.send(msg);
+        PubChannel controlChannel = Mecha.getChannels().getChannel(deriveControlChannelName(channel));
+        controlChannel.send(obj);
     }
     
     /*
-     * Create a data message.
+     * Jetlang message handlers.
     */
-    public JSONObject newDataMessage(JSONObject obj) throws Exception {
-        JSONObject msg = newBaseFunctionMessage();
-        msg.put(MESSAGE_TYPE_FIELD, DATA_CHANNEL);
-        msg.put(OBJECT_FIELD, obj);
-        return msg;
+    protected Callback<JSONObject> getDataChannelCallback() throws Exception {
+        return dataChannelCallback;
     }
     
-    /*
-     * Create a control message.
-    */
-    public JSONObject newControlMessage(JSONObject obj) throws Exception {
-        JSONObject msg = newBaseFunctionMessage();
-        msg.put(MESSAGE_TYPE_FIELD, CONTROL_CHANNEL);
-        msg.put(OBJECT_FIELD, obj);
-        return msg;
-    }
-    
-    /*
-     * Create a MVMFunction universal message template.
-    */
-    public JSONObject newBaseFunctionMessage() throws Exception {
-        JSONObject msg = new JSONObject();
-        msg.put(ORIGIN_FIELD, refId);
-        return msg;
-    }
-            
-    /*
-     * Get jetlang message handler.
-    */
-    protected Callback<JSONObject> getCallback() throws Exception {
-        return proxyChannelCallback;
+    protected Callback<JSONObject> getControlChannelCallback() throws Exception {
+        return controlChannelCallback;
     }
     
     /* 

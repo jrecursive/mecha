@@ -304,7 +304,7 @@ public class MVM {
         String toRefId = ctx.<String>get(to);
         
         String edgeRefId = Mecha.guid(Edge.class);
-        JSONObject edgeData = newFlowDataObject(ctx);
+        JSONObject edgeData = newBaseFlowDataObject(ctx);
         edgeData.put(Flow.REF_ID, edgeRefId);
         edgeData.put("source-vertex", from);
         edgeData.put("target-vertex", to);
@@ -320,9 +320,14 @@ public class MVM {
     /*
      * Send an arbitrary control message to an assigned var (pointing
      *  to an instance of a module:verb).
+     *
+     * channel: channel name (control channel name will be automatically
+     *  derived).
     */
-    private void nativeControlMessage(MVMContext ctx, String dest, JSONObject msg) throws Exception {
-        log.info("nativeControlMessage: dest: " + dest + " msg: " + msg);
+    private void nativeControlMessage(MVMContext ctx, String channel, JSONObject msg) throws Exception {
+        String controlChannelName = MVMFunction.deriveControlChannelName(channel);
+        Mecha.getChannels().getChannel(controlChannelName).send(msg);
+        log.info("nativeControlMessage: channel: " + controlChannelName + " msg: " + msg);
     }
     
     /*
@@ -332,7 +337,7 @@ public class MVM {
         log.info("nativeAssignment: var: " + var + " ast: " + ast);
         
         String vertexRefId = Mecha.guid(Vertex.class);
-        JSONObject vertexData = newFlowDataObject(ctx);
+        JSONObject vertexData = newBaseFlowDataObject(ctx);
         vertexData.put(Flow.REF_ID, vertexRefId);
         vertexData.put(Flow.CTX_VAR, var);
         vertexData.put(Flow.EXPR, ast);
@@ -355,7 +360,7 @@ public class MVM {
      * Flow helpers
     */
     
-    private JSONObject newFlowDataObject(MVMContext ctx) throws Exception {
+    private JSONObject newBaseFlowDataObject(MVMContext ctx) throws Exception {
         JSONObject data = new JSONObject();
         data.put(Flow.CLIENT_ID, ctx.getClientId());
         data.put(Flow.CONTEXT_REF_ID, ctx.getRefId());
