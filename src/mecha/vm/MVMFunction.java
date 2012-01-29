@@ -104,7 +104,7 @@ public abstract class MVMFunction {
         controlChannelCallback = new Callback<JSONObject>() {
             public void onMessage(JSONObject message) {
                 try {
-                    data(message);
+                    control(message);
                 } catch (Exception ex) {
                     ex.printStackTrace();
                 }

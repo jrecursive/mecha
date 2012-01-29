@@ -315,7 +315,9 @@ public class MVM {
      *  derived).
     */
     private void nativeControlMessage(MVMContext ctx, String channel, JSONObject msg) throws Exception {
-        String controlChannelName = MVMFunction.deriveControlChannelName(channel);
+        String resolvedChannel = ctx.resolveAssignmentToRefId(channel);
+        String controlChannelName = MVMFunction.deriveControlChannelName(resolvedChannel);
+        log.info("<" + controlChannelName + "> ! " + msg.toString(2));
         Mecha.getChannels().getChannel(controlChannelName).send(msg);
         log.info("nativeControlMessage: channel: " + controlChannelName + " msg: " + msg);
     }
@@ -337,6 +339,14 @@ public class MVM {
          * Map var assignment to underling vertex refId.
         */
         ctx.put(var, vertexRefId);
+        
+        final String namespacedVerb = this.<String>get(ast, "$");
+        MVMFunction inst = 
+            newFunctionInstance(ctx, 
+                                namespacedVerb, 
+                                vertexRefId, 
+                                ast);
+        ctx.startFunctionTask(vertexRefId, inst);
         
         /*
          * TODO: create MVMFunction instance,
@@ -433,6 +443,9 @@ public class MVM {
         JSONObject vars = new JSONObject();
         for(String k : ctx.getVars().keySet()) {
             vars.put(k, ctx.get(k));
+        }
+        for(String k : ctx.getMemoryChannelMap().keySet()) {
+            vars.put("MemoryChannel-" + k, ctx.getMemoryChannelMap().get(k).toString());
         }
         ctx.send(vars);
         

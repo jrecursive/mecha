@@ -101,12 +101,17 @@ public class MVMContext {
         return refId;
     }
     
+    public String resolveAssignmentToRefId(String var) throws Exception {
+        return this.<String>get(var);
+    }
+    
     /*
      * Context-specific messaging
     */
     
     public void send(JSONObject msg) throws Exception {
         getClient().getChannel().send(msg);
+        log.info(msg.toString(2));
     }
     
     /*
@@ -155,7 +160,7 @@ public class MVMContext {
         jetlangChannel.subscribe(fiber, jetlangCallback);
     }
     
-    private void startFunctionTask(String vertexRefId, MVMFunction inst)
+    public void startFunctionTask(String vertexRefId, MVMFunction inst)
         throws Exception {
         
         /*
@@ -178,6 +183,14 @@ public class MVMContext {
                                        dataFiber,
                                        jetlangControlChannel,
                                        inst.getControlChannelCallback());
+    }
+    
+    /*
+     * Jetlang debug helpers
+    */
+    
+    protected ConcurrentHashMap<String, Channel<JSONObject>> getMemoryChannelMap() {
+        return memoryChannelMap;
     }
     
     /*
