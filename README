@@ -1,31 +1,63 @@
-[mecha]# ./mecha
-Jan 26, 2012 1:06:17 PM mecha.Mecha <clinit>
+* CLI:
+
+# ./mecha-client 
+Jan 28, 2012 6:26:34 PM mecha.client.MechaClient onOpen
+INFO: onOpen()
+Jan 28, 2012 6:26:34 PM mecha.client.MechaClient onMessage
+INFO: OK
+mecha-cli> a = (get bucket:zipcodes key:94115)
+mecha-cli> Jan 28, 2012 6:26:36 PM mecha.client.MechaClient onMessage
+INFO: :OK 43111906751ce6fe58bf73fc4d83e62ceeef9eed
+b = (get bucket:zipcodes key:94114)
+mecha-cli> Jan 28, 2012 6:26:38 PM mecha.client.MechaClient onMessage
+INFO: :OK d8fe4c2b55536b8c03b9ce3c98fca3e67567c00c
+a -> b
+mecha-cli> Jan 28, 2012 6:26:40 PM mecha.client.MechaClient onMessage
+INFO: :OK 7a927797cb3fc4371f981bc48ac1bd241c9a1c72
+a ! (start)
+mecha-cli> Jan 28, 2012 6:26:42 PM mecha.client.MechaClient onMessage
+INFO: :OK cc83c266e14d69408002298fb192085f560d4274
+b ! (start)
+mecha-cli> Jan 28, 2012 6:26:44 PM mecha.client.MechaClient onMessage
+INFO: :OK 3d7525dc14156e3dad9fd9a79b96ae0de5e083d6
+
+mecha-cli> 
+mecha-cli> 
+
+
+///////
+
+* Server:
+
+
+# ./mecha
+Jan 28, 2012 6:26:29 PM mecha.Mecha <clinit>
 INFO: * reading config.json
-Jan 26, 2012 1:06:17 PM mecha.Mecha <init>
+Jan 28, 2012 6:26:29 PM mecha.Mecha <init>
 INFO: * starting channels
-Jan 26, 2012 1:06:17 PM mecha.Mecha <init>
+Jan 28, 2012 6:26:29 PM mecha.Mecha <init>
 INFO: * establishing riak link
-Jan 26, 2012 1:06:17 PM mecha.Mecha introspectRiakConfig
+Jan 28, 2012 6:26:29 PM mecha.Mecha introspectRiakConfig
 INFO: # introspected riak configuration: {
   "local-url" : "http://0.0.0.0:18098/riak/",
   "pb-ip" : "127.0.0.1",
   "pb-port" : 8087
 }
-Jan 26, 2012 1:06:17 PM mecha.Mecha <init>
+Jan 28, 2012 6:26:29 PM mecha.Mecha <init>
 INFO: * starting solr cores
-Jan 26, 2012 1:06:17 PM mecha.Mecha <init>
+Jan 28, 2012 6:26:29 PM mecha.Mecha <init>
 INFO: * starting mdb
-Jan 26, 2012 1:06:17 PM mecha.Mecha <init>
+Jan 28, 2012 6:26:29 PM mecha.Mecha <init>
 INFO: * starting mecha vm
-Jan 26, 2012 1:06:17 PM mecha.vm.MVM exec
+Jan 28, 2012 6:26:29 PM mecha.vm.MVM exec
 INFO: exec (./mvm/bootstrap.mvm) context: null
-Jan 26, 2012 1:06:17 PM mecha.vm.MVM execute
+Jan 28, 2012 6:26:29 PM mecha.vm.MVM execute
 INFO: ##
-Jan 26, 2012 1:06:17 PM mecha.vm.MVM execute
+Jan 28, 2012 6:26:29 PM mecha.vm.MVM execute
 INFO: ## register mecha.vm.bifs.* system verbs
-Jan 26, 2012 1:06:17 PM mecha.vm.MVM execute
+Jan 28, 2012 6:26:29 PM mecha.vm.MVM execute
 INFO: ##
-Jan 26, 2012 1:06:17 PM mecha.vm.MVM execute
+Jan 28, 2012 6:26:29 PM mecha.vm.MVM execute
 INFO: ast = {
   "$" : "register",
   "namespace" : "$",
@@ -36,23 +68,23 @@ INFO: ast = {
     "delete" : "Delete"
   }
 }
-Jan 26, 2012 1:06:17 PM mecha.vm.MVM execute
+Jan 28, 2012 6:26:29 PM mecha.vm.MVM execute
 INFO: verb: register
-Jan 26, 2012 1:06:17 PM mecha.vm.MVM nativeRegister
+Jan 28, 2012 6:26:29 PM mecha.vm.MVM nativeRegister
 INFO: nativeRegister: ast: {"$":"register","namespace":"$","module-class":"mecha.vm.bifs.RiakClientModule","verbs":{"get":"Get","put":"Put","delete":"Delete"}}
-Jan 26, 2012 1:06:17 PM mecha.vm.MVM nativeRegister
+Jan 28, 2012 6:26:29 PM mecha.vm.MVM nativeRegister
 INFO: newModuleInstance(mecha.vm.bifs.RiakClientModule)
-Jan 26, 2012 1:06:17 PM mecha.vm.MVM nativeRegister
+Jan 28, 2012 6:26:29 PM mecha.vm.MVM nativeRegister
 INFO: mecha.vm.bifs.RiakClientModule: moduleLoad()
-Jan 26, 2012 1:06:17 PM mecha.vm.bifs.RiakClientModule moduleLoad
+Jan 28, 2012 6:26:29 PM mecha.vm.bifs.RiakClientModule moduleLoad
 INFO: moduleLoad()
-Jan 26, 2012 1:06:17 PM mecha.vm.MVM nativeRegister
+Jan 28, 2012 6:26:29 PM mecha.vm.MVM nativeRegister
 INFO: register: mecha.vm.bifs.RiakClientModule: get -> Get
-Jan 26, 2012 1:06:17 PM mecha.vm.MVM nativeRegister
+Jan 28, 2012 6:26:29 PM mecha.vm.MVM nativeRegister
 INFO: register: mecha.vm.bifs.RiakClientModule: put -> Put
-Jan 26, 2012 1:06:17 PM mecha.vm.MVM nativeRegister
+Jan 28, 2012 6:26:29 PM mecha.vm.MVM nativeRegister
 INFO: register: mecha.vm.bifs.RiakClientModule: delete -> Delete
-Jan 26, 2012 1:06:17 PM mecha.vm.MVM execute
+Jan 28, 2012 6:26:29 PM mecha.vm.MVM execute
 INFO: ast = {
   "$" : "register",
   "namespace" : "$",
@@ -63,97 +95,177 @@ INFO: ast = {
     "publish" : "Publish"
   }
 }
-Jan 26, 2012 1:06:17 PM mecha.vm.MVM execute
+Jan 28, 2012 6:26:29 PM mecha.vm.MVM execute
 INFO: verb: register
-Jan 26, 2012 1:06:17 PM mecha.vm.MVM nativeRegister
+Jan 28, 2012 6:26:29 PM mecha.vm.MVM nativeRegister
 INFO: nativeRegister: ast: {"$":"register","namespace":"$","module-class":"mecha.vm.bifs.ChannelModule","verbs":{"subscribe":"Subscribe","unsubscribe":"Unsubscribe","publish":"Publish"}}
-Jan 26, 2012 1:06:17 PM mecha.vm.MVM nativeRegister
+Jan 28, 2012 6:26:29 PM mecha.vm.MVM nativeRegister
 INFO: newModuleInstance(mecha.vm.bifs.ChannelModule)
-Jan 26, 2012 1:06:17 PM mecha.vm.MVM nativeRegister
+Jan 28, 2012 6:26:29 PM mecha.vm.MVM nativeRegister
 INFO: mecha.vm.bifs.ChannelModule: moduleLoad()
-Jan 26, 2012 1:06:17 PM mecha.vm.bifs.ChannelModule moduleLoad
+Jan 28, 2012 6:26:29 PM mecha.vm.bifs.ChannelModule moduleLoad
 INFO: moduleLoad()
-Jan 26, 2012 1:06:17 PM mecha.vm.MVM nativeRegister
+Jan 28, 2012 6:26:29 PM mecha.vm.MVM nativeRegister
 INFO: register: mecha.vm.bifs.ChannelModule: subscribe -> Subscribe
-Jan 26, 2012 1:06:17 PM mecha.vm.MVM nativeRegister
+Jan 28, 2012 6:26:29 PM mecha.vm.MVM nativeRegister
 INFO: register: mecha.vm.bifs.ChannelModule: unsubscribe -> Unsubscribe
-Jan 26, 2012 1:06:17 PM mecha.vm.MVM nativeRegister
+Jan 28, 2012 6:26:29 PM mecha.vm.MVM nativeRegister
 INFO: register: mecha.vm.bifs.ChannelModule: publish -> Publish
-Jan 26, 2012 1:06:17 PM mecha.Mecha <init>
+Jan 28, 2012 6:26:29 PM mecha.Mecha <init>
 INFO: * starting socket server
-Jan 26, 2012 1:06:17 PM mecha.Mecha <init>
+Jan 28, 2012 6:26:29 PM mecha.Mecha <init>
 INFO: * starting riak connector
-Jan 26, 2012 1:06:18 PM mecha.jinterface.RiakConnector <init>
+Jan 28, 2012 6:26:29 PM mecha.jinterface.RiakConnector <init>
 INFO: fabric_ji@127.0.0.1/re14ak
-Jan 26, 2012 1:06:18 PM mecha.Mecha startSolrCores
+Jan 28, 2012 6:26:29 PM mecha.Mecha startSolrCores
 INFO: / starting core: index
-Jan 26, 2012 1:06:18 PM mecha.db.SolrCore <init>
+Jan 28, 2012 6:26:29 PM mecha.db.SolrCore <init>
 INFO: starting solr core [./solr] index
-Jan 26, 2012 1:06:18 PM org.apache.solr.core.SolrResourceLoader locateSolrHome
-INFO: JNDI not configured for solr (NoInitialContextEx)
-Jan 26, 2012 1:06:18 PM org.apache.solr.core.SolrResourceLoader locateSolrHome
-INFO: solr home defaulted to 'solr/' (could not find system property or JNDI)
-Jan 26, 2012 1:06:18 PM org.apache.solr.core.CoreContainer <init>
-INFO: New CoreContainer: solrHome=solr/ instance=143167084
-Jan 26, 2012 1:06:18 PM org.apache.solr.core.SolrResourceLoader <init>
-INFO: Solr home set to './solr/'
-Jan 26, 2012 1:06:18 PM org.apache.solr.core.SolrResourceLoader <init>
-INFO: Solr home set to './solr/index/'
-Jan 26, 2012 1:06:18 PM org.apache.solr.core.SolrConfig initLibs
-INFO: Adding specified lib dirs to ClassLoader
-Jan 26, 2012 1:06:18 PM org.apache.solr.core.SolrConfig <init>
-INFO: Using Lucene MatchVersion: LUCENE_35
-Jan 26, 2012 1:06:18 PM org.apache.solr.core.SolrConfig <init>
-INFO: Loaded SolrConfig: solrconfig.xml
-Jan 26, 2012 1:06:18 PM org.apache.solr.schema.IndexSchema readSchema
-INFO: Reading Solr Schema
-Jan 26, 2012 1:06:18 PM org.apache.solr.schema.IndexSchema readSchema
-INFO: Schema name=mecha
-
-[ ... Solr initialization ... ]
-
-Jan 26, 2012 1:06:20 PM org.apache.solr.core.QuerySenderListener newSearcher
-INFO: QuerySenderListener sending requests to Searcher@40537935 main
-Jan 26, 2012 1:06:20 PM org.apache.solr.core.CoreContainer register
-INFO: registering core: tmp
-Jan 26, 2012 1:06:20 PM mecha.db.MDB startMDB
-INFO: solrServer: org.apache.solr.client.solrj.embedded.EmbeddedSolrServer@2c1450bd
-Jan 26, 2012 1:06:20 PM mecha.db.MDB startMDB
+Jan 28, 2012 6:26:30 PM org.apache.solr.schema.IndexSchema readSchema
+SEVERE: uniqueKey is not stored - distributed search will not work
+Jan 28, 2012 6:26:31 PM org.apache.solr.handler.component.SpellCheckComponent inform
+WARNING: No queryConverter defined, using default converter
+Jan 28, 2012 6:26:31 PM mecha.db.SolrEventHandlers newSearcher
+INFO: newSearcher(Searcher@a2a987d main, null)
+Jan 28, 2012 6:26:31 PM org.apache.solr.schema.IndexSchema readSchema
+SEVERE: uniqueKey is not stored - distributed search will not work
+Jan 28, 2012 6:26:31 PM org.apache.solr.core.SolrCore initIndex
+WARNING: [tmp] Solr index directory '/mecha/tmp/index' doesn't exist. Creating new index...
+Jan 28, 2012 6:26:31 PM mecha.Mecha startSolrCores
+INFO: / starting core: tmp
+Jan 28, 2012 6:26:31 PM mecha.db.SolrCore <init>
+INFO: starting solr core [./solr] tmp
+Jan 28, 2012 6:26:32 PM org.apache.solr.schema.IndexSchema readSchema
+SEVERE: uniqueKey is not stored - distributed search will not work
+Jan 28, 2012 6:26:32 PM org.apache.solr.handler.component.SpellCheckComponent inform
+WARNING: No queryConverter defined, using default converter
+Jan 28, 2012 6:26:32 PM mecha.db.SolrEventHandlers newSearcher
+INFO: newSearcher(Searcher@2bab5dae main, null)
+Jan 28, 2012 6:26:32 PM org.apache.solr.schema.IndexSchema readSchema
+SEVERE: uniqueKey is not stored - distributed search will not work
+Jan 28, 2012 6:26:32 PM mecha.db.MDB startMDB
+INFO: solrServer: org.apache.solr.client.solrj.embedded.EmbeddedSolrServer@646d6aa0
+Jan 28, 2012 6:26:32 PM mecha.db.MDB startMDB
 INFO: started
-Jan 26, 2012 1:06:20 PM org.apache.solr.core.SolrCore execute
-INFO: [tmp] webapp=null path=null params={event=firstSearcher&q=static+firstSearcher+warming+in+solrconfig.xml} hits=0 status=0 QTime=1 
-Jan 26, 2012 1:06:20 PM org.apache.solr.core.QuerySenderListener newSearcher
-INFO: QuerySenderListener done.
-Jan 26, 2012 1:06:20 PM mecha.server.Server start
+Jan 28, 2012 6:26:32 PM mecha.server.Server start
 INFO: started
-Jan 26, 2012 1:06:21 PM mecha.server.Client <init>
-
-INFO: new client: socket-79eafc02013d0757b6be02645172909934029057
-Jan 26, 2012 1:06:22 PM mecha.server.Server onMessage
-INFO: mvm: execute: mecha.server.Client@436d4b50/mecha.vm.MVMContext@5fb9f88b: (get bucket:zipcodes key:94115)
-Jan 26, 2012 1:06:22 PM mecha.vm.MVM execute
+Jan 28, 2012 6:26:34 PM mecha.server.Client <init>
+INFO: new client: socket-4dbfa5c1dc1a27c43411e62392e02e9e890f4f93
+Jan 28, 2012 6:26:34 PM mecha.vm.MVMContext shutdownFunctionExecutor
+INFO: isTerminated: true
+Jan 28, 2012 6:26:36 PM mecha.server.Server onMessage
+INFO: mvm: execute: mecha.server.Client@54956254/mecha.vm.MVMContext@c4a3158: a = (get bucket:zipcodes key:94115)
+Jan 28, 2012 6:26:36 PM mecha.vm.MVM execute
 INFO: ast = {
-  "$" : "get",
-  "bucket" : "zipcodes",
-  "key" : "94115"
+  "$" : [ "a", "=" ],
+  "$args" : [ {
+    "keys" : [ "$", "bucket", "key" ]
+  } ]
 }
-Jan 26, 2012 1:06:22 PM mecha.vm.MVM execute
-INFO: verb: get
-Jan 26, 2012 1:06:22 PM mecha.vm.MVM dynamicInvoke
-INFO: dynamicInvoke: ctx: mecha.vm.MVMContext@5fb9f88b verb: get ast: {
-  "$" : "get",
-  "bucket" : "zipcodes",
-  "key" : "94115"
-}
-Jan 26, 2012 1:06:22 PM mecha.vm.MVM newFunctionInstance
+Jan 28, 2012 6:26:36 PM mecha.vm.MVM execute
+INFO: verb: null, operator: =
+Jan 28, 2012 6:26:36 PM mecha.vm.MVM nativeAssignment
+INFO: nativeAssignment: var: a ast: {"$":"get","bucket":"zipcodes","key":"94115"}
+Jan 28, 2012 6:26:36 PM mecha.vm.MVM newFunctionInstance
 INFO: newFunctionInstance: get
-Jan 26, 2012 1:06:22 PM mecha.vm.MVMFunction <init>
+Jan 28, 2012 6:26:36 PM mecha.vm.MVMFunction <init>
 INFO: <constructor> mecha.vm.bifs.RiakClientModule$Get
-Jan 26, 2012 1:06:22 PM mecha.vm.bifs.RiakClientModule$Get <init>
+Jan 28, 2012 6:26:36 PM mecha.vm.bifs.RiakClientModule$Get <init>
 INFO: constructor: {
   "$" : "get",
   "bucket" : "zipcodes",
   "key" : "94115"
 }
+Jan 28, 2012 6:26:38 PM mecha.server.Server onMessage
+INFO: mvm: execute: mecha.server.Client@54956254/mecha.vm.MVMContext@c4a3158: b = (get bucket:zipcodes key:94114)
+Jan 28, 2012 6:26:38 PM mecha.vm.MVM execute
+INFO: ast = {
+  "$" : [ "b", "=" ],
+  "$args" : [ {
+    "keys" : [ "$", "bucket", "key" ]
+  } ]
+}
+Jan 28, 2012 6:26:38 PM mecha.vm.MVM execute
+INFO: verb: null, operator: =
+Jan 28, 2012 6:26:38 PM mecha.vm.MVM nativeAssignment
+INFO: nativeAssignment: var: b ast: {"$":"get","bucket":"zipcodes","key":"94114"}
+Jan 28, 2012 6:26:38 PM mecha.vm.MVM newFunctionInstance
+INFO: newFunctionInstance: get
+Jan 28, 2012 6:26:38 PM mecha.vm.MVMFunction <init>
+INFO: <constructor> mecha.vm.bifs.RiakClientModule$Get
+Jan 28, 2012 6:26:38 PM mecha.vm.bifs.RiakClientModule$Get <init>
+INFO: constructor: {
+  "$" : "get",
+  "bucket" : "zipcodes",
+  "key" : "94114"
+}
+Jan 28, 2012 6:26:40 PM mecha.server.Server onMessage
+INFO: mvm: execute: mecha.server.Client@54956254/mecha.vm.MVMContext@c4a3158: a -> b
+Jan 28, 2012 6:26:40 PM mecha.vm.MVM execute
+INFO: ast = {
+  "$" : [ "a", "->", "b" ]
+}
+Jan 28, 2012 6:26:40 PM mecha.vm.MVM execute
+INFO: verb: null, operator: ->
+Jan 28, 2012 6:26:40 PM mecha.vm.MVM nativeFlowAddEdge
+INFO: nativeFlowAddEdge: from: a to: b
+Jan 28, 2012 6:26:42 PM mecha.server.Server onMessage
+INFO: mvm: execute: mecha.server.Client@54956254/mecha.vm.MVMContext@c4a3158: a ! (start)
+Jan 28, 2012 6:26:42 PM mecha.vm.MVM execute
+INFO: ast = {
+  "$" : [ "a", "!" ],
+  "$args" : [ {
+    "keys" : [ "$" ]
+  } ]
+}
+Jan 28, 2012 6:26:42 PM mecha.vm.MVM execute
+INFO: verb: null, operator: !
+Jan 28, 2012 6:26:42 PM mecha.vm.MVM nativeControlMessage
+INFO: <127.0.0.1/aaf6b2f7-683e-445b-8f66-7f60f8d0b0a7/mecha.vm.flows.Vertex-c> ! {
+  "$" : "start"
+}
+Jan 28, 2012 6:26:42 PM mecha.vm.MVMContext$1 onMessage
+INFO: 127.0.0.1/aaf6b2f7-683e-445b-8f66-7f60f8d0b0a7/mecha.vm.flows.Vertex-c -> {
+  "$" : "start"
+}
+Jan 28, 2012 6:26:42 PM mecha.vm.MVM nativeControlMessage
+INFO: nativeControlMessage: channel: 127.0.0.1/aaf6b2f7-683e-445b-8f66-7f60f8d0b0a7/mecha.vm.flows.Vertex-c msg: {"$":"start"}
+Jan 28, 2012 6:26:42 PM mecha.vm.bifs.RiakClientModule$Get control
+INFO: Control message: {
+  "$" : "start"
+}
+Jan 28, 2012 6:26:44 PM mecha.server.Server onMessage
+INFO: mvm: execute: mecha.server.Client@54956254/mecha.vm.MVMContext@c4a3158: b ! (start)
+Jan 28, 2012 6:26:44 PM mecha.vm.MVM execute
+INFO: ast = {
+  "$" : [ "b", "!" ],
+  "$args" : [ {
+    "keys" : [ "$" ]
+  } ]
+}
+Jan 28, 2012 6:26:44 PM mecha.vm.MVM execute
+INFO: verb: null, operator: !
+Jan 28, 2012 6:26:44 PM mecha.vm.MVM nativeControlMessage
+INFO: <127.0.0.1/4b712bd5-68bc-42e6-b31f-c3ebc757f812/mecha.vm.flows.Vertex-c> ! {
+  "$" : "start"
+}
+Jan 28, 2012 6:26:44 PM mecha.vm.MVMContext$1 onMessage
+INFO: 127.0.0.1/4b712bd5-68bc-42e6-b31f-c3ebc757f812/mecha.vm.flows.Vertex-c -> {
+  "$" : "start"
+}
+Jan 28, 2012 6:26:44 PM mecha.vm.MVM nativeControlMessage
+INFO: nativeControlMessage: channel: 127.0.0.1/4b712bd5-68bc-42e6-b31f-c3ebc757f812/mecha.vm.flows.Vertex-c msg: {"$":"start"}
+Jan 28, 2012 6:26:44 PM mecha.vm.bifs.RiakClientModule$Get control
+INFO: Control message: {
+  "$" : "start"
+}
+* shutting down...
+* shutting down riak link
+* terminating socket server
+* terminating mvm
+* shutting down mdb
+* shutting down solr
+* shutdown complete
+
 
 
