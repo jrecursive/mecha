@@ -1,0 +1,9 @@
+
+## 
+## register mecha.vm.bifs.* system verbs
+## 
+
+register namespace:$ module-class:mecha.vm.bifs.RiakClientModule verbs:(get:Get put:Put delete:Delete)
+
+register namespace:$ module-class:mecha.vm.bifs.ChannelModule verbs:(subscribe:Subscribe unsubscribe:Unsubscribe publish:Publish)
+
