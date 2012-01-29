@@ -32,12 +32,6 @@ public class MVM {
     final private static String NS_SEP = ".";
         
     /*
-     * Jetlang
-    */
-    final private ExecutorService functionExecutor;
-    final private PoolFiberFactory fiberFactory;
-    
-    /*
      * Namespaced verb to RegisteredFunction (which describes
      *  the owning module's class name, etc.)
      *
@@ -59,9 +53,6 @@ public class MVM {
         verbMap = new ConcurrentHashMap<String, RegisteredFunction>();
         moduleMap = new ConcurrentHashMap<String, MVMModule>();
     
-        functionExecutor = Executors.newCachedThreadPool();
-        fiberFactory = new PoolFiberFactory(functionExecutor);
-        
         bootstrap();
     }
     
@@ -277,8 +268,7 @@ public class MVM {
                                             JSONObject config) throws Exception {
         log.info("newFunctionInstance: " + namespacedVerb);
         if (!verbMap.containsKey(namespacedVerb)) {
-            log.info("Unknown namespaced verb: " + namespacedVerb);
-            return null;
+            throw new Exception("Unknown namespaced verb: " + namespacedVerb);
         }
         RegisteredFunction regFun = verbMap.get(namespacedVerb);
         MVMModule mod = moduleMap.get(regFun.getModuleClassName());
@@ -360,6 +350,10 @@ public class MVM {
      * Flow helpers
     */
     
+    /*
+     * Create a template data object for use with creation of Edge and
+     *  Vertex Flow instances.
+    */
     private JSONObject newBaseFlowDataObject(MVMContext ctx) throws Exception {
         JSONObject data = new JSONObject();
         data.put(Flow.CLIENT_ID, ctx.getClientId());

@@ -3,17 +3,37 @@ package mecha.vm;
 import java.lang.ref.*;
 import java.util.*;
 import java.util.concurrent.*;
+import java.util.logging.*;
+
+import org.jetlang.channels.*;
+import org.jetlang.core.*;
+import org.jetlang.fibers.*;
 
 import mecha.Mecha;
 import mecha.server.*;
 import mecha.json.*;
 import mecha.vm.*;
 import mecha.vm.flows.*;
+import mecha.vm.channels.*;
 
-public class MVMContext {    
+public class MVMContext {
+    final private static Logger log = 
+        Logger.getLogger(MVMContext.class.getName());
+
     final private ConcurrentHashMap<String, Object> vars;
     final private WeakReference<Client> clientRef;
     
+    /*
+     * Jetlang components & management
+    */
+    private ExecutorService functionExecutor;
+    private PoolFiberFactory fiberFactory;
+    private ConcurrentHashMap<String, Channel<JSONObject>> memoryChannelMap;
+    private Set<Fiber> fibers;
+    
+    /*
+     * Execution context
+    */
     private Flow flow;
     private String refId;
 
@@ -22,6 +42,11 @@ public class MVMContext {
         vars = new ConcurrentHashMap<String, Object>();
         flow = new Flow();
         refId = Mecha.guid(MVMContext.class);
+        
+        functionExecutor = Executors.newCachedThreadPool();
+        fiberFactory = new PoolFiberFactory(functionExecutor);
+        memoryChannelMap = new ConcurrentHashMap<String, Channel<JSONObject>>();
+        fibers = new HashSet<Fiber>();
     }
     
     /*
@@ -85,10 +110,121 @@ public class MVMContext {
     }
     
     /*
-     * Clear all assignments (vars) and create a new empty flow.
+     * Jetlang helpers
     */
     
-    public void reset() {
+    private Fiber newFiber() throws Exception {
+        Fiber fiber = fiberFactory.create();
+        fibers.add(fiber);
+        fiber.start();
+        return fiber;
+    }
+    
+    private Channel<JSONObject> newJetlangChannel(String refId) throws Exception {
+        Channel<JSONObject> jetlangChannel = 
+            new MemoryChannel<JSONObject>();
+        memoryChannelMap.put(refId, jetlangChannel);
+        return jetlangChannel;
+    }
+    
+    private void
+        newJetlangChannelConsumerProxy(final String mechaChannelName, 
+                                       final Fiber fiber,
+                                       final Channel<JSONObject> jetlangChannel,
+                                       final Callback<JSONObject> jetlangCallback) throws Exception {
+        ChannelConsumer proxyChannelConsumer = new ChannelConsumer() {
+            public void onMessage(String channel, String message) throws Exception {
+                log.info("this should never happen!  String message = " + message);
+            }
+    
+            public void onMessage(String channel, JSONObject message) throws Exception {
+                log.info(channel + " -> " + message.toString(2));
+                if (!channel.equals(mechaChannelName)) {
+                    log.info("!! " + channel + " != " + mechaChannelName);
+                }
+                jetlangChannel.publish(message);
+            }
+        
+            public void onMessage(String channel, byte[] message) throws Exception {
+                log.info("this should never happen!  byte[] message = " + new String(message));
+            }
+        };
+        Mecha.getChannels()
+             .getOrCreateChannel(mechaChannelName)
+             .addMember(proxyChannelConsumer);
+        jetlangChannel.subscribe(fiber, jetlangCallback);
+    }
+    
+    private void startFunctionTask(String vertexRefId, MVMFunction inst)
+        throws Exception {
+        
+        /*
+         * Data Channel
+        */
+        final Fiber dataFiber = newFiber();
+        final Channel<JSONObject> jetlangDataChannel = newJetlangChannel(vertexRefId);
+        newJetlangChannelConsumerProxy(vertexRefId, 
+                                       dataFiber,
+                                       jetlangDataChannel,
+                                       inst.getDataChannelCallback());
+        /*
+         * Control channel
+        */
+        final String controlChannelName = MVMFunction.deriveControlChannelName(vertexRefId);
+        final Fiber controlFiber = newFiber();
+        final Channel<JSONObject> jetlangControlChannel = 
+            newJetlangChannel(controlChannelName);
+        newJetlangChannelConsumerProxy(controlChannelName, 
+                                       dataFiber,
+                                       jetlangControlChannel,
+                                       inst.getControlChannelCallback());
+    }
+    
+    /*
+     * Jetlang reset helpers
+    */
+    
+    private void disposeFibers() throws Exception {
+        for(Fiber fiber : fibers) {
+            log.info("fiber.dispose: " + fiber);
+            fiber.dispose();
+        }
+    }
+    
+    private void clearChannels() throws Exception {
+        memoryChannelMap.clear();
+    }
+    
+    private void shutdownFunctionExecutor() throws Exception {
+        List<Runnable> waitingTasks = 
+            functionExecutor.shutdownNow();
+        for(Runnable r : waitingTasks) {
+            log.info("executor: killing waiting task: " + r);
+            if (r instanceof Thread) {
+                log.info("interrupting: " + r);
+                ((Thread)r).interrupt();
+            }
+        }
+        log.info("isTerminated: " + functionExecutor.isTerminated());
+        functionExecutor = null;
+    }
+    
+    private void resetJetlangPrimitives() throws Exception {
+        disposeFibers();
+        clearChannels();
+        shutdownFunctionExecutor();
+
+        functionExecutor = Executors.newCachedThreadPool();
+        fiberFactory = new PoolFiberFactory(functionExecutor);
+        memoryChannelMap = new ConcurrentHashMap<String, Channel<JSONObject>>();
+        fibers = new HashSet<Fiber>();
+    }
+    
+    /*
+     * Clear all assignments (vars), reset jetlang primitives and create a new empty flow.
+    */
+    public void reset() throws Exception {
+        resetJetlangPrimitives();
         clearVars();
         clearFlow();
     }

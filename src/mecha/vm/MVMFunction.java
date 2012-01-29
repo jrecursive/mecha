@@ -1,5 +1,6 @@
 package mecha.vm;
 
+import java.lang.ref.*;
 import java.util.*;
 import java.util.logging.*;
 
@@ -241,7 +242,7 @@ public abstract class MVMFunction {
     }
     
     /*
-     * Scheduling and process management
+     * Place & route helpers
     */
     
     /*
