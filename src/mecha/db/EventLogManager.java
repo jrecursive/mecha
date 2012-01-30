@@ -19,21 +19,17 @@ public class EventLogManager {
         eventLogs = new ConcurrentHashMap<String, EventLog>();
     }
     
-    public synchronized EventLog createEventLogForWrite(String eventLogName) throws Exception {
+    public synchronized EventLog createEventLogForWrite(String eventLogName, 
+                                                        String eventLogFilename) throws Exception {
         EventLog eventLog = eventLogs.get(eventLogName);
         if (eventLog == null) {
-            String eventLogFilename = 
-                getEventLogBasePath() + "/" + 
-                HashUtils.sha1(eventLogName) + "." + 
-                System.currentTimeMillis() + "." + 
-                "eventlog";
             log.info(eventLogFilename);
             File f = new File(eventLogFilename);
             if (f.exists()) {
                 throw new Exception(eventLogFilename + " already exists!");
             }
             eventLog = new EventLog(eventLogName, eventLogFilename, getEventLogMode());
-            log.info(eventLogFilename + " opened");
+            log.info(eventLogName + ": " + eventLogFilename + " opened");
             eventLogs.put(eventLogName, eventLog);
         } else {
             throw new Exception ("eventLog already open!");
@@ -45,19 +41,31 @@ public class EventLogManager {
         return eventLogs.get(eventLogName);
     }
     
-    private String getEventLogBasePath() throws Exception {
+    public static String getEventLogBasePath() throws Exception {
         return Mecha.getConfig().getString("event-log-directory");
     }
 
-    private String getEventLogMode() throws Exception {
+    public static String getEventLogMode() throws Exception {
         return Mecha.getConfig().getString("event-log-mode");
     }
     
     public synchronized void shutdown() throws Exception {
         for(String eventLogName : eventLogs.keySet()) {
             EventLog eventLog = eventLogs.get(eventLogName);
+            log.info("shutdown: " + eventLogName + ": " + eventLog.getFilename() + ": close");
             eventLog.close();
         }
         eventLogs.clear();
+        log.info("event logs shutdown");
+    }
+    
+    public synchronized void recycle() throws Exception {
+        log.info("recycling event logs...");
+        for(String eventLogName : eventLogs.keySet()) {
+            EventLog eventLog = eventLogs.get(eventLogName);
+            log.info("shutdown: " + eventLogName + ": " + eventLog.getFilename() + ": recycle");
+            eventLog.recycle();
+        }
+        log.info("event logs recycled");
     }
 }

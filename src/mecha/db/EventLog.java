@@ -13,17 +13,18 @@ public class EventLog {
     
     final private String name;
     final private String path;
-    final private Slab slab;
+    final private String mode;
+    private Slab slab;
     
     public EventLog(String name, String path, String mode) throws Exception {
         this.name = name;
         this.path = path;
+        this.mode = mode;
         slab = new Slab(path, false, mode);
     }
     
     public void append(JSONObject event) throws Exception {
         long offset = slab.append(event.toString().getBytes());
-        slab.sync();
         log.info(path + " -> " + offset);
     }
     
@@ -31,4 +32,26 @@ public class EventLog {
         slab.close();
     }
     
+    public String getName() {
+        return name;
+    }
+    
+    public String getFilename() {
+        return path;
+    }
+    
+    public synchronized void recycle() throws Exception {
+        log.info("recycle: close: " + path);
+        slab.close();
+        slab = null;
+        
+        log.info("recycle: unlink: " + path);
+        File file = new File(path);
+        //file.unlink();
+        
+        log.info("reopen: " + path);
+        slab = new Slab(path, false, mode);
+        
+        log.info("recycle complete <" + path + ">");
+    }   
 }

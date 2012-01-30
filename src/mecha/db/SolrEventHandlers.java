@@ -6,6 +6,8 @@ import org.apache.solr.core.SolrEventListener;
 import org.apache.solr.common.util.NamedList;
 import org.apache.solr.search.SolrIndexSearcher;
 
+import mecha.Mecha;
+
 public class SolrEventHandlers implements SolrEventListener {
     final private static Logger log = 
         Logger.getLogger(SolrEventHandlers.class.getName());
@@ -21,13 +23,11 @@ public class SolrEventHandlers implements SolrEventListener {
     }
     
     public void postCommit() {
-        log.info("postCommit()");
-        /*
-         * TODO: synchronously flush & close current 
-         *  stored-but-not-indexed EventLog (as these
-         *  bucket / key pairs have now been successfully
-         *  persisted.)
-         *
-        */
+        try {
+            log.info("postCommit()");
+            Mecha.getEventLogManager().recycle();
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
     }
 }

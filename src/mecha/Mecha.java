@@ -25,6 +25,7 @@ public class Mecha {
     final private RiakConnector riakConnector;
     final private RiakRPC riakRPC;
     final private Channels channels;
+    final private EventLogManager eventLogManager;
     
     /*
      * startup & init
@@ -54,6 +55,9 @@ public class Mecha {
         log.info("* establishing riak link");
         riakRPC = new RiakRPC();
         introspectRiakConfig();
+        
+        log.info("* starting event log");
+        eventLogManager = new EventLogManager();
     
         log.info("* starting solr cores");
         Logger.getLogger("org.apache.solr").setLevel(Level.WARNING);
@@ -137,6 +141,10 @@ public class Mecha {
     
     public static MVM getMVM() {
         return get().mvm;
+    }
+    
+    public static EventLogManager getEventLogManager() {
+        return get().eventLogManager;
     }
     
     /*
