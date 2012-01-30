@@ -31,9 +31,24 @@
     "riak-config": { },
     
     ##
-    ## data-directory:  where leveldb object store files go
+    ## data-directory: where leveldb object store files go
     ## 
     "data-directory": "/mecha/obj",
+    
+    ##
+    ## log-directory: where mecha event logs go
+    ##
+    "event-log-directory": "/mecha/log",
+    
+    ##
+    ## event-log-mode: RandomAccessFile open mode for
+    ##  event logging;
+    ##
+    ## rw: read/write (buffered)
+    ## rws: read/write content + metadata synchronous
+    ## rwd: read/write content synchronous
+    ##
+    "event-log-mode": "rw",
     
     ##
     ## solr-home: directory where solr.xml exists

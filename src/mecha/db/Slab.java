@@ -264,7 +264,7 @@ public class Slab {
                         try {
                             SlabIteratorObject sib = queue.take();
                             // todo: react to boolean return value
-                            JSONObject obj = new JSONObject(new String(decompress(sib.obj)));
+                            JSONObject obj = new JSONObject(new String(sib.obj));
                             si.process(sib.slab, sib.fn, sib.offset, sib.recnum, obj);
                         } catch (java.lang.InterruptedException iex) {
                             break;
@@ -299,10 +299,7 @@ public class Slab {
         }
         
         log.info("waiting for queue to empty...");
-        
-        while(queue.size() > 0) {
-            Thread.sleep(250);
-        }
+        while(queue.size() > 0) Thread.sleep(25);
         
         log.info("finishing...");
         si.finish(this, filename);
@@ -311,33 +308,43 @@ public class Slab {
         double t_seconds = ( (t_end - t_st) / 1000.00 );
         double p_rate = ( (double) recnum ) / t_seconds;
         log.info("#/processed = " + recnum + " in " + t_seconds + " seconds (" + p_rate + " / sec)");
-
-        es.shutdownNow();
         
+        es.shutdownNow();
         return recnum;
     }
 
     public static void main(String args[]) throws Exception {
-        Slab slab = new Slab("/c/slabs/consolidated.research.slab");
-        byte[] testRecord = slab.get(0);
-        log.info("testRecord.length = " + testRecord.length);
-        String decompressedRecord = slab.getString(0);
-        log.info("decompressedRecord = " + decompressedRecord);
-        JSONObject jo = slab.getObject(0);
-        log.info("jo = " + jo.toString(4));
+        long t_st = System.currentTimeMillis();
+        Slab slab = new Slab("eventlog.test.slab", false, "rw");
+        JSONObject testObj = new JSONObject();
+        testObj.put("value", System.nanoTime());
+        byte[] bytez = testObj.toString().getBytes();
+        log.info("start write");
+        for(int i=0; i<1000; i++) {
+            long offset = slab.append(bytez);
+        }
+        log.info("end write");
+        slab.close();
+        log.info("slab close");
         
+        long t_elapsed = System.currentTimeMillis() - t_st;
+        log.info(t_elapsed + "ms elapsed");
+        
+        t_st = System.currentTimeMillis();
+        slab = new Slab("eventlog.test.slab", false, "r");
         int processed = 
             slab.iterate2(new SlabIterator() {
                 public boolean process(Slab slab, String fn, long offset, int recnum, JSONObject jo) throws Exception {
-                    //log.info("[" + recnum + "] fn = " + fn + ", offset = " + offset + " jo.name = " + jo.getString("name"));
+                    //log.info("[" + recnum + "] fn = " + fn + ", offset = " + offset);
                     return true;
                 }
-                
-            public void finish(Slab slab, String fn) throws Exception {
-            }
-            
+                public void finish(Slab slab, String fn) throws Exception {
+                    log.info("test iterator done!");
+                }
             });
         slab.close();
+        t_elapsed = System.currentTimeMillis() - t_st;
+        log.info(t_elapsed + "ms elapsed");
     }
 }
 
