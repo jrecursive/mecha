@@ -6,107 +6,59 @@ import java.util.logging.*;
 import java.io.*;
 import java.net.*;
 
+import mecha.Mecha;
+import mecha.vm.channels.*;
 import mecha.json.*;
-
 import mecha.vm.*;
 
 public class ChannelModule extends MVMModule {
     final private static Logger log = 
         Logger.getLogger(ChannelModule.class.getName());
 
-    public ChannelModule() throws Exception {
-        super();
-    }
+    public ChannelModule() throws Exception { super(); }
         
-    public void moduleLoad() throws Exception {
-        log.info("moduleLoad()");
-    }
+    public void moduleLoad() throws Exception { }
     
-    public void moduleUnload() throws Exception {
-        log.info("moduleunLoad()");
-    }
+    public void moduleUnload() throws Exception { }
     
     public class Subscribe extends MVMFunction {
         public Subscribe(String refId, MVMContext ctx, JSONObject config) throws Exception {
             super(refId, ctx, config);
-            log.info("constructor: " + config.toString(2));
+            String channel = config.getString("channel");
+            PubChannel pubChannel = 
+                Mecha.getChannels().getOrCreateChannel(channel);
+            pubChannel.addMember(ctx.getClient());
+            ctx.getClient().addSubscription(channel);
         }
-        
-        public void onControlMessage(JSONObject msg) throws Exception {
-            log.info("Control message: " + msg.toString(2));
-        }
-
-        public void onDataMessage(JSONObject msg) throws Exception {
-            log.info("Data message: " + msg.toString(2));
-        }
-        
-        public void onStartEvent(JSONObject msg) throws Exception {
-            log.info("onStartEvent: " + msg.toString(2));
-        }
-        
-        public void onCancelEvent(JSONObject msg) throws Exception {
-            log.info("onCancelEvent: " + msg.toString(2));
-        }
-        
-        public void onDoneEvent(JSONObject msg) throws Exception {
-            log.info("onDoneEvent: " + msg.toString(2));
-        }
-
     }
 
     public class Unsubscribe extends MVMFunction {
         public Unsubscribe(String refId, MVMContext ctx, JSONObject config) throws Exception {
             super(refId, ctx, config);
-            log.info("constructor: " + config.toString(2));
+            String channel = config.getString("channel");
+            PubChannel pubChannel = 
+                Mecha.getChannels().getOrCreateChannel(channel);
+            if (pubChannel == null) {
+                return;
+            } else {
+                pubChannel.removeMember(ctx.getClient());
+                ctx.getClient().removeSubscription(channel);
+            }
         }
-        
-        public void onControlMessage(JSONObject msg) throws Exception {
-            log.info("Control message: " + msg.toString(2));
-        }
-
-        public void onDataMessage(JSONObject msg) throws Exception {
-            log.info("Data message: " + msg.toString(2));
-        }
-        
-        public void onStartEvent(JSONObject msg) throws Exception {
-            log.info("onStartEvent: " + msg.toString(2));
-        }
-        
-        public void onCancelEvent(JSONObject msg) throws Exception {
-            log.info("onCancelEvent: " + msg.toString(2));
-        }
-        
-        public void onDoneEvent(JSONObject msg) throws Exception {
-            log.info("onDoneEvent: " + msg.toString(2));
-        }
-
     }
 
     public class Publish extends MVMFunction {
         public Publish(String refId, MVMContext ctx, JSONObject config) throws Exception {
             super(refId, ctx, config);
-            log.info("constructor: " + config.toString(2));
+            String channel = config.getString("channel");
+            JSONObject data = config.getJSONObject("data");
+            PubChannel pubChannel = 
+                Mecha.getChannels().getChannel(channel);
+            if (pubChannel == null) {
+                return;
+            } else {
+                pubChannel.send(data);
+            }
         }
-        
-        public void onControlMessage(JSONObject msg) throws Exception {
-            log.info("Control message: " + msg.toString(2));
-        }
-
-        public void onDataMessage(JSONObject msg) throws Exception {
-            log.info("Data message: " + msg.toString(2));
-        }
-        
-        public void onStartEvent(JSONObject msg) throws Exception {
-            log.info("onStartEvent: " + msg.toString(2));
-        }
-        
-        public void onCancelEvent(JSONObject msg) throws Exception {
-            log.info("onCancelEvent: " + msg.toString(2));
-        }
-        
-        public void onDoneEvent(JSONObject msg) throws Exception {
-            log.info("onDoneEvent: " + msg.toString(2));
-        }
-
     }
 }
