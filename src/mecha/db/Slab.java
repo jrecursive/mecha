@@ -87,7 +87,7 @@ public class Slab {
         return jo;
     }
 
-    public synchronized long append(byte[] record) throws Exception {
+    public long append(byte[] record) throws Exception {
         byte[] cRec;
         long key = raf.length();
         raf.seek(key);
@@ -133,7 +133,7 @@ public class Slab {
         raf.writeUTF(s);
     }
 
-    public synchronized void close() throws Exception {
+    public void close() throws Exception {
         raf.close();
     }
 
@@ -141,7 +141,7 @@ public class Slab {
         return raf.length();
     }
 
-    public synchronized void sync() throws Exception {
+    public void sync() throws Exception {
         raf.getChannel().force(false);
     }
     

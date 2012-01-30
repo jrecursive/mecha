@@ -30,13 +30,6 @@ public class Bucket {
     final private SolrServer server;
     final private LinkedBlockingQueue<SolrInputDocument> solrDocQueue;
     
-    /*
-     * after-object-store-but-before-index-commit log
-    */
-    final private String eventLogName;
-    final private String eventLogFilename;
-    final private EventLog eventLog;
-    
     public Bucket(String partition, 
                   byte[] bucket, 
                   String dataDir,
@@ -45,45 +38,10 @@ public class Bucket {
                     throws Exception {
         this.partition = partition;
         this.bucket = bucket;
-        this.bucketStr = new String(bucket);
+        this.bucketStr = (new String(bucket)).trim();
         this.dataDir = dataDir;
         this.server = server;
         this.solrDocQueue = solrDocQueue;
-        
-        eventLogName = 
-            partition + "/" +
-            bucketStr;
-        eventLogFilename = 
-            EventLogManager.getEventLogBasePath() + "/" + 
-                partition + "." +
-                bucketStr + ".eventlog";
-        log.info("checking event log: " + eventLogFilename);
-        File file = new File(eventLogFilename);
-        if (file.exists()) {
-            log.info("replaying event log <" + eventLogFilename + ">");
-            Slab slab = new Slab(eventLogFilename, false, "r");
-            int processed = 
-                slab.iterate2(new Slab.SlabIterator() {
-                    public boolean process(Slab slab, String fn, long offset, int recnum, JSONObject entry) throws Exception {
-                        log.info("[" + recnum + "] fn = " + fn + ", offset = " + offset + ": " + entry.toString());
-                        /*
-                         * TODO: actually get object from object store & reindex
-                        */
-                        return true;
-                    }
-                    public void finish(Slab slab, String fn) throws Exception {
-                        log.info("event log replay complete");
-                    }
-                });
-            slab.close();
-            log.info(file + ": unlink");
-            //file.unlink();
-        }
-        
-        log.info("opening event log: " + eventLogFilename);
-        eventLog = Mecha.getEventLogManager().createEventLogForWrite(
-            eventLogName,
-            eventLogFilename);
         
         Options options = new Options()
             .createIfMissing(true)
@@ -147,21 +105,7 @@ public class Bucket {
              * Because the object is not deleted, write to object store.
             */
             db.put(getWriteOptions(), key, value);
-            
-            /*
-             * Objects written to object store but that remain
-             *  in memory for Solr indexing.  Solr callback will
-             *  call back to recycle this bucket's event log
-             *  upon successful commit.
-             *
-             * TODO: lower overhead
-             *
-            */
-            JSONObject logEntry = new JSONObject();
-            logEntry.put("b", bucketStr);
-            logEntry.put("k", new String(key));
-            eventLog.append(logEntry);
-            
+                        
             String id = makeid(key);
             
             SolrInputDocument doc = new SolrInputDocument();

@@ -40,14 +40,14 @@ public class EventLog {
         return path;
     }
     
-    public synchronized void recycle() throws Exception {
+    public void recycle() throws Exception {
         log.info("recycle: close: " + path);
         slab.close();
         slab = null;
         
         log.info("recycle: unlink: " + path);
         File file = new File(path);
-        //file.unlink();
+        file.delete();
         
         log.info("reopen: " + path);
         slab = new Slab(path, false, mode);

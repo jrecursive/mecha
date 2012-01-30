@@ -19,8 +19,9 @@ public class EventLogManager {
         eventLogs = new ConcurrentHashMap<String, EventLog>();
     }
     
-    public synchronized EventLog createEventLogForWrite(String eventLogName, 
+    public EventLog createEventLogForWrite(String eventLogName, 
                                                         String eventLogFilename) throws Exception {
+        log.info("\n\ncreateEventLogForWrite\n\n" + eventLogName + " -> " + eventLogFilename);
         EventLog eventLog = eventLogs.get(eventLogName);
         if (eventLog == null) {
             log.info(eventLogFilename);
@@ -31,8 +32,6 @@ public class EventLogManager {
             eventLog = new EventLog(eventLogName, eventLogFilename, getEventLogMode());
             log.info(eventLogName + ": " + eventLogFilename + " opened");
             eventLogs.put(eventLogName, eventLog);
-        } else {
-            throw new Exception ("eventLog already open!");
         }
         return eventLog;
     }
@@ -49,7 +48,7 @@ public class EventLogManager {
         return Mecha.getConfig().getString("event-log-mode");
     }
     
-    public synchronized void shutdown() throws Exception {
+    public void shutdown() throws Exception {
         for(String eventLogName : eventLogs.keySet()) {
             EventLog eventLog = eventLogs.get(eventLogName);
             log.info("shutdown: " + eventLogName + ": " + eventLog.getFilename() + ": close");
@@ -59,7 +58,7 @@ public class EventLogManager {
         log.info("event logs shutdown");
     }
     
-    public synchronized void recycle() throws Exception {
+    public void recycle() throws Exception {
         log.info("recycling event logs...");
         for(String eventLogName : eventLogs.keySet()) {
             EventLog eventLog = eventLogs.get(eventLogName);
