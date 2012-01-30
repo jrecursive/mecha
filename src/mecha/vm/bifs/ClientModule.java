@@ -36,13 +36,11 @@ public class ClientModule extends MVMModule {
         public void onControlMessage(JSONObject msg) throws Exception {
             msg.put("$type", "control");
             getContext().send(msg);
-            log.info("x control msg " + msg.toString());
         }
 
         public void onDataMessage(JSONObject msg) throws Exception {
             msg.put("$type", "data");
             getContext().send(msg);
-            log.info("x data msg " + msg.toString());
         }
     }
 }

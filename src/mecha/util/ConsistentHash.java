@@ -4,13 +4,16 @@ import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.util.*;
 
+/*
+ * <T> Type of items to consistently hash over. ;)
+*/
 public class ConsistentHash<T> {
-    private final int numberOfReplicas;
-    private final SortedMap<BigInteger, T> ring =
+    final private int numberOfReplicas;
+    final private SortedMap<BigInteger, T> ring =
             new TreeMap<BigInteger, T>();
 
     public ConsistentHash(int numberOfReplicas,
-                    Collection<T> nodes) throws Exception {
+                          Collection<T> nodes) throws Exception {
         this.numberOfReplicas = numberOfReplicas;
         for (T node : nodes) {
             add(node);

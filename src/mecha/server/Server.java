@@ -140,7 +140,7 @@ public class Server implements WebSocketHandler {
                 if (pchan == null) {
                     connection.send("ERR :no such channel");
                 } else {
-                    pchan.members.remove(cl);
+                    pchan.removeMember(cl);
                     cl.removeSubscription(chan);
                     connection.send("OK");
                 }
