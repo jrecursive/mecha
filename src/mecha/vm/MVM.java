@@ -245,17 +245,13 @@ public class MVM {
     /*
      * Dynamic invoker.  Returns the assigned refId.
     */
-    private String dynamicInvoke(MVMContext ctx, 
+    private void dynamicInvoke(MVMContext ctx, 
                                  String verb, 
                                  JSONObject ast) throws Exception {
-        String refId = Mecha.guid(MVM.class);
-        log.info("dynamicInvoke: refId: " + refId + " ctx: " + ctx + 
-            " verb: " + verb + " ast: " + ast.toString(2));
-        newFunctionInstance(ctx, verb, refId, ast);
-        /*
-         * TODO: auto-wire & trigger.
-        */
-        return refId;
+        String sourceRefId = nativeAssignment(ctx, "$dyn$source", ast);
+        execute(ctx, "$dyn$sink = (client-sink)");
+        execute(ctx, "$dyn$source -> $dyn$sink");
+        execute(ctx, "$dyn$source ! (start)");
     }
     
     /*
@@ -306,8 +302,8 @@ public class MVM {
                               0.0);
         MVMFunction sourceFunction = ctx.getFunRef(fromRefId);
         MVMFunction targetFunction = ctx.getFunRef(toRefId);
-        sourceFunction.addOutgoingChannel(Mecha.getChannels().getOrCreateChannel(fromRefId));
-        targetFunction.addIncomingChannel(Mecha.getChannels().getOrCreateChannel(toRefId));
+        sourceFunction.addOutgoingChannel(Mecha.getChannels().getOrCreateChannel(toRefId));
+        targetFunction.addIncomingChannel(Mecha.getChannels().getOrCreateChannel(fromRefId));
         return edgeRefId;
     }
     

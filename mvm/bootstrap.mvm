@@ -7,3 +7,5 @@ register namespace:$ module-class:mecha.vm.bifs.RiakClientModule verbs:(get:Get 
 
 register namespace:$ module-class:mecha.vm.bifs.ChannelModule verbs:(subscribe:Subscribe unsubscribe:Unsubscribe publish:Publish)
 
+register namespace:$ module-class:mecha.vm.bifs.ClientModule verbs:(client-sink:ClientSink)
+

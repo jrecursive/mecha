@@ -52,6 +52,11 @@ public abstract class MVMFunction {
     final private MVMContext context;
     
     /*
+     * Config passed to constructor.
+    */
+    final private JSONObject config;
+    
+    /*
      * refId: a cluster-wide (globally) unique identifier
      *  for this MVMFunction instance.
     */
@@ -84,6 +89,7 @@ public abstract class MVMFunction {
                        MVMContext context, 
                        JSONObject config) throws Exception {
         this.context = context;
+        this.config = config;
         this.refId = refId;
         
         incomingChannels = new HashSet<PubChannel>();
@@ -116,6 +122,10 @@ public abstract class MVMFunction {
     
     public MVMContext getContext() {
         return context;
+    }
+    
+    public JSONObject getConfig() {
+        return config;
     }
     
     /*
@@ -161,6 +171,7 @@ public abstract class MVMFunction {
      * Broadcast a data message to all outgoingChannels.
     */
     public void broadcastDataMessage(JSONObject msg) throws Exception {
+        log.info(outgoingChannels.size() + " outgoing channels");
         for(PubChannel channel : outgoingChannels) {
             log.info(channel + ": " + msg.toString());
             channel.send(msg);

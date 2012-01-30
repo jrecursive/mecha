@@ -33,7 +33,6 @@ public class ChannelModule extends MVMModule {
         }
         
         public void onControlMessage(JSONObject msg) throws Exception {
-            super.control(msg);
             log.info("Control message: " + msg.toString(2));
         }
 
@@ -62,7 +61,6 @@ public class ChannelModule extends MVMModule {
         }
         
         public void onControlMessage(JSONObject msg) throws Exception {
-            super.control(msg);
             log.info("Control message: " + msg.toString(2));
         }
 
@@ -91,7 +89,6 @@ public class ChannelModule extends MVMModule {
         }
         
         public void onControlMessage(JSONObject msg) throws Exception {
-            super.control(msg);
             log.info("Control message: " + msg.toString(2));
         }
 
