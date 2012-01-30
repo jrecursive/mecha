@@ -32,12 +32,31 @@ public class RiakClientModule extends MVMModule {
             log.info("constructor: " + config.toString(2));
         }
         
-        public void control(JSONObject msg) throws Exception {
+        public void onControlMessage(JSONObject msg) throws Exception {
             log.info("Control message: " + msg.toString(2));
         }
 
-        public void data(JSONObject msg) throws Exception {
+        public void onDataMessage(JSONObject msg) throws Exception {
             log.info("Data message: " + msg.toString(2));
+        }
+        
+        public void onStartEvent(JSONObject msg) throws Exception {
+            log.info("onStartEvent: " + msg.toString(2));
+            
+            /*
+             * .. xxx message passing test code
+            */
+            JSONObject newMsg = new JSONObject();
+            newMsg.put("welcome", "to the new database");
+            broadcastDataMessage(newMsg);
+        }
+        
+        public void onCancelEvent(JSONObject msg) throws Exception {
+            log.info("onCancelEvent: " + msg.toString(2));
+        }
+        
+        public void onDoneEvent(JSONObject msg) throws Exception {
+            log.info("onDoneEvent: " + msg.toString(2));
         }
     }
     
@@ -47,13 +66,26 @@ public class RiakClientModule extends MVMModule {
             log.info("constructor: " + config.toString(2));
         }
         
-        public void control(JSONObject msg) throws Exception {
+        public void onControlMessage(JSONObject msg) throws Exception {
             log.info("Control message: " + msg.toString(2));
         }
 
-        public void data(JSONObject msg) throws Exception {
+        public void onDataMessage(JSONObject msg) throws Exception {
             log.info("Data message: " + msg.toString(2));
         }
+        
+        public void onStartEvent(JSONObject msg) throws Exception {
+            log.info("onStartEvent: " + msg.toString(2));
+        }
+        
+        public void onCancelEvent(JSONObject msg) throws Exception {
+            log.info("onCancelEvent: " + msg.toString(2));
+        }
+        
+        public void onDoneEvent(JSONObject msg) throws Exception {
+            log.info("onDoneEvent: " + msg.toString(2));
+        }
+
     }
     
     public class Delete extends MVMFunction {
@@ -62,12 +94,25 @@ public class RiakClientModule extends MVMModule {
             log.info("constructor: " + config.toString(2));
         }
         
-        public void control(JSONObject msg) throws Exception {
+        public void onControlMessage(JSONObject msg) throws Exception {
             log.info("Control message: " + msg.toString(2));
         }
 
-        public void data(JSONObject msg) throws Exception {
+        public void onDataMessage(JSONObject msg) throws Exception {
             log.info("Data message: " + msg.toString(2));
         }
+        
+        public void onStartEvent(JSONObject msg) throws Exception {
+            log.info("onStartEvent: " + msg.toString(2));
+        }
+        
+        public void onCancelEvent(JSONObject msg) throws Exception {
+            log.info("onCancelEvent: " + msg.toString(2));
+        }
+        
+        public void onDoneEvent(JSONObject msg) throws Exception {
+            log.info("onDoneEvent: " + msg.toString(2));
+        }
+
     }
 }

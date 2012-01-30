@@ -21,6 +21,12 @@ public class MVMContext {
         Logger.getLogger(MVMContext.class.getName());
 
     final private ConcurrentHashMap<String, Object> vars;
+    
+    /*
+     * Maps vertexRefId values to a weak reference to an MVMFunction instance.
+    */
+    final private ConcurrentHashMap<String, WeakReference<MVMFunction>> funRefs;
+    
     final private WeakReference<Client> clientRef;
     
     /*
@@ -40,6 +46,7 @@ public class MVMContext {
     public MVMContext(Client client) throws Exception {
         clientRef = new WeakReference<Client>(client);
         vars = new ConcurrentHashMap<String, Object>();
+        funRefs = new ConcurrentHashMap<String, WeakReference<MVMFunction>>();
         flow = new Flow();
         refId = Mecha.guid(MVMContext.class);
         
@@ -71,6 +78,18 @@ public class MVMContext {
     
     public void clearVars() {
         vars.clear();
+    }
+    
+    public MVMFunction getFunRef(String vertexRefId) throws Exception {
+        return funRefs.get(vertexRefId).get();
+    }
+    
+    public void putFunRef(String vertexRefId, MVMFunction inst) throws Exception {
+        funRefs.put(vertexRefId, new WeakReference<MVMFunction>(inst));
+    }
+    
+    public void clearFunRefs() {
+        funRefs.clear();
     }
     
     /*
@@ -239,6 +258,7 @@ public class MVMContext {
     public void reset() throws Exception {
         resetJetlangPrimitives();
         clearVars();
+        clearFunRefs();
         clearFlow();
     }
     

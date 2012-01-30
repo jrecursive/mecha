@@ -31,6 +31,28 @@ public class ChannelModule extends MVMModule {
             super(refId, ctx, config);
             log.info("constructor: " + config.toString(2));
         }
+        
+        public void onControlMessage(JSONObject msg) throws Exception {
+            super.control(msg);
+            log.info("Control message: " + msg.toString(2));
+        }
+
+        public void onDataMessage(JSONObject msg) throws Exception {
+            log.info("Data message: " + msg.toString(2));
+        }
+        
+        public void onStartEvent(JSONObject msg) throws Exception {
+            log.info("onStartEvent: " + msg.toString(2));
+        }
+        
+        public void onCancelEvent(JSONObject msg) throws Exception {
+            log.info("onCancelEvent: " + msg.toString(2));
+        }
+        
+        public void onDoneEvent(JSONObject msg) throws Exception {
+            log.info("onDoneEvent: " + msg.toString(2));
+        }
+
     }
 
     public class Unsubscribe extends MVMFunction {
@@ -38,6 +60,28 @@ public class ChannelModule extends MVMModule {
             super(refId, ctx, config);
             log.info("constructor: " + config.toString(2));
         }
+        
+        public void onControlMessage(JSONObject msg) throws Exception {
+            super.control(msg);
+            log.info("Control message: " + msg.toString(2));
+        }
+
+        public void onDataMessage(JSONObject msg) throws Exception {
+            log.info("Data message: " + msg.toString(2));
+        }
+        
+        public void onStartEvent(JSONObject msg) throws Exception {
+            log.info("onStartEvent: " + msg.toString(2));
+        }
+        
+        public void onCancelEvent(JSONObject msg) throws Exception {
+            log.info("onCancelEvent: " + msg.toString(2));
+        }
+        
+        public void onDoneEvent(JSONObject msg) throws Exception {
+            log.info("onDoneEvent: " + msg.toString(2));
+        }
+
     }
 
     public class Publish extends MVMFunction {
@@ -45,5 +89,27 @@ public class ChannelModule extends MVMModule {
             super(refId, ctx, config);
             log.info("constructor: " + config.toString(2));
         }
+        
+        public void onControlMessage(JSONObject msg) throws Exception {
+            super.control(msg);
+            log.info("Control message: " + msg.toString(2));
+        }
+
+        public void onDataMessage(JSONObject msg) throws Exception {
+            log.info("Data message: " + msg.toString(2));
+        }
+        
+        public void onStartEvent(JSONObject msg) throws Exception {
+            log.info("onStartEvent: " + msg.toString(2));
+        }
+        
+        public void onCancelEvent(JSONObject msg) throws Exception {
+            log.info("onCancelEvent: " + msg.toString(2));
+        }
+        
+        public void onDoneEvent(JSONObject msg) throws Exception {
+            log.info("onDoneEvent: " + msg.toString(2));
+        }
+
     }
 }

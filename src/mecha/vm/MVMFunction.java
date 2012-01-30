@@ -146,7 +146,7 @@ public abstract class MVMFunction {
     }
     
     public void addOutgoingChannel(PubChannel channel) {
-        incomingChannels.add(channel);
+        outgoingChannels.add(channel);
     }
     
     public Set<PubChannel> getIncomingChannels() {
@@ -160,19 +160,17 @@ public abstract class MVMFunction {
     /*
      * Broadcast a data message to all outgoingChannels.
     */
-    public void broadcastData(JSONObject msg) throws Exception {
+    public void broadcastDataMessage(JSONObject msg) throws Exception {
         for(PubChannel channel : outgoingChannels) {
+            log.info(channel + ": " + msg.toString());
             channel.send(msg);
         }
     }
     
     /*
      * Broadcast a control message to all outgoingChannels.
-     *
-     * 
-     *
     */
-    public void broadcastControl(JSONObject msg) throws Exception {
+    public void broadcastControlMessage(JSONObject msg) throws Exception {
         for(PubChannel channel : outgoingChannels) {
             PubChannel dataChannel = 
                 Mecha.getChannels().getChannel(
@@ -212,33 +210,78 @@ public abstract class MVMFunction {
     }
     
     /* 
-     * Override control, data, and info to handle each
+     * Override control & data to handle each
      *  message type.
     */
+    
+    public void onControlMessage(JSONObject msg) throws Exception {
+        log.info("generic onControlMessage: msg = " + msg.toString(2));
+    }
+    
     public void control(JSONObject msg) throws Exception {
+        /*
+         * detect & intercept 'native' control messages:
+         *  start
+         *  cancel
+         *  done
+        */
         log.info("<control> " + this.getClass().getName() + ": " +
             msg.toString(2));
+        String cmd = msg.getString("$");
+        if (cmd.equals("start")) {
+            start(msg);
+        
+        } else if (cmd.equals("cancel")) {
+            cancel(msg);
+        
+        } else if (cmd.equals("done")) {
+            done(msg);
+        
+        } else {
+            onControlMessage(msg);
+        }
     }
-
+    
+    public void onDataMessage(JSONObject msg) throws Exception {
+        log.info("generic onDataMessage: msg = " + msg.toString(2));
+    }
+    
     public void data(JSONObject msg) throws Exception {
         log.info("<data> " + this.getClass().getName() + ": " +
             msg.toString(2));
-    }
-
-    public void info(JSONObject msg) throws Exception {
-        log.info("info: " + msg.toString(2));
+        onDataMessage(msg);
     }
     
     /*
      * Override start & cancel to handle "baked-in" control
      *  operations.
     */
-    public void start() throws Exception {
-        log.info("start");
+    
+    public void onStartEvent(JSONObject msg) throws Exception {
+        log.info("generic onStartEvent: msg = " + msg.toString(2));
     }
     
-    public void cancel() throws Exception {
-        log.info("cancel");
+    public void start(JSONObject msg) throws Exception {
+        log.info("start: " + msg.toString(2));
+        onStartEvent(msg);
+    }
+    
+    public void onCancelEvent(JSONObject msg) throws Exception {
+        log.info("generic onCancelEvent: msg = " + msg.toString(2));
+    }
+    
+    public void cancel(JSONObject msg) throws Exception {
+        log.info("cancel: " + msg.toString(2));
+        onCancelEvent(msg);
+    }
+    
+    public void onDoneEvent(JSONObject msg) throws Exception {
+        log.info("generic onDoneEvent: msg = " + msg.toString(2));
+    }
+    
+    public void done(JSONObject msg) throws Exception {
+        log.info("done: " + msg.toString(2));
+        onDoneEvent(msg);
     }
     
     /*

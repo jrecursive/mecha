@@ -304,6 +304,10 @@ public class MVM {
                               toRefId,
                               Flow.FLOW_EDGE_REL,
                               0.0);
+        MVMFunction sourceFunction = ctx.getFunRef(fromRefId);
+        MVMFunction targetFunction = ctx.getFunRef(toRefId);
+        sourceFunction.addOutgoingChannel(Mecha.getChannels().getOrCreateChannel(fromRefId));
+        targetFunction.addIncomingChannel(Mecha.getChannels().getOrCreateChannel(toRefId));
         return edgeRefId;
     }
     
@@ -347,6 +351,7 @@ public class MVM {
                                 vertexRefId, 
                                 ast);
         ctx.startFunctionTask(vertexRefId, inst);
+        ctx.putFunRef(vertexRefId, inst);
         
         /*
          * TODO: create MVMFunction instance,
