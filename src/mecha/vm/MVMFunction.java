@@ -209,15 +209,35 @@ public abstract class MVMFunction {
             dataChannel.send(msg);
         }
     }
+    
+    /*
+     * Broadcast a control message to all incomingChannels.
+    */
+    public void broadcastControlMessageUpstream(JSONObject msg) throws Exception {
+        for(PubChannel channel : incomingChannels) {
+            PubChannel dataChannel = 
+                Mecha.getChannels().getChannel(
+                    deriveControlChannelName(channel.getName()));
+            dataChannel.send(msg);
+        }
+    }
 
     public void broadcastDone() throws Exception {
-        JSONObject msg = new JSONObject();
-        broadcastDone(msg);
+        broadcastDone(new JSONObject());
+    }
+    
+    public void broadcastDoneUpstream() throws Exception {
+        broadcastDoneUpstream(new JSONObject());
     }
     
     public void broadcastDone(JSONObject msg) throws Exception {
         msg.put("$", "done");
         broadcastControlMessage(msg);
+    }
+    
+    public void broadcastDoneUpstream(JSONObject msg) throws Exception {
+        msg.put("$", "done");
+        broadcastControlMessageUpstream(msg);
     }
 
     /*
@@ -331,6 +351,10 @@ public abstract class MVMFunction {
     
     public void onDoneEvent(JSONObject msg) throws Exception {
         //log.info("generic onDoneEvent: msg = " + msg.toString(2));
+        /*
+         * Default behavior is to pass "done" messages through.
+        */
+        broadcastDone(msg);
     }
     
     public void done(JSONObject msg) throws Exception {

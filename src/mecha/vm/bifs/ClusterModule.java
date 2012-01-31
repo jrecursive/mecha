@@ -21,11 +21,9 @@ public class ClusterModule extends MVMModule {
     }
     
     public void moduleLoad() throws Exception {
-        log.info("moduleLoad()");   
     }
     
     public void moduleUnload() throws Exception {
-        log.info("moduleUnload()");
     }
     
     public class WithCoverage extends MVMFunction {
@@ -43,8 +41,6 @@ public class ClusterModule extends MVMModule {
             final Map<String, Set<String>> coveragePlan = 
                 Mecha.getRiakRPC().getCoverage(bucket);
             
-            log.info("coveragePlan = " + coveragePlan);
-                        
             for(String host : coveragePlan.keySet()) {
                 for(String partition : coveragePlan.get(host)) {
                     String proxyVar = HashUtils.sha1(Mecha.guid(WithCoverage.class)) + "-" + host;
@@ -55,7 +51,6 @@ public class ClusterModule extends MVMModule {
                     doAstStr = doAstStr.replaceAll("<<partition>>", partition);
                     JSONObject doAst = new JSONObject(doAstStr);
                     Mecha.getMVM().nativeAssignment(getContext(), proxyVar, doAst);
-                    log.info(getRefId() + ": " + proxyVar + " -> " + thisInstVar + " =>> " + doAst.toString());
                     Mecha.getMVM().nativeFlowAddEdge(getContext(), proxyVar, thisInstVar);
                 }
             }
@@ -66,7 +61,6 @@ public class ClusterModule extends MVMModule {
         */
         public void onStartEvent(JSONObject msg) throws Exception {
             for(String proxyVar : proxyVars) {
-                log.info("onStartEvent: " + proxyVar + " ! " + msg.toString(2));
                 Mecha.getMVM().nativeControlMessage(getContext(), proxyVar, msg);
             }
         }
@@ -75,7 +69,6 @@ public class ClusterModule extends MVMModule {
          * Forward all data messages.
         */
         public void onDataMessage(JSONObject msg) throws Exception {
-            log.info("Forwarding: " + msg.toString());
             broadcastDataMessage(msg);
         }
         
