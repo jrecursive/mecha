@@ -9,6 +9,7 @@ import java.util.logging.*;
 import org.apache.solr.client.solrj.response.QueryResponse;
 import org.apache.solr.common.params.ModifiableSolrParams;
 import org.apache.solr.common.SolrDocument;
+import org.apache.solr.client.solrj.response.FacetField;
 
 import mecha.Mecha;
 import mecha.json.*;
@@ -47,6 +48,10 @@ public class SolrModule extends MVMModule {
             /*
              * Rewrite scored queries into filter queries.
             */
+            if (!selectParams.has("q") &&
+                !selectParams.has("fq")) {
+                selectParams.put("q", "*:*");
+            }
             if (selectParams.has("q") &&
                 !selectParams.has("fq")) {
                 selectParams.put("fq", selectParams.get("q"));
@@ -74,6 +79,25 @@ public class SolrModule extends MVMModule {
                 int batchCount = 0;
                 QueryResponse res = 
                     Mecha.getSolrManager().getIndexServer().query(solrParams);
+                
+                /*
+                 * Facet results.
+                */
+                if (res.getFacetFields() != null) {
+                    for (FacetField facetField : res.getFacetFields()) {
+                        for (FacetField.Count facetFieldCount : facetField.getValues()) {
+                            JSONObject msg = new JSONObject();
+                            msg.put("field", facetField.getName());
+                            msg.put("value", facetFieldCount.getName());
+                            msg.put("count", facetFieldCount.getCount());
+                            broadcastDataMessage(msg);
+                        }
+                    }
+                }
+                
+                /*
+                 * Document results.
+                */  
                 rawFound = res.getResults().getNumFound();
                 if (res.getResults().getNumFound() == 0) break;
                 if (rowLimit == -1) {
