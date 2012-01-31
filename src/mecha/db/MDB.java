@@ -235,8 +235,12 @@ public class MDB {
     /*
      * helpers
     */
+    
+    public Bucket getBucket(String partition, String bucket) throws Exception {
+        return getBucket(partition, bucket.getBytes());
+    }
 
-    private Bucket getBucket(String partition, byte[] bucket) throws Exception {
+    public Bucket getBucket(String partition, byte[] bucket) throws Exception {
         if (null == partitionDirs.get(partition)) start(partition);
         String b = new String(bucket);
         Map<String, Bucket> bucketMap = partitionBuckets.get(partition);

@@ -11,3 +11,5 @@ register namespace:$ module-class:mecha.vm.bifs.ClientModule verbs:(client-sink:
 
 register namespace:$ module-class:mecha.vm.bifs.SolrModule verbs:(solr-select:Select)
 
+register namespace:$ module-class:mecha.vm.bifs.MDBModule verbs:(materialize-pbk-stream:MaterializePBKStream)
+
