@@ -13,3 +13,5 @@ register namespace:$ module-class:mecha.vm.bifs.SolrModule verbs:(solr-select:Se
 
 register namespace:$ module-class:mecha.vm.bifs.MDBModule verbs:(materialize-pbk-stream:MaterializePBKStream)
 
+register namespace:$ module-class:mecha.vm.bifs.ETLModule verbs:(extract:Extract extract-riak-value:ExtractRiakValue)
+
