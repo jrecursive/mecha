@@ -283,7 +283,7 @@ public class MVM {
      * Returns a cluster-wide (globally) unique refId.
      *
     */
-    private String nativeFlowAddEdge(MVMContext ctx, String from, String to) throws Exception {
+    public String nativeFlowAddEdge(MVMContext ctx, String from, String to) throws Exception {
         //log.info("nativeFlowAddEdge: from: " + from + " to: " + to);
         
         String fromRefId = ctx.<String>get(from);
@@ -314,7 +314,7 @@ public class MVM {
      * channel: channel name (control channel name will be automatically
      *  derived).
     */
-    private void nativeControlMessage(MVMContext ctx, String channel, JSONObject msg) throws Exception {
+    public void nativeControlMessage(MVMContext ctx, String channel, JSONObject msg) throws Exception {
         String resolvedChannel = ctx.resolveAssignmentToRefId(channel);
         String controlChannelName = MVMFunction.deriveControlChannelName(resolvedChannel);
         //log.info("<" + controlChannelName + "> ! " + msg.toString(2));
@@ -325,7 +325,7 @@ public class MVM {
     /*
      * Perform "a = (expr ...)" assignment to ctx.
     */
-    private String nativeAssignment(MVMContext ctx, String var, JSONObject ast) throws Exception {
+    public String nativeAssignment(MVMContext ctx, String var, JSONObject ast) throws Exception {
         //log.info("nativeAssignment: var: " + var + " ast: " + ast);
         
         String vertexRefId = Mecha.guid(Vertex.class);
@@ -348,6 +348,12 @@ public class MVM {
                                 ast);
         ctx.startFunctionTask(vertexRefId, inst);
         ctx.putFunRef(vertexRefId, inst);
+        
+        /*
+         * Trigger MVMFunction "onPostAssignment" event
+         *  generally used for self-rewriting functions.
+        */
+        inst.postAssignment(ctx, var, ast);
         
         /*
          * TODO: create MVMFunction instance,

@@ -146,6 +146,10 @@ public abstract class MVMFunction {
         return config;
     }
     
+    public String getRefId() {
+        return refId;
+    }
+    
     /*
      * Channels
     */
@@ -236,6 +240,16 @@ public abstract class MVMFunction {
     }
     
     /*
+     * Post-assignnment event.
+    */
+    public void onPostAssignment(MVMContext ctx, String var, JSONObject ast) throws Exception {
+    }
+    
+    public void postAssignment(MVMContext ctx, String var, JSONObject ast) throws Exception {
+        onPostAssignment(ctx, var, ast);
+    }    
+    
+    /*
      * Jetlang message handlers.
     */
     protected Callback<JSONObject> getDataChannelCallback() throws Exception {
@@ -273,6 +287,9 @@ public abstract class MVMFunction {
         
         } else if (cmd.equals("done")) {
             done(msg);
+        
+        } else if (cmd.equals("ping")) {
+            log.info("pong");
         
         } else {
             onControlMessage(msg);
