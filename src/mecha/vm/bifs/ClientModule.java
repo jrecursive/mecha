@@ -42,5 +42,22 @@ public class ClientModule extends MVMModule {
             msg.put("$type", "data");
             getContext().send(msg);
         }
+        
+        public void onStartEvent(JSONObject msg) throws Exception {
+            msg.put("$type", "start");
+            getContext().send(msg);
+        }
+        
+        public void onCancelEvent(JSONObject msg) throws Exception {
+            msg.put("$type", "cancel");
+            getContext().send(msg);
+        }
+        
+        public void onDoneEvent(JSONObject msg) throws Exception {
+            msg.put("$type", "done");
+            getContext().send(msg);
+        }
+
+        
     }
 }

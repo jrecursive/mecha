@@ -47,7 +47,7 @@ public class Mecha {
     
     public static void main(String args[]) 
         throws Exception { }
-    
+        
     private Mecha() throws Exception {
         log.info("* starting channels");
         channels = new Channels();

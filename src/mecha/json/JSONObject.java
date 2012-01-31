@@ -76,6 +76,10 @@ public class JSONObject {
         }
     }
     
+    public void put(String field, long value) throws Exception {
+        put(field, new Long(value));
+    }
+    
     public void putJSONObject(String field, JSONObject jsonObj) throws Exception {
         obj.put(field, jsonObj._map());
     }
@@ -87,6 +91,10 @@ public class JSONObject {
     /*
      * misc
     */
+    
+    public void remove(String field) throws Exception {
+        obj.remove(field);
+    }
     
     public boolean has(String field) throws Exception {
         return obj.containsKey(field);

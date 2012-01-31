@@ -130,7 +130,7 @@ public class MVMContext {
     
     public void send(JSONObject msg) throws Exception {
         getClient().getChannel().send(msg);
-        log.info(msg.toString(2));
+        //log.info(msg.toString(2));
     }
     
     /*
@@ -162,7 +162,7 @@ public class MVMContext {
             }
     
             public void onMessage(String channel, JSONObject message) throws Exception {
-                log.info(channel + " -> " + message.toString(2));
+                //log.info(channel + " -> " + message.toString(2));
                 if (!channel.equals(mechaChannelName)) {
                     log.info("!! " + channel + " != " + mechaChannelName);
                 }

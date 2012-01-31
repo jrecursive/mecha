@@ -110,7 +110,7 @@ public class MVM {
             MVMParser mvmParser = new MVMParser();
             JSONObject ast = 
                 mvmParser.parse(cmd);
-            log.info("ast = " + ast.toString(4));
+            //log.info("ast = " + ast.toString(4));
             
             String verb = null;
             String operator = null;
@@ -145,7 +145,7 @@ public class MVM {
                  *  e.g., !, ->, <-
                 */
                 operator = this.<String>getNth(ast, "$", 1);
-                log.info("verb: " + verb + ", operator: " + operator);
+                //log.info("verb: " + verb + ", operator: " + operator);
                 
                 /*
                  * A -> B 
@@ -188,7 +188,7 @@ public class MVM {
             */
             else {
                 verb = this.<String>get(ast, "$");
-                log.info("verb: " + verb);
+                //log.info("verb: " + verb);
                 
                 /*
                  * Native built-in verbs
@@ -262,7 +262,7 @@ public class MVM {
                                             String namespacedVerb, 
                                             String refId, 
                                             JSONObject config) throws Exception {
-        log.info("newFunctionInstance: " + namespacedVerb);
+        //log.info("newFunctionInstance: " + namespacedVerb);
         if (!verbMap.containsKey(namespacedVerb)) {
             throw new Exception("Unknown namespaced verb: " + namespacedVerb);
         }
@@ -284,7 +284,7 @@ public class MVM {
      *
     */
     private String nativeFlowAddEdge(MVMContext ctx, String from, String to) throws Exception {
-        log.info("nativeFlowAddEdge: from: " + from + " to: " + to);
+        //log.info("nativeFlowAddEdge: from: " + from + " to: " + to);
         
         String fromRefId = ctx.<String>get(from);
         String toRefId = ctx.<String>get(to);
@@ -317,16 +317,16 @@ public class MVM {
     private void nativeControlMessage(MVMContext ctx, String channel, JSONObject msg) throws Exception {
         String resolvedChannel = ctx.resolveAssignmentToRefId(channel);
         String controlChannelName = MVMFunction.deriveControlChannelName(resolvedChannel);
-        log.info("<" + controlChannelName + "> ! " + msg.toString(2));
+        //log.info("<" + controlChannelName + "> ! " + msg.toString(2));
         Mecha.getChannels().getChannel(controlChannelName).send(msg);
-        log.info("nativeControlMessage: channel: " + controlChannelName + " msg: " + msg);
+        //log.info("nativeControlMessage: channel: " + controlChannelName + " msg: " + msg);
     }
     
     /*
      * Perform "a = (expr ...)" assignment to ctx.
     */
     private String nativeAssignment(MVMContext ctx, String var, JSONObject ast) throws Exception {
-        log.info("nativeAssignment: var: " + var + " ast: " + ast);
+        //log.info("nativeAssignment: var: " + var + " ast: " + ast);
         
         String vertexRefId = Mecha.guid(Vertex.class);
         JSONObject vertexData = newBaseFlowDataObject(ctx);
@@ -389,7 +389,7 @@ public class MVM {
      *
     */
     private void nativeRegister(MVMContext ctx, JSONObject ast) throws Exception {
-        log.info("nativeRegister: ast: " + ast);
+        //log.info("nativeRegister: ast: " + ast);
         
         MVMModule moduleInstance;
         String moduleClassName = ast.getString("module-class");
@@ -439,7 +439,7 @@ public class MVM {
      * Dump context vars.
     */
     private void nativeDumpVars(MVMContext ctx) throws Exception {
-        log.info("nativeVars");
+        //log.info("nativeVars");
         
         JSONObject vars = new JSONObject();
         for(String k : ctx.getVars().keySet()) {
@@ -456,7 +456,7 @@ public class MVM {
      * Clear all assignments & create a new, empty flow.
     */
     private void nativeReset(MVMContext ctx) throws Exception {
-        log.info("nativeReset");
+        //log.info("nativeReset");
         ctx.reset();
     }
     

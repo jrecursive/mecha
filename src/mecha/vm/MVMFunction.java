@@ -85,6 +85,22 @@ public abstract class MVMFunction {
     final private String dataChannelName;
     final private String controlChannelName;
     
+    protected MVMFunction() {
+        this.context = null;
+        this.config = null;
+        this.refId = null;
+        incomingChannels = null;
+        outgoingChannels = null;
+        dataChannelName = null;
+        dataChannelCallback = null;
+        controlChannelName = null;
+        controlChannelCallback = null;
+    }
+    
+    protected void onCreate(String refId, MVMContext ctx, JSONObject config) throws Exception {
+        //log.info("onCreate()");
+    }
+    
     public MVMFunction(String refId,
                        MVMContext context, 
                        JSONObject config) throws Exception {
@@ -116,8 +132,10 @@ public abstract class MVMFunction {
                 }
             }
         };
-                
-        log.info("<constructor> " + this.getClass().getName());
+        
+        onCreate(refId, context, config);
+        
+        //log.info("<constructor> " + this.getClass().getName());
     }
     
     public MVMContext getContext() {
@@ -171,9 +189,7 @@ public abstract class MVMFunction {
      * Broadcast a data message to all outgoingChannels.
     */
     public void broadcastDataMessage(JSONObject msg) throws Exception {
-        log.info(outgoingChannels.size() + " outgoing channels");
         for(PubChannel channel : outgoingChannels) {
-            log.info(channel + ": " + msg.toString());
             channel.send(msg);
         }
     }
@@ -188,6 +204,16 @@ public abstract class MVMFunction {
                     deriveControlChannelName(channel.getName()));
             dataChannel.send(msg);
         }
+    }
+
+    public void broadcastDone() throws Exception {
+        JSONObject msg = new JSONObject();
+        broadcastDone(msg);
+    }
+    
+    public void broadcastDone(JSONObject msg) throws Exception {
+        msg.put("$", "done");
+        broadcastControlMessage(msg);
     }
 
     /*
@@ -226,7 +252,7 @@ public abstract class MVMFunction {
     */
     
     public void onControlMessage(JSONObject msg) throws Exception {
-        log.info("generic onControlMessage: msg = " + msg.toString(2));
+        //log.info("generic onControlMessage: msg = " + msg.toString(2));
     }
     
     public void control(JSONObject msg) throws Exception {
@@ -236,8 +262,8 @@ public abstract class MVMFunction {
          *  cancel
          *  done
         */
-        log.info("<control> " + this.getClass().getName() + ": " +
-            msg.toString(2));
+        //log.info("<control> " + this.getClass().getName() + ": " +
+        //    msg.toString(2));
         String cmd = msg.getString("$");
         if (cmd.equals("start")) {
             start(msg);
@@ -254,12 +280,12 @@ public abstract class MVMFunction {
     }
     
     public void onDataMessage(JSONObject msg) throws Exception {
-        log.info("generic onDataMessage: msg = " + msg.toString(2));
+        //log.info("generic onDataMessage: msg = " + msg.toString(2));
     }
     
     public void data(JSONObject msg) throws Exception {
-        log.info("<data> " + this.getClass().getName() + ": " +
-            msg.toString(2));
+        //log.info("<data> " + this.getClass().getName() + ": " +
+        //    msg.toString(2));
         onDataMessage(msg);
     }
     
@@ -269,29 +295,29 @@ public abstract class MVMFunction {
     */
     
     public void onStartEvent(JSONObject msg) throws Exception {
-        log.info("generic onStartEvent: msg = " + msg.toString(2));
+        //log.info("generic onStartEvent: msg = " + msg.toString(2));
     }
     
     public void start(JSONObject msg) throws Exception {
-        log.info("start: " + msg.toString(2));
+        //log.info("start: " + msg.toString(2));
         onStartEvent(msg);
     }
     
     public void onCancelEvent(JSONObject msg) throws Exception {
-        log.info("generic onCancelEvent: msg = " + msg.toString(2));
+        //log.info("generic onCancelEvent: msg = " + msg.toString(2));
     }
     
     public void cancel(JSONObject msg) throws Exception {
-        log.info("cancel: " + msg.toString(2));
+        //log.info("cancel: " + msg.toString(2));
         onCancelEvent(msg);
     }
     
     public void onDoneEvent(JSONObject msg) throws Exception {
-        log.info("generic onDoneEvent: msg = " + msg.toString(2));
+        //log.info("generic onDoneEvent: msg = " + msg.toString(2));
     }
     
     public void done(JSONObject msg) throws Exception {
-        log.info("done: " + msg.toString(2));
+        //log.info("done: " + msg.toString(2));
         onDoneEvent(msg);
     }
     
