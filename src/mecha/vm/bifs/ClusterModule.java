@@ -26,6 +26,24 @@ public class ClusterModule extends MVMModule {
     public void moduleUnload() throws Exception {
     }
     
+    /*
+     * XXX FINISH
+    */
+    public class Warp extends MVMFunction {
+        final String host;
+        final String remoteVar;
+        
+        public Warp(String refId, MVMContext ctx, JSONObject config) throws Exception {
+            super(refId, ctx, config);
+            host = config.getString("host");
+            remoteVar = Mecha.guid(Warp.class);
+            /*
+             * XXX FINISH
+            */
+            log.info(config.toString(2));
+        }
+    }
+    
     public class WithCoverage extends MVMFunction {
         
         final private Set<String> proxyVars;

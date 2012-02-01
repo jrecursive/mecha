@@ -14,6 +14,7 @@ import mecha.util.*;
 import mecha.vm.*;
 import mecha.vm.channels.*;
 import mecha.db.MDB;
+import mecha.json.*;
 
 import org.webbitserver.*;
 import org.webbitserver.handler.*;
@@ -120,53 +121,26 @@ public class Server implements WebSocketHandler {
                 connection.close();
             }
             
-            // subscribe <chan>
-            if (cmd.equals("/sub")) {
-                String chan = parts[1];
-                log.info(connection + ": sub: " + chan);
-                
-                PubChannel pchan = 
-                    Mecha.getChannels().getOrCreateChannel(chan);
-                pchan.addMember(cl);
-                cl.addSubscription(chan);
-                connection.send("OK");
-                
-            // unsubscribe <chan>
-            } else if (cmd.equals("/unsub")) {
-                String chan = parts[1];
-                log.info(connection + ": unsub: " + chan);
-                PubChannel pchan = 
-                    Mecha.getChannels().getOrCreateChannel(chan);
-                if (pchan == null) {
-                    connection.send("ERR :no such channel");
-                } else {
-                    pchan.removeMember(cl);
-                    cl.removeSubscription(chan);
-                    connection.send("OK");
-                }
-                
-            // publish <chan> <msg>
-            } else if (cmd.equals("!")) {
-                String chan = parts[1];
-                PubChannel pchan = 
-                    Mecha.getChannels().getChannel(chan);
-                if (pchan == null) {
-                    connection.send("ERR :no such channel");
-                } else {
-                    String msg = request.substring(request.indexOf(parts[1])+parts[1].length()).trim();
-                    pchan.send(msg);
-                    connection.send("OK");
-                }
-               
+            String response = null;
+            
+            // used by "warp" (and other rpc mechanisms) to execute
+            //  a pre-generated AST
+            if (cmd.equals("$exec")) {
+                String astStr = cmd.substring(cmd.length()+1);
+                JSONObject ast = new JSONObject(astStr);
+                log.info("mvm: execute: " + cl + "/" + cl.getContext() + ": " + ast.toString());
+                response = Mecha.getMVM().execute(cl.getContext(), ast);
+
             // execute mecha vm command
             } else {
                 log.info("mvm: execute: " + cl + "/" + cl.getContext() + ": " + request);
-                String response = Mecha.getMVM().execute(cl.getContext(), request);
-                if (response == null) {
-                    connection.send(OK_RESPONSE + HashUtils.sha1(request));
-                } else {
-                    connection.send(response);
-                }
+                response = Mecha.getMVM().execute(cl.getContext(), request);
+            }
+            
+            if (response == null) {
+                connection.send(OK_RESPONSE + HashUtils.sha1(request));
+            } else {
+                connection.send(response);
             }
             
         } catch (Exception ex) {

@@ -110,6 +110,12 @@ public class MVM {
             MVMParser mvmParser = new MVMParser();
             JSONObject ast = 
                 mvmParser.parse(cmd);
+                
+            /*
+             * To make the AST "reversible" for RPC-style
+             *  mechanisms (e.g., (warp do:(...))
+            */
+            ast.put("$_", cmd);
             //log.info("ast = " + ast.toString(4));
             
             String verb = null;
@@ -239,6 +245,15 @@ public class MVM {
                 return "ERROR :" + ex1.toString() + " ON :" + cmd;
             }
         }
+        return null;
+    }
+    
+    /*
+     * For one-off RPC executions of precomputed ASTs.
+    */
+    public String execute(MVMContext ctx,
+                        JSONObject ast) throws Exception {
+        dynamicInvoke(ctx, ast.getString("$"), ast);
         return null;
     }
     

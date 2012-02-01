@@ -31,6 +31,8 @@ public class MVMParser {
         String currentField = "";
         String currentValue = "";
         
+        obj.put("$_", q);
+        
         for(int i=0; i<q.length(); i++) {
             String ch = q.substring(i,i+1);
             
@@ -171,7 +173,15 @@ public class MVMParser {
             if (f.equals("$args")) {
                 obj1.put(f, obj.get(f));
                 continue;
+            
+            /*
+             * Ignore the "reconstructive" field "$_".
+            */
+            } else if (f.equals("$_")) {
+                obj1.put(f, obj.get(f));
+                continue;
             }
+            
             JSONArray ar = obj.getJSONArray(f);
             if (ar.length() == 1) {
                 if (ar.get(0) instanceof JSONObject) {

@@ -1,0 +1,116 @@
+a = (get bucket:zipcodes key:94115)
+b = (get bucket:zipcodes key:94114)
+c = (client-sink)
+a -> b
+b -> c
+a -> c
+c ! (start)
+a ! (start)
+b ! (start)
+
+
+source1 = (get bucket:zipcodes key:94115)
+sink1 = (client-sink)
+source1 -> sink1
+source1 ! (start)
+
+
+
+(get bucket:zipcodes key:94115)
+
+
+
+(subscribe channel:xyz)
+(publish channel:xyz data:(some:kind of:object))
+(unsubscribe channel:xyz)
+
+
+(solr-select params:(q:"zipcode_s:9*" start:20 rows:5))
+(solr-select params:(q:"zipcode_s:9*"))
+
+
+
+(solr-select params:(q:"zipcode_s:[94110 TO 9412*]"))
+
+
+(solr-select params:(q:"zipcode_s:[94110 TO 9412*]" start:0 rows:2))
+
+(solr-select params:(q:"city_t:minneapolis"))
+
+(solr-select params:(q:"state_s:MN city_t:minne*" sort:"city_s desc"))
+
+(solr-select params:(facet:true facet.limit=50 facet.field:city_s facet.mincount=1 start:0 rows:0 q:"*:*"))
+
+
+(solr-select params:(facet:true facet.limit=50 facet.field:city_s facet.mincount=1 start:0 rows:0))
+
+(solr-select params:(facet:true facet.limit=1 facet.field:city_s  facet.mincount=25 start:0 rows:0 fq:"city_s:S* AND zipcode_s:94115" q:"*:*"))
+
+
+
+
+solr-stream = (solr-select params:(q:"zipcode_s:[94110 TO 9412*]" start:0 rows:2))
+solr-materializer = (materialize-pbk-stream)
+me = (client-sink)
+solr-stream -> solr-materializer
+solr-materializer -> me
+solr-stream ! (start)
+
+
+
+solr-stream = (solr-select params:(q:"zipcode_s:[94110 TO 9412*]" start:0 rows:2))
+solr-materializer = (materialize-pbk-stream)
+riak-extractor = (extract-riak-value position:0)
+extractor = (extract fields:(city_s zipcode_s loc_ll))
+me = (client-sink)
+solr-stream -> solr-materializer
+solr-materializer -> riak-extractor
+riak-extractor -> extractor
+extractor -> me
+solr-stream ! (start)
+
+
+solr-stream-1 = (solr-select params:(q:"zipcode_s:[94110 TO 9412*]" start:0 rows:2))
+solr-stream-2 = (solr-select params:(q:"zipcode_s:[55432 TO 55435]" start:0 rows:2))
+solr-materializer = (materialize-pbk-stream)
+riak-extractor = (extract-riak-value position:0)
+extractor = (extract fields:(city_s zipcode_s loc_ll))
+me = (client-sink)
+solr-stream-1 -> solr-materializer
+solr-stream-2 -> solr-materializer
+solr-materializer -> riak-extractor
+riak-extractor -> extractor
+extractor -> me
+solr-stream-1 ! (start)
+solr-stream-2 ! (start)
+
+
+
+a = (with-coverage bucket:zipcodes do:(solr-select params:(q:"partition:<<partition>> AND zipcode_s:9411*")))
+b = (client-sink)
+a -> b
+a ! (start)
+
+
+
+solr-stream-1 = (solr-select params:(q:"zipcode_s:[94110 TO 9412*]" start:0 rows:2))
+solr-stream-2 = (solr-select params:(q:"zipcode_s:[55432 TO 55435]" start:0 rows:2))
+solr-materializer = (materialize-pbk-stream)
+riak-extractor = (extract-riak-value position:0)
+extractor = (extract fields:(city_s zipcode_s loc_ll))
+xyz = (channel-sink channel:xyz)
+solr-stream-1 -> solr-materializer
+solr-stream-2 -> solr-materializer
+solr-materializer -> riak-extractor
+riak-extractor -> extractor
+extractor -> xyz
+solr-stream-1 ! (start)
+solr-stream-2 ! (start)
+
+
+a = (with-coverage bucket:zipcodes do:(warp host:<<host>> do:(solr-select params:(q:"partition:<<partition>> AND zipcode_s:9411*"))))
+b = (client-sink)
+a -> b
+a ! (start)
+
+
