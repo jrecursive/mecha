@@ -1,12 +1,63 @@
+:D
 
-:)
+mecha-cli> a = (with-coverage bucket:zipcodes do:(solr-select params:(q:"partition:<<partition>> AND zipcode_s:9411*" start:0 rows:1)))
+mecha-cli> b = (client-sink)
+mecha-cli> a -> b
+mecha-cli> a ! (start)
+mecha-cli> 
+INFO: {"c":"socket-013a8dfeb9954dd09085c6cd8edbe14ef238661a","o":{"partition":"137015778499772148581595453067151533092743675904","bucket":"zipcodes","key":"94110","last_modified":1327964398601,"$type":"data"}}
 
-mecha-cli> (solr-select params:(q:"city_t:minneapolis" rows:1))
-mecha-cli> Jan 30, 2012 7:21:13 PM mecha.client.MechaClient onMessage
-INFO: :OK 5f819dd7c0be4dc45f798c484b36959cf91de162
-Jan 30, 2012 7:21:13 PM mecha.client.MechaClient onMessage
-INFO: {"c":"socket-473938d7e512a728afb76ac5e13af2100d656df9","o":{"partition":"959110449498405040071168171470060731649205731328","bucket":"zipcodes","key":"67467","last_modified":1327964460608,"$type":"data"}}
-Jan 30, 2012 7:21:13 PM mecha.client.MechaClient onMessage
-INFO: {"c":"socket-473938d7e512a728afb76ac5e13af2100d656df9","o":{"elapsed":8,"count":1,"found":66,"$":"done","$type":"done"}}
+INFO: {"c":"socket-013a8dfeb9954dd09085c6cd8edbe14ef238661a","o":{"partition":"274031556999544297163190906134303066185487351808","bucket":"zipcodes","key":"94114","last_modified":1327964398602,"$type":"data"}}
+
+INFO: {"c":"socket-013a8dfeb9954dd09085c6cd8edbe14ef238661a","o":{"partition":"548063113999088594326381812268606132370974703616","bucket":"zipcodes","key":"94115","last_modified":1327964398603,"$type":"data"}}
+
+INFO: {"c":"socket-013a8dfeb9954dd09085c6cd8edbe14ef238661a","o":{"partition":"959110449498405040071168171470060731649205731328","bucket":"zipcodes","key":"94117","last_modified":1327964398707,"$type":"data"}}
+
+INFO: {"c":"socket-013a8dfeb9954dd09085c6cd8edbe14ef238661a","o":{"partition":"1096126227998177188652763624537212264741949407232","bucket":"zipcodes","key":"94111","last_modified":1327964398601,"$type":"data"}}
+
+INFO: {"c":"socket-013a8dfeb9954dd09085c6cd8edbe14ef238661a","o":{"complete":11,"$":"done","$type":"done"}}
+
+------
+
+mecha-cli> 
+mecha-cli> solr-stream-1 = (solr-select params:(q:"zipcode_s:[94110 TO 9412*]" start:0 rows:2))
+mecha-cli> solr-stream-2 = (solr-select params:(q:"zipcode_s:[55432 TO 55435]" start:0 rows:2))
+mecha-cli> solr-materializer = (materialize-pbk-stream)
+mecha-cli> riak-extractor = (extract-riak-value position:0)
+mecha-cli> extractor = (extract fields:(city_s zipcode_s loc_ll))
+mecha-cli> me = (client-sink)
+mecha-cli> solr-stream-1 -> solr-materializer
+mecha-cli> solr-stream-2 -> solr-materializer
+mecha-cli> solr-materializer -> riak-extractor
+mecha-cli> riak-extractor -> extractor
+mecha-cli> extractor -> me
+mecha-cli> solr-stream-1 ! (start)
+mecha-cli> solr-stream-2 ! (start)
+mecha-cli> 
+INFO: {"c":"socket-143e5ef5c0e0979d8c10f6573123efcb25940346","o":{"zipcode_s":"94110","city_s":"San Francisco","loc_ll":"37.748730,-122.41545","$type":"data"}}
+INFO: {"c":"socket-143e5ef5c0e0979d8c10f6573123efcb25940346","o":{"zipcode_s":"94110","city_s":"San Francisco","loc_ll":"37.748730,-122.41545","$type":"data"}}
+INFO: {"c":"socket-143e5ef5c0e0979d8c10f6573123efcb25940346","o":{"zipcode_s":"55432","city_s":"Fridley","loc_ll":"45.095674,-93.25336","$type":"data"}}
+INFO: {"c":"socket-143e5ef5c0e0979d8c10f6573123efcb25940346","o":{"zipcode_s":"55432","city_s":"Fridley","loc_ll":"45.095674,-93.25336","$type":"data"}}
+
+------
+
+mecha-cli> 
+mecha-cli> solr-stream = (solr-select params:(q:"zipcode_s:[94110 TO 9412*]" start:0 rows:2))
+mecha-cli> solr-materializer = (materialize-pbk-stream)
+mecha-cli> riak-extractor = (extract-riak-value position:0)
+mecha-cli> extractor = (extract fields:(city_s zipcode_s loc_ll))
+mecha-cli> me = (client-sink)
+mecha-cli> solr-stream -> solr-materializer
+mecha-cli> solr-materializer -> riak-extractor
+mecha-cli> riak-extractor -> extractor
+mecha-cli> extractor -> me
+mecha-cli> solr-stream ! (start)
+
+INFO: {"c":"socket-143e5ef5c0e0979d8c10f6573123efcb25940346","o":{"zipcode_s":"94110","city_s":"San Francisco","loc_ll":"37.748730,-122.41545","$type":"data"}}
+Jan 31, 2012 1:43:16 PM mecha.client.MechaClient onMessage
+INFO: {"c":"socket-143e5ef5c0e0979d8c10f6573123efcb25940346","o":{"zipcode_s":"94110","city_s":"San Francisco","loc_ll":"37.748730,-122.41545","$type":"data"}}
+
+mecha-cli> 
+
 
 
