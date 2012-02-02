@@ -31,10 +31,13 @@ public class ETLModule extends MVMModule {
         log.info("moduleUnload()");
     }
     
-    public class Extract extends MVMFunction {
+    /*
+     * Project a subset of fields.
+    */
+    public class Project extends MVMFunction {
         final Set<String> fields;
         
-        public Extract(String refId, MVMContext ctx, JSONObject config) throws Exception {
+        public Project(String refId, MVMContext ctx, JSONObject config) throws Exception {
             super(refId, ctx, config);
             fields = new HashSet<String>();
             if (config.get("fields") instanceof String) {
@@ -58,7 +61,10 @@ public class ETLModule extends MVMModule {
             broadcastDataMessage(newObj);
         }
     }
-
+    
+    /*
+     * Extract & reconstitute the JSONObject within a Riak object.
+    */
     public class ExtractRiakValue extends MVMFunction {
         final int position;
         

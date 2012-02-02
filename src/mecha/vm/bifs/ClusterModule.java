@@ -50,6 +50,8 @@ public class ClusterModule extends MVMModule {
      *
      * NOTE: Inputs are immediately passed through in the order they 
      *  are received -- this means this function is non-deterministic!
+     * 
+     * See WithIteratedCoverage for a near-equivalent that is deterministic.
      *
     */
     public class WithCoverage extends MVMFunction {
@@ -145,6 +147,9 @@ public class ClusterModule extends MVMModule {
      *  it will equally iterate all upstream functiosn
      *  via the control message ! (next), systematically
      *  exhausting them.
+     * 
+     * This function is deterministic.
+     *
     */
     public class WithIteratedCoverage extends MVMFunction {
         final private String partitionMarker;
