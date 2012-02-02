@@ -1,5 +1,92 @@
 :D
 
+
+mecha-cli> 
+mecha-cli> zipcodes-iter = (with-sorted-coverage sort-field:key sort-order:asc partition-marker:"<<p>>" bucket:zipcodes do:(partition-bucket-iterator iterator-name:zipcode-iter-0 bucket:zipcodes partition:<<p>>))
+mecha-cli> riak-extractor = (extract-riak-value position:0)
+mecha-cli> projection = (project fields:(city_s zipcode_s))
+mecha-cli> me = (client-sink)
+mecha-cli> zipcodes-iter -> riak-extractor
+mecha-cli> riak-extractor -> projection
+mecha-cli> projection -> me
+mecha-cli> zipcodes-iter ! (start)
+mecha-cli> Feb 2, 2012 5:28:09 PM mecha.client.MechaClient$1 onOk
+INFO: <ok> ee733ec472e967e8472394d24cf0c867d73ef00c
+Feb 2, 2012 5:28:09 PM mecha.client.MechaClient$1 onOk
+INFO: <ok> f81107288612e3f698124582ede85feaf2c49c5c
+Feb 2, 2012 5:28:09 PM mecha.client.MechaClient$1 onOk
+INFO: <ok> 12be11a57726ea690e796decd12142b45291619b
+Feb 2, 2012 5:28:09 PM mecha.client.MechaClient$1 onOk
+INFO: <ok> bc8cc5f2d4b66e854cd0cbfbcfa79a44e750b225
+Feb 2, 2012 5:28:09 PM mecha.client.MechaClient$1 onOk
+INFO: <ok> f7760392ccd3f60dceacfac22323fb408f89858c
+Feb 2, 2012 5:28:09 PM mecha.client.MechaClient$1 onOk
+INFO: <ok> a950b4db982ab9dff5522cb74b4b1a236a944e54
+Feb 2, 2012 5:28:09 PM mecha.client.MechaClient$1 onOk
+INFO: <ok> d1d301daf7bb6e9749ab64e0f4523e10ee80a529
+Feb 2, 2012 5:28:09 PM mecha.client.MechaClient$1 onOk
+INFO: <ok> 68f711cd354025dd883f13eeb7223bd952f66f90
+Feb 2, 2012 5:28:09 PM mecha.client.MechaClient$1 onDataMessage
+INFO: <data: socket-e20a477e6b27b12827474d1451f301f79699dcc2> {
+  "zipcode_s" : "00601",
+  "city_s" : "Adjuntas",
+  "$origin" : "127.0.0.1/64066854-ba92-4f6e-aafe-ef49d8e06882/mecha.vm.flows.Vertex",
+  "$type" : "data"
+}
+Feb 2, 2012 5:28:09 PM mecha.client.MechaClient$1 onDataMessage
+INFO: <data: socket-e20a477e6b27b12827474d1451f301f79699dcc2> {
+  "zipcode_s" : "00602",
+  "city_s" : "Aguada",
+  "$origin" : "127.0.0.1/64066854-ba92-4f6e-aafe-ef49d8e06882/mecha.vm.flows.Vertex",
+  "$type" : "data"
+}
+Feb 2, 2012 5:28:09 PM mecha.client.MechaClient$1 onDataMessage
+INFO: <data: socket-e20a477e6b27b12827474d1451f301f79699dcc2> {
+  "zipcode_s" : "00603",
+  "city_s" : "Aguadilla",
+  "$origin" : "127.0.0.1/64066854-ba92-4f6e-aafe-ef49d8e06882/mecha.vm.flows.Vertex",
+  "$type" : "data"
+}
+Feb 2, 2012 5:28:09 PM mecha.client.MechaClient$1 onDataMessage
+INFO: <data: socket-e20a477e6b27b12827474d1451f301f79699dcc2> {
+  "zipcode_s" : "00604",
+  "city_s" : "Aguadilla",
+  "$origin" : "127.0.0.1/64066854-ba92-4f6e-aafe-ef49d8e06882/mecha.vm.flows.Vertex",
+  "$type" : "data"
+}
+Feb 2, 2012 5:28:09 PM mecha.client.MechaClient$1 onDataMessage
+INFO: <data: socket-e20a477e6b27b12827474d1451f301f79699dcc2> {
+  "zipcode_s" : "00606",
+  "city_s" : "Maricao",
+  "$origin" : "127.0.0.1/64066854-ba92-4f6e-aafe-ef49d8e06882/mecha.vm.flows.Vertex",
+  "$type" : "data"
+}
+Feb 2, 2012 5:28:09 PM mecha.client.MechaClient$1 onDataMessage
+INFO: <data: socket-e20a477e6b27b12827474d1451f301f79699dcc2> {
+  "zipcode_s" : "00606",
+  "city_s" : "Maricao",
+  "$origin" : "127.0.0.1/64066854-ba92-4f6e-aafe-ef49d8e06882/mecha.vm.flows.Vertex",
+  "$type" : "data"
+}
+Feb 2, 2012 5:28:09 PM mecha.client.MechaClient$1 onDataMessage
+INFO: <data: socket-e20a477e6b27b12827474d1451f301f79699dcc2> {
+  "zipcode_s" : "00610",
+  "city_s" : "Anasco",
+  "$origin" : "127.0.0.1/64066854-ba92-4f6e-aafe-ef49d8e06882/mecha.vm.flows.Vertex",
+  "$type" : "data"
+}
+Feb 2, 2012 5:28:09 PM mecha.client.MechaClient$1 onDataMessage
+INFO: <data: socket-e20a477e6b27b12827474d1451f301f79699dcc2> {
+  "zipcode_s" : "00612",
+  "city_s" : "Arecibo",
+  "$origin" : "127.0.0.1/64066854-ba92-4f6e-aafe-ef49d8e06882/mecha.vm.flows.Vertex",
+  "$type" : "data"
+}
+
+
+-----
+
+
 # ./mecha-client 
 mecha-cli> 
 mecha-cli> index-stream = (with-coverage bucket:zipcodes do:(solr-select params:(q:"partition:<<partition>> AND zipcode_s:9411*")))
