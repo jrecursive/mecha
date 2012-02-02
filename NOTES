@@ -92,7 +92,7 @@ a -> b
 a ! (start)
 
 
-
+(subscribe channel:xyz)
 solr-stream-1 = (solr-select params:(q:"zipcode_s:[94110 TO 9412*]" start:0 rows:2))
 solr-stream-2 = (solr-select params:(q:"zipcode_s:[55432 TO 55435]" start:0 rows:2))
 solr-materializer = (materialize-pbk-stream)
@@ -104,6 +104,8 @@ solr-stream-2 -> solr-materializer
 solr-materializer -> riak-extractor
 riak-extractor -> extractor
 extractor -> xyz
+(start-all-sources message:(start))
+
 solr-stream-1 ! (start)
 solr-stream-2 ! (start)
 
@@ -113,4 +115,75 @@ b = (client-sink)
 a -> b
 a ! (start)
 
+
+
+index-stream = (with-coverage bucket:zipcodes do:(solr-select params:(q:"partition:<<partition>> AND zipcode_s:9411*")))
+solr-materializer = (materialize-pbk-stream)
+riak-extractor = (extract-riak-value position:0)
+project = (extract fields:(city_s zipcode_s loc_ll))
+client-sink = (client-sink)
+index-stream -> solr-materializer
+solr-materializer -> riak-extractor
+riak-extractor -> project
+project -> client-sink
+index-stream ! (start)
+
+
+auth me3ch4a
+(subscribe channel:x)
+a = (stream-partition-bucket bucket:zipcodes partition:1141798154164767904846628775559596109106197299200)
+c = (extract-riak-value position:0)
+d = (extract fields:(city_s state_s)
+e = (channel-sink channel:x)
+a -> c
+c -> d
+d -> e
+a ! (start)
+
+a = (with-coverage bucket:zipcodes do:(stream-partition-bucket bucket:zipcodes partition:<<partition>>))
+c = (extract-riak-value position:0)
+d = (extract fields:(city_s state_s)
+e = (client-sink)
+a -> c
+c -> d
+d -> e
+a ! (start)
+
+
+a = (with-coverage partition-marker:"<<p>>" bucket:zipcodes do:(stream-partition-bucket bucket:zipcodes partition:<<p>>))
+c = (extract-riak-value position:0)
+d = (extract fields:(city_s state_s)
+e = (client-sink)
+a -> c
+c -> d
+d -> e
+a ! (start)
+
+
+
+
+
+$define-block test
+1
+2
+3
+4
+5
+$end-block test
+
+
+$define-block js-test
+var onDataMessage = function(msg) {
+    log.info(msg.toString(2));
+}
+$end-block js-test
+
+a = (with-coverage partition-marker:"<<p>>" bucket:zipcodes do:(stream-partition-bucket bucket:zipcodes partition:<<p>>))
+c = (extract-riak-value position:0)
+d = (extract fields:(city_s state_s)
+e = (client-sink)
+a -> c
+c -> d
+d -> e
+(start-all-sources message:(start))
 

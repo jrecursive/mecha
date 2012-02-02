@@ -1,5 +1,84 @@
 :D
 
+# ./mecha-client 
+mecha-cli> 
+mecha-cli> index-stream = (with-coverage bucket:zipcodes do:(solr-select params:(q:"partition:<<partition>> AND zipcode_s:9411*")))
+mecha-cli> solr-materializer = (materialize-pbk-stream)
+mecha-cli> riak-extractor = (extract-riak-value position:0)
+mecha-cli> project = (extract fields:(city_s zipcode_s loc_ll))
+mecha-cli> client-sink = (client-sink)
+mecha-cli> index-stream -> solr-materializer
+mecha-cli> solr-materializer -> riak-extractor
+mecha-cli> riak-extractor -> project
+mecha-cli> project -> client-sink
+mecha-cli> index-stream ! (start)
+
+INFO: <data: socket-7e7e0807565dd50ed39a0af2766aacf74d747aef> {
+  "zipcode_s" : "94112",
+  "city_s" : "San Francisco",
+  "loc_ll" : "37.720931,-122.44241",
+  "$type" : "data"
+}
+
+INFO: <data: socket-7e7e0807565dd50ed39a0af2766aacf74d747aef> {
+  "zipcode_s" : "94117",
+  "city_s" : "San Francisco",
+  "loc_ll" : "37.770937,-122.44276",
+  "$type" : "data"
+}
+
+INFO: <data: socket-7e7e0807565dd50ed39a0af2766aacf74d747aef> {
+  "zipcode_s" : "94114",
+  "city_s" : "San Francisco",
+  "loc_ll" : "37.758434,-122.43512",
+  "$type" : "data"
+}
+
+INFO: <data: socket-7e7e0807565dd50ed39a0af2766aacf74d747aef> {
+  "zipcode_s" : "94116",
+  "city_s" : "San Francisco",
+  "loc_ll" : "37.743381,-122.48578",
+  "$type" : "data"
+}
+
+INFO: <data: socket-7e7e0807565dd50ed39a0af2766aacf74d747aef> {
+  "zipcode_s" : "94115",
+  "city_s" : "San Francisco",
+  "loc_ll" : "37.786129,-122.43736",
+  "$type" : "data"
+}
+
+INFO: <data: socket-7e7e0807565dd50ed39a0af2766aacf74d747aef> {
+  "zipcode_s" : "94110",
+  "city_s" : "San Francisco",
+  "loc_ll" : "37.748730,-122.41545",
+  "$type" : "data"
+}
+
+INFO: <data: socket-7e7e0807565dd50ed39a0af2766aacf74d747aef> {
+  "zipcode_s" : "94111",
+  "city_s" : "San Francisco",
+  "loc_ll" : "37.798228,-122.40027",
+  "$type" : "data"
+}
+
+INFO: <data: socket-7e7e0807565dd50ed39a0af2766aacf74d747aef> {
+  "zipcode_s" : "94118",
+  "city_s" : "San Francisco",
+  "loc_ll" : "37.782029,-122.46158",
+  "$type" : "data"
+}
+
+INFO: <done: socket-7e7e0807565dd50ed39a0af2766aacf74d747aef> {
+  "complete" : 11,
+  "$type" : "done"
+}
+
+mecha-cli> 
+
+
+-----
+
 mecha-cli> a = (with-coverage bucket:zipcodes do:(solr-select params:(q:"partition:<<partition>> AND zipcode_s:9411*" start:0 rows:1)))
 mecha-cli> b = (client-sink)
 mecha-cli> a -> b
