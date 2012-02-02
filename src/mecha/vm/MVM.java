@@ -334,17 +334,13 @@ public class MVM {
     public void nativeControlMessage(MVMContext ctx, String channel, JSONObject msg) throws Exception {
         String resolvedChannel = ctx.resolveAssignmentToRefId(channel);
         String controlChannelName = MVMFunction.deriveControlChannelName(resolvedChannel);
-        //log.info("<" + controlChannelName + "> ! " + msg.toString(2));
         Mecha.getChannels().getChannel(controlChannelName).send(msg);
-        //log.info("nativeControlMessage: channel: " + controlChannelName + " msg: " + msg);
     }
     
     /*
      * Perform "a = (expr ...)" assignment to ctx.
     */
     public String nativeAssignment(MVMContext ctx, String var, JSONObject ast) throws Exception {
-        //log.info("nativeAssignment: var: " + var + " ast: " + ast);
-        
         String vertexRefId = Mecha.guid(Vertex.class);
         JSONObject vertexData = newBaseFlowDataObject(ctx);
         vertexData.put(Flow.REF_ID, vertexRefId);
@@ -464,14 +460,58 @@ public class MVM {
     private void nativeDumpVars(MVMContext ctx) throws Exception {
         //log.info("nativeVars");
         
+        /*
+         * Function assignments.
+        */
         JSONObject vars = new JSONObject();
         for(String k : ctx.getVars().keySet()) {
             vars.put(k, ctx.get(k));
         }
+        
+        /*
+         * Memory Channels
+        */
+        JSONObject memoryChannels = new JSONObject();
         for(String k : ctx.getMemoryChannelMap().keySet()) {
-            vars.put("MemoryChannel-" + k, ctx.getMemoryChannelMap().get(k).toString());
+            memoryChannels.put(k, ctx.getMemoryChannelMap().get(k).toString());
         }
-        ctx.send(vars);
+        
+        /*
+         * Blocks.
+        */
+        JSONObject blocks = new JSONObject();
+        for(String k : ctx.getBlockMap().keySet()) {
+            blocks.put(k, ctx.getBlock(k));
+        }
+        
+        /*
+         * Flow.
+        */
+        JSONObject flow = new JSONObject();
+        JSONArray flowVertices = new JSONArray();
+        JSONArray flowEdges = new JSONArray();
+        for(Vertex v : ctx.getFlow().getVertices()) {
+            flowVertices.put(v);
+        }
+        for(Edge<Vertex> e : ctx.getFlow().getEdges()) {
+            JSONObject edge = new JSONObject();
+            edge.put(Flow.REF_ID, e.getRefId());
+            edge.put("source-refid", e.getSource().getRefId());
+            edge.put("target-refid", e.getTarget().getRefId());
+            edge.put(Flow.REL, e.getRel());
+            edge.put(Flow.EXPR, e.getExpr());
+            flowEdges.put(edge);
+        }
+        flow.put("vertices", flowVertices);
+        flow.put("edges", flowEdges);
+        
+        JSONObject result = new JSONObject();
+        result.put("assignments", vars);
+        result.put("memory-channels", memoryChannels);
+        result.put("blocks", blocks);
+        result.put("flow", flow);
+        
+        ctx.send(result);
         
     }
     
@@ -479,7 +519,6 @@ public class MVM {
      * Clear all assignments & create a new, empty flow.
     */
     private void nativeReset(MVMContext ctx) throws Exception {
-        //log.info("nativeReset");
         ctx.reset();
     }
     

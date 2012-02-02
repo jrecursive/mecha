@@ -20,6 +20,9 @@ public class MVMContext {
     final private static Logger log = 
         Logger.getLogger(MVMContext.class.getName());
 
+    /*
+     * Primitive function assignment -> ref maps.
+    */
     final private ConcurrentHashMap<String, Object> vars;
     
     /*
@@ -28,6 +31,11 @@ public class MVMContext {
     final private ConcurrentHashMap<String, WeakReference<MVMFunction>> funRefs;
     
     final private WeakReference<Client> clientRef;
+    
+    /*
+     * Maps a "block name" to a "block" (list of strings)
+    */
+    final private ConcurrentHashMap<String, List<String>> blocks;
     
     /*
      * Jetlang components & management
@@ -49,6 +57,7 @@ public class MVMContext {
         funRefs = new ConcurrentHashMap<String, WeakReference<MVMFunction>>();
         flow = new Flow();
         refId = Mecha.guid(MVMContext.class);
+        blocks = new ConcurrentHashMap<String, List<String>>();
         
         functionExecutor = Executors.newCachedThreadPool();
         fiberFactory = new PoolFiberFactory(functionExecutor);
@@ -125,10 +134,37 @@ public class MVMContext {
     }
     
     /*
+     * blocks
+    */
+    
+    public void clearBlocks() {
+        blocks.clear();
+    }
+    
+    public void setBlock(String blockName, List<String> block) {
+        blocks.put(blockName, block);
+    }
+    
+    public void removeBlock(String blockName) {
+        blocks.remove(blockName);
+    }
+    
+    public List<String> getBlock(String blockName) {
+        return blocks.get(blockName);
+    }
+    
+    public ConcurrentHashMap<String, List<String>> getBlockMap() {
+        return blocks;
+    }
+    
+    /*
      * Context-specific messaging
     */
     
     public void send(JSONObject msg) throws Exception {
+        /*
+         * Send message.
+        */
         getClient().getChannel().send(msg);
     }
     
@@ -262,6 +298,7 @@ public class MVMContext {
     public void reset() throws Exception {
         resetJetlangPrimitives();
         clearVars();
+        clearBlocks();
         clearFunRefs();
         clearFlow();
     }

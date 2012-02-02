@@ -1,5 +1,6 @@
 package mecha.vm.flows;
 
+import java.util.*;
 import java.util.logging.*;
 import org.jgrapht.graph.DefaultWeightedEdge;
 import mecha.json.*;
@@ -67,7 +68,8 @@ public class Edge<Vertex> extends DefaultWeightedEdge {
     }
     
     public JSONObject getExpr() throws Exception {
-        return this.<JSONObject>get(Flow.EXPR);
+        //return this.<JSONObject>get(Flow.EXPR);
+        return new JSONObject(this.<Map>get(Flow.EXPR));
     }
     
     public String getRel() {

@@ -100,6 +100,27 @@ public class Server {
                 return;
             }
             
+            /*
+             * Append to current block if in
+             *  block mode (via $define-block)
+            */
+            if (cl.withinBlock()) {
+                /*
+                 * End of block.
+                */
+                if (request.equals("$end-block " + cl.getBlockName())) {
+                    cl.setWithinBlock(false);
+                    cl.getContext().setBlock(cl.getBlockName(), cl.getBlock());
+                    send(connection, OK_RESPONSE + HashUtils.sha1(cl.getBlockName()));
+                    cl.setBlockName(null);
+                    cl.clearBlock();
+                } else {
+                    cl.appendBlock(request);
+                }
+                
+                return;
+            }
+            
             // command processing here
             String[] parts = request.split(" ");
             String cmd = parts[0];
@@ -129,6 +150,17 @@ public class Server {
                 JSONObject ast = new JSONObject(astStr);
                 log.info("mvm: execute: " + cl + "/" + cl.getContext() + ": " + ast.toString());
                 response = Mecha.getMVM().execute(cl.getContext(), ast);
+
+            /*
+             * Block definition commands.
+            */
+            } else if (cmd.equals("$define-block")) {
+                String blockName = parts[1];
+                log.info("blockName = " + blockName);
+                cl.clearBlock();
+                cl.setWithinBlock(true);
+                cl.setBlockName(blockName);
+                return;
 
             // execute mecha vm command
             } else {

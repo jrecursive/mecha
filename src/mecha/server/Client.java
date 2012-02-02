@@ -27,6 +27,13 @@ public class Client implements ChannelConsumer {
     private boolean authorized = false;
     
     /*
+     * Blocks.
+    */
+    private boolean withinBlock = false;
+    private List<String> block;
+    private String blockName;
+    
+    /*
      * messaging via mecha.vm.channels.Channels
     */
     final private Set<String> subscriptions;
@@ -55,6 +62,9 @@ public class Client implements ChannelConsumer {
         this.connection = new WeakReference<ChannelHandlerContext>(connection);
         subscriptions = Collections.synchronizedSet(new HashSet());
         
+        block = new ArrayList<String>();
+        blockName = null;
+        
         /*
          * MVMContext keeps WeakReference<Client>
         */
@@ -82,6 +92,38 @@ public class Client implements ChannelConsumer {
     
     public ConcurrentHashMap<String, String> getState() {
         return state;
+    }
+    
+    /*
+     * Block definition
+    */
+    
+    public String getBlockName() {
+        return blockName;
+    }
+    
+    public void setBlockName(String blockName) {
+        this.blockName = blockName;
+    }
+    
+    public boolean withinBlock() {
+        return withinBlock;
+    }
+    
+    public void setWithinBlock(boolean isWithinBlock) {
+        withinBlock = isWithinBlock;
+    }
+    
+    public void clearBlock() {
+        block = new ArrayList<String>();
+    }
+    
+    public void appendBlock(String line) {
+        block.add(line);
+    }
+    
+    public List<String> getBlock() {
+        return block;
     }
     
     /* 

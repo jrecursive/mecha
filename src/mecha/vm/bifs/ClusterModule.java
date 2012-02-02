@@ -46,12 +46,24 @@ public class ClusterModule extends MVMModule {
     
     public class WithCoverage extends MVMFunction {
         
+        final private String partitionMarker;
+        final private String hostMarker;
         final private Set<String> proxyVars;
         int doneCount = 0;
         
         public WithCoverage(String refId, MVMContext ctx, JSONObject config) throws Exception {
             super(refId, ctx, config);
             proxyVars = new HashSet<String>();
+            if (config.has("partition-marker")) {
+                partitionMarker = config.getString("partition-marker");
+            } else {
+                partitionMarker = "<<partition>>";
+            }
+            if (config.has("host-marker")) {
+                hostMarker = config.getString("host-marker");
+            } else {
+                hostMarker = "<<host>>";
+            }
         }
         
         public void onPostAssignment(MVMContext ctx, String thisInstVar, JSONObject config) throws Exception {
@@ -65,8 +77,8 @@ public class ClusterModule extends MVMModule {
                     proxyVars.add(proxyVar);
                     
                     String doAstStr = config.getJSONObject("do").toString();
-                    doAstStr = doAstStr.replaceAll("<<host>>", host);
-                    doAstStr = doAstStr.replaceAll("<<partition>>", partition);
+                    doAstStr = doAstStr.replaceAll(hostMarker, host);
+                    doAstStr = doAstStr.replaceAll(partitionMarker, partition);
                     JSONObject doAst = new JSONObject(doAstStr);
                     Mecha.getMVM().nativeAssignment(getContext(), proxyVar, doAst);
                     Mecha.getMVM().nativeFlowAddEdge(getContext(), proxyVar, thisInstVar);

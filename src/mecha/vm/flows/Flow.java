@@ -20,6 +20,7 @@ public class Flow {
      * Used as fields in data payloads for
      *  vertices & edges
     */
+    final public static String REL = "rel";
     final public static String CLIENT_ID = "cid";
     final public static String REF_ID = "refid";
     final public static String CONTEXT_REF_ID = "ctx-refid";
@@ -89,6 +90,7 @@ public class Flow {
                                              obj);
         graph.addEdge(fromVertex, toVertex, edge);
         graph.setEdgeWeight(edge, weight);
+        edges.put(refId, edge);
     }
     
     public Edge getEdge(String refId) throws Exception {
@@ -212,6 +214,14 @@ public class Flow {
     
     public int edegCount() throws Exception {
         return graph.edgeSet().size();
+    }
+    
+    public Collection<Vertex> getVertices() throws Exception {
+        return vertices.values();
+    }
+    
+    public Collection<Edge> getEdges() throws Exception {
+        return edges.values();
     }
 
 }

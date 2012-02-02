@@ -9,6 +9,7 @@ import java.net.*;
 import mecha.Mecha;
 import mecha.json.*;
 import mecha.vm.*;
+import mecha.vm.flows.*;
 
 public class ClientModule extends MVMModule {
     final private static Logger log = 
@@ -21,6 +22,44 @@ public class ClientModule extends MVMModule {
     public void moduleLoad() throws Exception { }
     
     public void moduleUnload() throws Exception { }
+    
+    /*
+     * StartAllSources is a helper function that identifies
+     *  all vertices in the current flow which have zero
+     *  incoming edges and 1 or more outgoing edges and
+     *  sends a start control message to them.
+    */
+    public class StartAllSources extends MVMFunction {
+        public StartAllSources(String refId, MVMContext ctx, JSONObject config) throws Exception {
+            super(refId, ctx, config);
+            Set<String> sourceRefIds = new HashSet<String>();
+            Flow flow = ctx.getFlow();
+            for(Vertex v : flow.getVertices()) {
+                if (flow.getIncomingEdgesOf(v).size() == 0 &&
+                    !v.getRefId().equals(getRefId())) {
+                    sourceRefIds.add(v.getRefId());
+                }
+            }
+            JSONObject msg;
+            if (config.has("message")) {
+                if (config.get("message") instanceof String) {
+                    msg = new JSONObject();
+                    msg.put("$", config.getString("message"));
+                
+                } else {
+                    msg = config.getJSONObject("message");
+                }
+            } else {
+                msg = new JSONObject();
+                msg.put("$", config.getString("start"));
+            }
+            for(String vertexRefId : sourceRefIds) {
+                String controlChannelName = 
+                    MVMFunction.deriveControlChannelName(vertexRefId);
+                Mecha.getChannels().getChannel(controlChannelName).send(msg);
+            }
+        }
+    }
     
     /*
      * ClientSink is a generic "sink" function that forwards

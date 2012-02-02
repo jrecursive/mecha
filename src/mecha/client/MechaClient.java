@@ -157,6 +157,7 @@ public class MechaClient extends MechaClientHandler {
     
     public void exec(String cmd, int msTimeout) throws Exception {
         long t_st = System.currentTimeMillis();
+        /*
         while(waitingForResponse) {
             Thread.sleep(10);
             if (msTimeout > 0 &&
@@ -165,6 +166,7 @@ public class MechaClient extends MechaClientHandler {
                 throw new MechaClient.TimeoutException(cmd + " timed out (" + msTimeout + ")");
             }
         }
+        */
         textClient.send(cmd);
         waitingForResponse = true;
     }
