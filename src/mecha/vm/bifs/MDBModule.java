@@ -94,6 +94,7 @@ public class MDBModule extends MVMModule {
         final private AtomicBoolean stop;
         final private ReentrantLock stateLock;
         final private Thread iteratorThread;
+        final private String iterationLabel;
         
         public PartitionBucketIterator(String refId, MVMContext ctx, JSONObject config) throws Exception {
             super(refId, ctx, config);
@@ -103,6 +104,12 @@ public class MDBModule extends MVMModule {
             next = new AtomicBoolean(false);
             stop = new AtomicBoolean(false);
             stateLock = new ReentrantLock();
+            
+            if (config.has("iterator-name")) {
+                iterationLabel = config.getString("iterator-name");
+            } else {
+                iterationLabel = null;
+            }
             
             /*
              * Dedicated bucket iterator thread.
@@ -127,6 +134,9 @@ public class MDBModule extends MVMModule {
                                         stateLock.lock();
                                         try {
                                             JSONObject msg = new JSONObject(new String(value));
+                                            if (iterationLabel != null) {
+                                                msg.put("$iterator", iterationLabel);
+                                            }
                                             broadcastDataMessage(msg);
                                             count.getAndIncrement();
                                             next.set(false);
