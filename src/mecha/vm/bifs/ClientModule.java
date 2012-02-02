@@ -9,6 +9,7 @@ import java.net.*;
 import mecha.Mecha;
 import mecha.json.*;
 import mecha.vm.*;
+import mecha.vm.channels.*;
 import mecha.vm.flows.*;
 
 public class ClientModule extends MVMModule {
@@ -56,7 +57,10 @@ public class ClientModule extends MVMModule {
             for(String vertexRefId : sourceRefIds) {
                 String controlChannelName = 
                     MVMFunction.deriveControlChannelName(vertexRefId);
-                Mecha.getChannels().getChannel(controlChannelName).send(msg);
+                PubChannel channel = Mecha.getChannels().getChannel(controlChannelName);
+                if (channel != null) {
+                    Mecha.getChannels().getChannel(controlChannelName).send(msg);
+                }
             }
         }
     }
