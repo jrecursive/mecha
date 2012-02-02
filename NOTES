@@ -187,3 +187,88 @@ c -> d
 d -> e
 (start-all-sources message:(start))
 
+
+$block test-js
+onDataMessage = function(x) {
+	log.info("x = " + x);
+};
+$end test-js
+
+a = (function block:test-js language:js data:(some:field another:field a-value:3))
+
+"lockstep functions"
+
+"sequenced functions"
+
+"interval functions"
+
+"fan-out function"
+
+"reduce function"
+
+"vectorize" / "devectorize"
+
+* "named arcs" for reference; e.g., "named ports" of a function instance
+
+
+
+a = (partition-bucket-iterator bucket:zipcodes partition:1141798154164767904846628775559596109106197299200)
+b = (client-sink)
+a -> b
+a ! (start)
+a ! (next)
+a ! (next)
+a ! (next)
+a ! (next)
+reset
+
+
+
+a = (with-coverage partition-marker:"<<p>>" bucket:zipcodes do:(partition-bucket-iterator iterator-name:zipcode-iter-0 bucket:zipcodes partition:<<p>>))
+b = (client-sink)
+a -> b
+a ! (start)
+
+
+a = (with-iterated-coverage partition-marker:"<<p>>" bucket:zipcodes do:(partition-bucket-iterator iterator-name:zipcode-iter-0 bucket:zipcodes partition:<<p>>))
+b = (client-sink)
+a -> b
+a ! (start)
+a ! (next)
+a ! (next)
+a ! (next)
+
+
+
+zipcodes-iter = (with-iterated-coverage partition-marker:"<<p>>" bucket:zipcodes do:(partition-bucket-iterator iterator-name:zipcode-iter-0 bucket:zipcodes partition:<<p>>))
+vec-seq = (vector-sequencer field:key order:asc)
+me = (client-sink)
+zipcodes-iter -> vec-seq
+vec-seq -> me
+zipcodes-iter ! (start)
+zipcodes-iter ! (next)
+zipcodes-iter ! (next)
+zipcodes-iter ! (next)
+
+
+zipcodes-iter = (with-sorted-coverage field:key order:asc partition-marker:"<<p>>" bucket:zipcodes do:(partition-bucket-iterator iterator-name:zipcode-iter-0 bucket:zipcodes partition:<<p>>))
+vec-seq = (vector-sequencer field:key order:asc)
+me = (client-sink)
+zipcodes-iter -> vec-seq
+vec-seq -> me
+zipcodes-iter ! (start)
+zipcodes-iter ! (next)
+zipcodes-iter ! (next)
+zipcodes-iter ! (next)
+
+
+zipcodes-iter = (with-sorted-coverage sort-field:key sort-order:asc partition-marker:"<<p>>" bucket:zipcodes do:(partition-bucket-iterator iterator-name:zipcode-iter-0 bucket:zipcodes partition:<<p>>))
+riak-extractor = (extract-riak-value position:0)
+projection = (project fields:(city_s zipcode_s loc_ll))
+me = (client-sink)
+zipcodes-iter -> riak-extractor
+riak-extractor -> projection
+projection -> me
+zipcodes-iter ! (start)
+
+

@@ -15,5 +15,5 @@ register namespace:$ module-class:mecha.vm.bifs.MDBModule verbs:(materialize-pbk
 
 register namespace:$ module-class:mecha.vm.bifs.ETLModule verbs:(project:Project extract-riak-value:ExtractRiakValue vector-sequencer:VectorSequencer)
 
-register namespace:$ module-class:mecha.vm.bifs.ClusterModule verbs:(with-coverage:WithCoverage with-iterated-coverage:WithIteratedCoverage warp:Warp)
+register namespace:$ module-class:mecha.vm.bifs.ClusterModule verbs:(with-coverage:WithCoverage with-iterated-coverage:WithIteratedCoverage with-sorted-coverage:WithSortedCoverage warp:Warp)
 

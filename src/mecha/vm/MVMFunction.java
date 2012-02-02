@@ -193,6 +193,7 @@ public abstract class MVMFunction {
      * Broadcast a data message to all outgoingChannels.
     */
     public void broadcastDataMessage(JSONObject msg) throws Exception {
+        msg.put("$origin", getRefId());
         for(PubChannel channel : outgoingChannels) {
             channel.send(msg);
         }
@@ -202,6 +203,7 @@ public abstract class MVMFunction {
      * Broadcast a control message to all outgoingChannels.
     */
     public void broadcastControlMessage(JSONObject msg) throws Exception {
+        msg.put("$origin", getRefId());
         for(PubChannel channel : outgoingChannels) {
             PubChannel dataChannel = 
                 Mecha.getChannels().getChannel(
@@ -214,6 +216,7 @@ public abstract class MVMFunction {
      * Broadcast a control message to all incomingChannels.
     */
     public void broadcastControlMessageUpstream(JSONObject msg) throws Exception {
+        msg.put("$origin", getRefId());
         for(PubChannel channel : incomingChannels) {
             PubChannel dataChannel = 
                 Mecha.getChannels().getChannel(
@@ -237,7 +240,6 @@ public abstract class MVMFunction {
     }
     
     public void broadcastDoneUpstream(JSONObject msg) throws Exception {
-        msg.put("$", "done");
         broadcastControlMessageUpstream(msg);
     }
 
@@ -246,6 +248,7 @@ public abstract class MVMFunction {
     */
     public void sendData(String channel, JSONObject obj) throws Exception {
         PubChannel dataChannel = Mecha.getChannels().getChannel(channel);
+        obj.put("$origin", getRefId());
         dataChannel.send(obj);
     }
         
@@ -257,6 +260,7 @@ public abstract class MVMFunction {
     */
     public void sendControl(String channel, JSONObject obj) throws Exception {
         PubChannel controlChannel = Mecha.getChannels().getChannel(deriveControlChannelName(channel));
+        obj.put("$origin", getRefId());
         controlChannel.send(obj);
     }
     

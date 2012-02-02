@@ -185,8 +185,6 @@ public class MDBModule extends MVMModule {
         }
         
         public void onControlMessage(JSONObject msg) throws Exception {
-            log.info("control message : " + msg.toString(2));
-            
             if (!iteratorThread.isAlive()) {
                 log.info("iterator thread has not been started!");
                 return;
