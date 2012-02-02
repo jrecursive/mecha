@@ -1,5 +1,6 @@
 package mecha;
 
+import java.io.*;
 import java.util.*;
 import java.util.logging.*;
 import java.util.concurrent.*;
@@ -254,6 +255,18 @@ public class Mecha {
     public static String getGuidType(String guid) throws Exception {
         return guid.split(GUID_SEP)[2];
     }
+    
+    /*
+     * Universally useful helpers.
+    */
+    
+    public static String[] exceptionToStringArray(Exception ex) {
+        final Writer result = new StringWriter();
+        final PrintWriter printWriter = new PrintWriter(result);
+        ex.printStackTrace(printWriter);
+        return result.toString().split("\n");
+    }
+
 
     /*
      * Shutdown hook.

@@ -86,6 +86,13 @@ public class Server {
                 log.info("removed subscription to " + chan + 
                     " for " + cl + " <" + connection + ">");
             }
+            try {
+                log.info("resetting context");
+                cl.getContext().reset();
+                log.info("cleanup complete <" + cl.toString() + ">");
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
         }
         clientMap.remove(connection);
         log.info("disconnect: " + connection);
@@ -108,7 +115,7 @@ public class Server {
                 /*
                  * End of block.
                 */
-                if (request.equals("$end-block " + cl.getBlockName())) {
+                if (request.equals("$end " + cl.getBlockName())) {
                     cl.setWithinBlock(false);
                     cl.getContext().setBlock(cl.getBlockName(), cl.getBlock());
                     send(connection, OK_RESPONSE + HashUtils.sha1(cl.getBlockName()));
@@ -154,7 +161,7 @@ public class Server {
             /*
              * Block definition commands.
             */
-            } else if (cmd.equals("$define-block")) {
+            } else if (cmd.equals("$block")) {
                 String blockName = parts[1];
                 log.info("blockName = " + blockName);
                 cl.clearBlock();

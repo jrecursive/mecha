@@ -103,6 +103,9 @@ public class MechaClient extends MechaClientHandler {
                         } else if (obj.has("$type") &&
                             obj.getString("$type").equals("control")) {
                             handler.onControlEvent(channel, obj);    
+                        } else if (obj.has("$type") &&
+                            obj.getString("$type").equals("cancel")) {
+                            handler.onDoneEvent(channel, obj);    
                         } else {
                             handler.onDataMessage(channel, obj);
                         }

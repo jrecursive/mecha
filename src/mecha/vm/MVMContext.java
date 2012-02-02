@@ -217,6 +217,10 @@ public class MVMContext {
     public void startFunctionTask(String vertexRefId, MVMFunction inst)
         throws Exception {
         
+        if (functionExecutor.isShutdown()) {
+            throw new Exception("function executor has been shut down, try again");
+        }
+        
         /*
          * Data Channel
         */
@@ -237,6 +241,22 @@ public class MVMContext {
                                        dataFiber,
                                        jetlangControlChannel,
                                        inst.getControlChannelCallback());
+    }
+    
+    private void cancelAllFunctions(String reason) throws Exception {
+        for(String refId : funRefs.keySet()) {
+            WeakReference<MVMFunction> funRef = funRefs.get(refId);
+            MVMFunction fun = funRef.get();
+            if (fun != null) {
+                log.info("cancel: " + refId + ": reason: " + reason);
+                JSONObject cancelMsg = new JSONObject();
+                cancelMsg.put("$", "cancel");
+                cancelMsg.put("reason", reason);
+                fun.cancel(cancelMsg);
+            } else {
+                log.info("cancel: " + refId + ": void reference (already dead)");
+            }
+        }
     }
     
     /*
@@ -263,21 +283,21 @@ public class MVMContext {
     }
     
     private void shutdownFunctionExecutor() throws Exception {
-        List<Runnable> waitingTasks = 
-            functionExecutor.shutdownNow();
-        for(Runnable r : waitingTasks) {
-            log.info("executor: killing waiting task: " + r);
-            if (r instanceof Thread) {
-                log.info("interrupting: " + r);
-                ((Thread)r).interrupt();
-            }
-        }
+        functionExecutor.shutdownNow();
         while(!functionExecutor.isTerminated()) {
-            log.info("isTerminated: " + functionExecutor.isTerminated());
+            List<Runnable> waitingTasks = 
+                functionExecutor.shutdownNow();
+            if (waitingTasks.size() == 0) break;
+            log.info(waitingTasks.size() + " waiting tasks: ");
+            for(Runnable r : waitingTasks) {
+                log.info("task: " + r.toString() + " <" + r.getClass().getName() + ">");
+                if (r instanceof Thread) {
+                    log.info("interrupting: " + r);
+                    ((Thread)r).interrupt();
+                }
+            }
             Thread.sleep(1000);
-            functionExecutor.shutdownNow();
         }
-        log.info("functionExecutor terminated");
         functionExecutor = null;
     }
     
@@ -296,6 +316,7 @@ public class MVMContext {
      * Clear all assignments (vars), reset jetlang primitives and create a new empty flow.
     */
     public void reset() throws Exception {
+        cancelAllFunctions("reset");
         resetJetlangPrimitives();
         clearVars();
         clearBlocks();

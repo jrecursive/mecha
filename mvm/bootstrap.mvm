@@ -11,7 +11,7 @@ register namespace:$ module-class:mecha.vm.bifs.ClientModule verbs:(client-sink:
 
 register namespace:$ module-class:mecha.vm.bifs.SolrModule verbs:(solr-select:Select)
 
-register namespace:$ module-class:mecha.vm.bifs.MDBModule verbs:(materialize-pbk-stream:MaterializePBKStream stream-partition-bucket:StreamPartitionBucket)
+register namespace:$ module-class:mecha.vm.bifs.MDBModule verbs:(materialize-pbk-stream:MaterializePBKStream stream-partition-bucket:StreamPartitionBucket partition-bucket-iterator:PartitionBucketIterator)
 
 register namespace:$ module-class:mecha.vm.bifs.ETLModule verbs:(extract:Extract extract-riak-value:ExtractRiakValue)
 
