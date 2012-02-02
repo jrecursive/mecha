@@ -72,6 +72,10 @@ public class JSONArray {
         return obj;
     }
     
+    public List<Object> asList() {
+        return obj;
+    }
+    
     /*
      * toString
     */
