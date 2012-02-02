@@ -24,11 +24,9 @@ public class SolrModule extends MVMModule {
     }
     
     public void moduleLoad() throws Exception {
-        log.info("moduleLoad()");   
     }
     
     public void moduleUnload() throws Exception {
-        log.info("moduleUnload()");
     }
     
     public class Select extends MVMFunction {
@@ -124,14 +122,6 @@ public class SolrModule extends MVMModule {
             doneMsg.put("count", count);
             doneMsg.put("found", rawFound);
             broadcastDone(doneMsg);
-        }
-        
-        public void onCancelEvent(JSONObject msg) throws Exception {
-            log.info("onCancelEvent: " + msg.toString(2));
-        }
-        
-        public void onDoneEvent(JSONObject msg) throws Exception {
-            log.info("onDoneEvent: " + msg.toString(2));
         }
     }
 }

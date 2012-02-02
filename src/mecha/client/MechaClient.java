@@ -4,27 +4,28 @@ import java.io.*;
 import java.net.*;
 import java.util.*;
 import java.util.logging.*;
-
-import net.tootallnate.websocket.Draft;
-import net.tootallnate.websocket.WebSocketClient;
-import net.tootallnate.websocket.drafts.Draft_76;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import mecha.json.*;
+import mecha.client.net.*;
 
-public class MechaClient extends WebSocketClient {
+public class MechaClient extends MechaClientHandler {
     final private static Logger log = 
         Logger.getLogger(MechaClient.class.getName());
-
-    final private String url;
+    
+    final private String host;
+    final private int port;
     final private String password;
     final private MechaClientHandler handler;
+    final private TextClient textClient;
     
     private boolean connected = false;
     private boolean waitingForResponse = false;
 
-    public MechaClient(String url, 
+    public MechaClient(String host, 
+                       int port,
                        String password) throws Exception {
-        this(url, password, new MechaClientHandler() {
+        this(host, port, password, new MechaClientHandler() {
             public void onSystemMessage(JSONObject msg) throws Exception {
                 log.info("<system> " + msg.toString(2));
             }
@@ -40,6 +41,10 @@ public class MechaClient extends WebSocketClient {
             public void onError(Exception ex) {
                 log.info("<error> " + ex.toString());
                 ex.printStackTrace();
+            }
+            
+            public void onMessage(String msg) {
+                log.info("this should never happen: " + msg);
             }
 
             public void onDataMessage(String channel, JSONObject msg) throws Exception {
@@ -64,19 +69,15 @@ public class MechaClient extends WebSocketClient {
         });
     }
     
-    public MechaClient(String url, 
+    public MechaClient(String host, 
+                       int port, 
                        String password, 
                        MechaClientHandler handler) throws Exception {
-        super(new URI(url), new Draft_76());
-        this.url = url;
+        this.host = host;
+        this.port = port;
         this.password = password;
         this.handler = handler;
-        
-        connect();
-        while(!connected) {
-            Thread.sleep(1);
-        }
-        send("auth " + password);
+        textClient = new TextClient(host, port, password, this);
     }
     
     public void onMessage(String message) {
@@ -143,15 +144,15 @@ public class MechaClient extends WebSocketClient {
         waitingForResponse = false;
     }
 
-    public void onIOError(IOException ex) {
+    public void onError(Exception ex) {
         handler.onError(ex);
-        log.info("onIOError(ex): " + ex.toString());
+        log.info("onError(ex): " + ex.toString());
         ex.printStackTrace();
         waitingForResponse = false;
     }
 
     public void exec(String cmd) throws Exception {
-        exec(cmd, 0);
+        exec(cmd, 60000);
     }
     
     public void exec(String cmd, int msTimeout) throws Exception {
@@ -160,10 +161,11 @@ public class MechaClient extends WebSocketClient {
             Thread.sleep(10);
             if (msTimeout > 0 &&
                 System.currentTimeMillis() - t_st > msTimeout) {
+                waitingForResponse = false;
                 throw new MechaClient.TimeoutException(cmd + " timed out (" + msTimeout + ")");
             }
         }
-        send(cmd);
+        textClient.send(cmd);
         waitingForResponse = true;
     }
     
@@ -177,29 +179,4 @@ public class MechaClient extends WebSocketClient {
         }
     }
     
-    /*
-     * Consumer interface.
-    */
-    
-    public interface MechaClientHandler {
-        
-        public void onSystemMessage(JSONObject msg) throws Exception;
-        
-        public void onOpen() throws Exception;
-         
-        public void onClose() throws Exception;
-        
-        public void onError(Exception exception);
-        
-        public void onDoneEvent(String channel, JSONObject msg) throws Exception;
-        
-        public void onControlEvent(String channel, JSONObject msg) throws Exception;
-        
-        public void onDataMessage(String channel, JSONObject msg) throws Exception;
-        
-        public void onOk(String msg) throws Exception;
-        
-        public void onInfo(String msg) throws Exception;
-        
-    }
 }

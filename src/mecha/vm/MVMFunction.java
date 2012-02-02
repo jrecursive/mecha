@@ -232,6 +232,7 @@ public abstract class MVMFunction {
     
     public void broadcastDone(JSONObject msg) throws Exception {
         msg.put("$", "done");
+        msg.put("$type", "done");
         broadcastControlMessage(msg);
     }
     

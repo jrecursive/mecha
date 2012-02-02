@@ -130,7 +130,6 @@ public class MVMContext {
     
     public void send(JSONObject msg) throws Exception {
         getClient().getChannel().send(msg);
-        //log.info(msg.toString(2));
     }
     
     /*
@@ -237,7 +236,12 @@ public class MVMContext {
                 ((Thread)r).interrupt();
             }
         }
-        log.info("isTerminated: " + functionExecutor.isTerminated());
+        while(!functionExecutor.isTerminated()) {
+            log.info("isTerminated: " + functionExecutor.isTerminated());
+            Thread.sleep(1000);
+            functionExecutor.shutdownNow();
+        }
+        log.info("functionExecutor terminated");
         functionExecutor = null;
     }
     

@@ -10,51 +10,49 @@ import java.security.MessageDigest;
 import java.net.*;
 
 import mecha.Mecha;
+import mecha.server.net.*;
 import mecha.util.*;
 import mecha.vm.*;
 import mecha.vm.channels.*;
 import mecha.db.MDB;
 import mecha.json.*;
 
-import org.webbitserver.*;
-import org.webbitserver.handler.*;
-import org.webbitserver.handler.exceptions.*;
-
+import org.jboss.netty.channel.ChannelHandlerContext;
 import mecha.json.*;
 
-public class Server implements WebSocketHandler {
+public class Server {
     final private static Logger log = 
         Logger.getLogger(Server.class.getName());
     
     final private static String OK_RESPONSE = ":OK ";
     
+    final private Thread netServerThread;
+    
     final private String password;
-    final private WebServer webServer;
     private int connectionCount;
         
     /*
      * map: connections -> clients
      * map: client ids -> clients
     */
-    final private Map<WebSocketConnection, Client> clientMap;
+    final private Map<ChannelHandlerContext, Client> clientMap;
     final private Map<String, Client> clientIdMap;
         
     public Server() throws Exception {
         this.password = Mecha.getConfig().getString("password");
-        clientMap = new ConcurrentHashMap<WebSocketConnection, Client>();
+        clientMap = new ConcurrentHashMap<ChannelHandlerContext, Client>();
         clientIdMap = new ConcurrentHashMap<String, Client>();
-        webServer = 
-            WebServers.createWebServer(Mecha.getConfig().getInt("client-port"))
-                .add(Mecha.getConfig().getString("client-endpoint"), this)
-                .add(new StaticFileHandler(Mecha.getConfig().getString("client-www-root")));
+        
+        int port = Mecha.getConfig().getInt("client-port");
+        netServerThread = new Thread(new MechaServer(port));
     }
     
     public void start() throws Exception {
-        webServer.start();
+        netServerThread.start();
         log.info("started");
-    }        
+    }
     
-    public void onOpen(WebSocketConnection connection) {
+    public void onOpen(ChannelHandlerContext connection) {
         try {
             connectionCount++;
             Client cl = new Client(connection);
@@ -72,9 +70,10 @@ public class Server implements WebSocketHandler {
         }
     }
     
-    public void onClose(WebSocketConnection connection) {
+    public void onClose(ChannelHandlerContext connection) {
         connectionCount--;
         Client cl = clientMap.get(connection);
+        if (cl == null) return;
         clientIdMap.remove(cl.getId());
         if (null != cl) {
             log.info("* client cleanup: " + connection);
@@ -92,12 +91,12 @@ public class Server implements WebSocketHandler {
         log.info("disconnect: " + connection);
     }
     
-    public void onMessage(WebSocketConnection connection, String request) {
+    public void onMessage(ChannelHandlerContext connection, String request) {
         try {
             Client cl = clientMap.get(connection);
             
             if (cl == null) {
-                connection.send("ERR :no client for connection :this should never happen");
+                send(connection, "ERR :no client for connection :this should never happen");
                 return;
             }
             
@@ -110,15 +109,15 @@ public class Server implements WebSocketHandler {
                 String pass = parts[1];
                 if (password.equals(pass)) {
                     cl.setAuthorized(true);
-                    connection.send("OK");
+                    send(connection, "OK");
                     return;
                 } else {
-                    connection.close();
+                    connection.getChannel().close();
                 }
             }
             
             if (!cl.isAuthorized()) {
-                connection.close();
+                connection.getChannel().close();
             }
             
             String response = null;
@@ -138,9 +137,9 @@ public class Server implements WebSocketHandler {
             }
             
             if (response == null) {
-                connection.send(OK_RESPONSE + HashUtils.sha1(request));
+                send(connection, OK_RESPONSE + HashUtils.sha1(request));
             } else {
-                connection.send(response);
+                send(connection, response);
             }
             
         } catch (Exception ex) {
@@ -148,12 +147,12 @@ public class Server implements WebSocketHandler {
         }
     }
     
-    public void onMessage(WebSocketConnection connection, byte[] message) {
-        log.info("onMessage(" + connection + ", <" + message.length + " bytes> " + (new String(message)) + ")");
+    private void send(ChannelHandlerContext connection, String message) throws Exception {
+        connection.getChannel().write(message + "\n");
     }
     
-    public void onPong(WebSocketConnection connection, String message) {
-        log.info("onPong(" + connection + ", " + message + ")");
+    public void onMessage(ChannelHandlerContext connection, byte[] message) {
+        log.info("onMessage(" + connection + ", <" + message.length + " bytes> " + (new String(message)) + ")");
     }
     
     /*

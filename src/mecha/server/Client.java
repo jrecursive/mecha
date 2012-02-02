@@ -5,15 +5,12 @@ import java.util.*;
 import java.util.concurrent.*;
 import java.util.logging.*;
 
-import org.webbitserver.*;
-import org.webbitserver.handler.*;
-import org.webbitserver.handler.exceptions.*;
+import org.jboss.netty.channel.ChannelHandlerContext;
 
 import mecha.Mecha;
 import mecha.util.*;
 import mecha.vm.*;
 import mecha.vm.channels.*;
-
 import mecha.json.*;
 
 /*
@@ -33,7 +30,7 @@ public class Client implements ChannelConsumer {
      * messaging via mecha.vm.channels.Channels
     */
     final private Set<String> subscriptions;
-    final private WeakReference<WebSocketConnection> connection;
+    final private WeakReference<ChannelHandlerContext> connection;
     final private PubChannel clientChannel;
     
     /*
@@ -46,7 +43,7 @@ public class Client implements ChannelConsumer {
     */
     final private String id;
     
-    public Client(WebSocketConnection connection) throws Exception {
+    public Client(ChannelHandlerContext connection) throws Exception {
         id = "socket-" +
              HashUtils.sha1(
                 UUID.randomUUID() + "-" +
@@ -55,7 +52,7 @@ public class Client implements ChannelConsumer {
         log.info("new client: " + id);
     
         state = new ConcurrentHashMap<String, String>();
-        this.connection = new WeakReference<WebSocketConnection>(connection);
+        this.connection = new WeakReference<ChannelHandlerContext>(connection);
         subscriptions = Collections.synchronizedSet(new HashSet());
         
         /*
@@ -123,7 +120,7 @@ public class Client implements ChannelConsumer {
         return id;
     }
     
-    public WebSocketConnection getConnection() {
+    public ChannelHandlerContext getConnection() {
         return connection.get();
     }
     
@@ -135,14 +132,14 @@ public class Client implements ChannelConsumer {
         JSONObject messageObj = new JSONObject();
         messageObj.put("c", channel);
         messageObj.put("o", message);
-        connection.get().send(messageObj.toString());
+        send(messageObj.toString());
     }
     
     public void onMessage(String channel, JSONObject message) throws Exception {
         JSONObject messageObj = new JSONObject();
         messageObj.put("c", channel);
         messageObj.put("o", message);
-        connection.get().send(messageObj.toString());
+	    send(messageObj.toString());
     }
     
     /*
@@ -150,6 +147,14 @@ public class Client implements ChannelConsumer {
      *  have an implicit understanding with the receivers
     */
     public void onMessage(String channel, byte[] message) throws Exception {
-        connection.get().send(message);
+        send(message);
+    }
+    
+    public void send(String message) throws Exception {
+        connection.get().getChannel().write(message + "\n").awaitUninterruptibly();
+    }
+    
+    public void send(byte[] message) throws Exception {
+        send(new String(message));
     }
 }

@@ -37,10 +37,14 @@ public class ETLModule extends MVMModule {
         public Extract(String refId, MVMContext ctx, JSONObject config) throws Exception {
             super(refId, ctx, config);
             fields = new HashSet<String>();
-            JSONArray fieldArray = config.getJSONArray("fields");
-            for (int i=0; i<fieldArray.length(); i++) {
-                final String field = fieldArray.getString(i);
-                fields.add(field);
+            if (config.get("fields") instanceof String) {
+                fields.add(config.getString("fields"));
+            } else {
+                JSONArray fieldArray = config.getJSONArray("fields");
+                for (int i=0; i<fieldArray.length(); i++) {
+                    final String field = fieldArray.getString(i);
+                    fields.add(field);
+                }
             }
         }
         
@@ -64,10 +68,15 @@ public class ETLModule extends MVMModule {
         }
         
         public void onDataMessage(JSONObject msg) throws Exception {
-            broadcastDataMessage(new JSONObject(
-                msg.getJSONArray("values")
-                   .getJSONObject(position)
-                   .getString("data")));
+            try {
+                broadcastDataMessage(new JSONObject(
+                    msg.getJSONArray("values")
+                       .getJSONObject(position)
+                       .getString("data")));
+            } catch (Exception ex) {
+                ex.printStackTrace();
+                log.info(msg.toString(2));
+            }
         }
     }
 

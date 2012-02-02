@@ -13,10 +13,11 @@ public class MechaCLI {
         if (args.length < 2) {
             log.info("usage: MechaCLI <ws://host:port/mecha> <password>");
         }
-        String url = args[0];
-        String pass = args[1];
+        String host = args[0];
+        int port = Integer.parseInt(args[1]);
+        String pass = args[2];
         
-        MechaClient client = new MechaClient(url, pass);
+        MechaClient client = new MechaClient(host, port, pass);
         
         ConsoleReader reader = new ConsoleReader();
         reader.setBellEnabled(false);

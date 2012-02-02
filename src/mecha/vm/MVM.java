@@ -263,10 +263,12 @@ public class MVM {
     private void dynamicInvoke(MVMContext ctx, 
                                  String verb, 
                                  JSONObject ast) throws Exception {
-        String sourceRefId = nativeAssignment(ctx, "$dyn$source", ast);
-        execute(ctx, "$dyn$sink = (client-sink)");
-        execute(ctx, "$dyn$source -> $dyn$sink");
-        execute(ctx, "$dyn$source ! (start)");
+        String sinkVar = HashUtils.sha1(Mecha.guid(MVM.class));
+        String sourceVar = HashUtils.sha1(Mecha.guid(MVM.class));
+        String sourceRefId = nativeAssignment(ctx, sourceVar, ast);
+        execute(ctx, sinkVar + " = (client-sink)");
+        execute(ctx, sourceVar + " -> " + sinkVar);
+        execute(ctx, sourceVar + " ! (start)");
     }
     
     /*
