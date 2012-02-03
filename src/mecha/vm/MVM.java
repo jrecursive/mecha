@@ -15,7 +15,10 @@ import org.jetlang.channels.*;
 import org.jetlang.core.*;
 import org.jetlang.fibers.*;
 
-import mecha.json.*;
+import org.apache.velocity.app.Velocity;
+import org.apache.velocity.VelocityContext;
+import org.apache.velocity.exception.ParseErrorException;
+import org.apache.velocity.exception.MethodInvocationException;
 
 import mecha.Mecha;
 import mecha.db.*;
@@ -23,6 +26,7 @@ import mecha.util.*;
 import mecha.server.*;
 import mecha.vm.parser.*;
 import mecha.vm.flows.*;
+import mecha.json.*;
 
 public class MVM {
     final private static Logger log = 
@@ -52,7 +56,8 @@ public class MVM {
     public MVM() throws Exception {
         verbMap = new ConcurrentHashMap<String, RegisteredFunction>();
         moduleMap = new ConcurrentHashMap<String, MVMModule>();
-    
+        Velocity.init();
+        
         bootstrap();
     }
     
@@ -194,7 +199,6 @@ public class MVM {
             */
             else {
                 verb = this.<String>get(ast, "$");
-                //log.info("verb: " + verb);
                 
                 /*
                  * Native built-in verbs
@@ -205,12 +209,17 @@ public class MVM {
                     nativeDumpVars(ctx);
                 } else if (verb.equals("reset")) {
                     nativeReset(ctx);
-                }
                 
+                /*
+                 * Macro expansion
+                */
+                } else if (verb.startsWith("#")) {
+                    nativeMacro(ctx, verb, ast);
+                    
                 /*
                  * "Auto-wired" invocation
                 */
-                else {
+                } else {
                     dynamicInvoke(ctx, verb, ast);
                 }
             }
@@ -451,6 +460,31 @@ public class MVM {
                     namespacedVerb + " -> " + 
                     (verbMap.get(namespacedVerb)).getVerbClassName());
             }
+        }
+    }
+    
+    private void nativeMacro(MVMContext ctx, String verb, JSONObject ast)
+        throws Exception {
+        
+        String macroName = verb.substring(1);
+        List<String> blockDef = ctx.getBlock(macroName);
+        StringBuffer blockStrBuf = new StringBuffer();
+        for(String s : blockDef) {
+            blockStrBuf.append(s);
+            blockStrBuf.append("\n");
+        }
+        String blockStr = blockStrBuf.toString();
+        
+        VelocityContext context = new VelocityContext();
+        context.put("ctx", ctx);
+        context.put("args", ast);
+        
+        StringWriter w = new StringWriter();
+        Velocity.evaluate(context, w, "#" + verb, blockStr);
+        
+        String[] renderedMacro = w.toString().split("\n");
+        for(String line : renderedMacro) {
+            execute(ctx, line);
         }
     }
     

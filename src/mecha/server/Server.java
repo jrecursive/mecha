@@ -115,7 +115,7 @@ public class Server {
                 /*
                  * End of block.
                 */
-                if (request.equals("$end " + cl.getBlockName())) {
+                if (request.equals("#end " + cl.getBlockName())) {
                     cl.setWithinBlock(false);
                     cl.getContext().setBlock(cl.getBlockName(), cl.getBlock());
                     send(connection, OK_RESPONSE + HashUtils.sha1(cl.getBlockName()));
@@ -161,7 +161,7 @@ public class Server {
             /*
              * Block definition commands.
             */
-            } else if (cmd.equals("$block")) {
+            } else if (cmd.equals("#define")) {
                 String blockName = parts[1];
                 log.info("blockName = " + blockName);
                 cl.clearBlock();

@@ -285,7 +285,8 @@ public class ClusterModule extends MVMModule {
             }
             refIdToObj.put(origin, msg);
             if (refIdToObj.keySet().size() == (proxyVars.size() - doneCount)) {
-                JSONObject[] values = (JSONObject[]) refIdToObj.values().toArray(new JSONObject[0]);
+                JSONObject[] values = 
+                    (JSONObject[]) refIdToObj.values().toArray(new JSONObject[0]);
                 Arrays.<JSONObject>sort(values, comparatorFun);
                 JSONObject winner = values[0];
                 String winnerOrigin = 
@@ -314,7 +315,8 @@ public class ClusterModule extends MVMModule {
                 /*
                  * Empty the remaining entries in the map.
                 */
-                JSONObject[] values = (JSONObject[]) refIdToObj.values().toArray(new JSONObject[0]);
+                JSONObject[] values = 
+                    (JSONObject[]) refIdToObj.values().toArray(new JSONObject[0]);
                 Arrays.<JSONObject>sort(values, comparatorFun);
                 for(JSONObject obj: values) {
                     broadcastDataMessage(obj);
