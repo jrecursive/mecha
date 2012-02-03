@@ -478,6 +478,7 @@ public class MVM {
         VelocityContext context = new VelocityContext();
         context.put("ctx", ctx);
         context.put("args", ast);
+        context.put("guid", Mecha.guid(Velocity.class));
         
         StringWriter w = new StringWriter();
         Velocity.evaluate(context, w, "#" + verb, blockStr);
