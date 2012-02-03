@@ -1,5 +1,27 @@
 :D
 
+#define query-get
+
+${guid}-iter = (with-sorted-coverage partition-marker:"<<p-${guid}>>" host-marker:"<<h-${guid}>>" sort-field:key sort-order:asc bucket:$args.bucket do:(solr-select-iterator host:<<h-${guid}>> params:(q:"partition:<<p-${guid}>> AND bucket:${args.bucket} ${args.q}" sort:"key asc"))
+${guid}-solr-materializer = (materialize-pbk-stream)
+${guid}-riak-extractor = (extract-riak-value position:0)
+${guid}-projection = (project fields:(city_s zipcode_s loc_ll))
+${guid}-limit = (limit count:1)
+
+${guid}-iter -> ${guid}-solr-materializer
+${guid}-solr-materializer -> ${guid}-riak-extractor
+${guid}-riak-extractor -> ${guid}-projection
+${guid}-projection -> ${guid}-limit
+${guid}-limit -> ${args.sink}
+${guid}-iter ! (start)
+
+#end query-get
+
+me = (client-sink)
+(#query-get bucket:zipcodes sink:me q:"city_t:f*")
+
+
+-----
 
 mecha-cli> 
 mecha-cli> zipcodes-iter = (with-sorted-coverage sort-field:key sort-order:asc partition-marker:"<<p>>" bucket:zipcodes do:(partition-bucket-iterator iterator-name:zipcode-iter-0 bucket:zipcodes partition:<<p>>))
