@@ -67,12 +67,14 @@ public class StreamModule extends MVMModule {
         }
         
         public void onDataMessage(JSONObject msg) throws Exception {
-            count++;
-            if (count <= total) {
+            if (count > total) {
+                return;
+            } else if (count < total) {
                 broadcastDataMessage(msg);
-            } else {
+            } else if (count == total) {
                 broadcastDone();
             }
+            count++;
         }
         
         public void onDoneEvent(JSONObject msg) throws Exception {
