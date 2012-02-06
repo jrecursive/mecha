@@ -53,22 +53,23 @@
     ##
     ## solr-home: directory where solr.xml exists
     ## solr-cores: solr cores defined in solr.xml to automatically start
-    ## solr-url: deprecated
     ##
     "solr-home": "./solr",
     "solr-data-dir": "/mecha/index",
     "solr-temporary-data-dir": "/mecha/tmp",
     "solr-cores": [ "index", "tmp" ],
-    "solr-url": "http://127.0.0.1:7331/solr/index",
     
     ##
-    ## client-port: websocket listen port
-    ## client-endpoint: websocket endpoint
-    ## client-www-root: websocket server www root
+    ## client-port: socket client listen port
     ##
     "client-port": 10102,
-    "client-endpoint": "/mecha",
-    "client-www-root": "./www",
+    
+    ##
+    ## http-port: http client listen port
+    ## www-root: directory /* files are served from
+    ##
+    "http-port": 10103,
+    "www-root": "./www",
     
     ##
     ## ***************************************

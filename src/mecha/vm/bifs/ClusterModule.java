@@ -204,8 +204,8 @@ public class ClusterModule extends MVMModule {
             comparatorFun = new Comparator<JSONObject>() {
                 public int compare(JSONObject obj1, JSONObject obj2) {
                     try {
-                        String value1 = obj1.getString(sortField);
-                        String value2 = obj2.getString(sortField);
+                        String value1 = "" + obj1.get(sortField);
+                        String value2 = "" + obj2.get(sortField);
                         if (isAscending) {
                             return collator.compare(value1, value2);
                         } else {

@@ -8,6 +8,7 @@ import java.util.concurrent.*;
 import mecha.json.*;
 import mecha.util.*;
 import mecha.server.*;
+import mecha.http.*;
 import mecha.db.*;
 import mecha.jinterface.*;
 import mecha.vm.MVM;
@@ -22,6 +23,7 @@ public class Mecha {
     final private MVM mvm;
     final private MDB mdb;
     final private Server server;
+    final private HTTPServer httpServer;
     final private SolrManager solrManager;
     final private RiakConnector riakConnector;
     final private RiakRPC riakRPC;
@@ -73,6 +75,9 @@ public class Mecha {
         log.info("* starting socket server");
         server = new Server();
         
+        log.info("* starting http server");
+        httpServer = new HTTPServer();
+        
         // log.info("* starting web services");
         // TODO: jetty ws integ
         
@@ -102,6 +107,7 @@ public class Mecha {
         mdb.startMDB();
         riakConnector.startConnector();
         server.start();
+        httpServer.start();
     }
     
     /* 
