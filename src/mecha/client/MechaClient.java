@@ -20,7 +20,6 @@ public class MechaClient extends MechaClientHandler {
     final private TextClient textClient;
     
     private boolean connected = false;
-    private boolean waitingForResponse = false;
 
     public MechaClient(String host, 
                        int port,
@@ -84,7 +83,6 @@ public class MechaClient extends MechaClientHandler {
         try {
             // Command-driven :OK <sha1(cmd)> response.
             if (message.startsWith(":OK")) {
-                waitingForResponse = false;
                 handler.onOk(message.substring(message.indexOf(" ")).trim());
             
             // Potential data message
@@ -98,7 +96,6 @@ public class MechaClient extends MechaClientHandler {
                         JSONObject obj = msg.getJSONObject("o");
                         if (obj.has("$type") &&
                             obj.getString("$type").equals("done")) {
-                            waitingForResponse = false;
                             handler.onDoneEvent(channel, obj);
                         } else if (obj.has("$type") &&
                             obj.getString("$type").equals("control")) {
@@ -134,7 +131,6 @@ public class MechaClient extends MechaClientHandler {
         } catch (Exception ex) {
             handler.onError(ex);
         }
-        waitingForResponse = false;
     }
 
     public void onClose() {
@@ -144,44 +140,16 @@ public class MechaClient extends MechaClientHandler {
         } catch (Exception ex) {
             handler.onError(ex);
         }
-        waitingForResponse = false;
     }
 
     public void onError(Exception ex) {
         handler.onError(ex);
         log.info("onError(ex): " + ex.toString());
         ex.printStackTrace();
-        waitingForResponse = false;
     }
 
     public void exec(String cmd) throws Exception {
-        exec(cmd, 60000);
-    }
-    
-    public void exec(String cmd, int msTimeout) throws Exception {
-        long t_st = System.currentTimeMillis();
-        /*
-        while(waitingForResponse) {
-            Thread.sleep(10);
-            if (msTimeout > 0 &&
-                System.currentTimeMillis() - t_st > msTimeout) {
-                waitingForResponse = false;
-                throw new MechaClient.TimeoutException(cmd + " timed out (" + msTimeout + ")");
-            }
-        }
-        */
         textClient.send(cmd);
-        waitingForResponse = true;
-    }
-    
-    /*
-     * TimeoutException (for exec)
-    */
-    
-    public class TimeoutException extends Exception {
-        public TimeoutException(String msg) {
-            super(msg);
-        }
     }
     
 }

@@ -152,12 +152,42 @@ public class Server {
             
             // used by "warp" (and other rpc mechanisms) to execute
             //  a pre-generated AST
-            if (cmd.equals("$exec")) {
+            if (cmd.equals("$execute")) {
                 String astStr = cmd.substring(cmd.length()+1);
                 JSONObject ast = new JSONObject(astStr);
-                log.info("mvm: execute: " + cl + "/" + cl.getContext() + ": " + ast.toString());
+                log.info("mvm: $execute: " + cl + "/" + cl.getContext() + ": " + ast.toString());
                 response = Mecha.getMVM().execute(cl.getContext(), ast);
-
+            
+            /*
+             * WarpDelegate "shortcut" to assign a vertex via JSON AST.
+            */
+            } else if (cmd.equals("$assign")) {
+                String varName = parts[1];
+                JSONObject ast = 
+                    new JSONObject(request.substring(cmd.length() + varName.length() + 2).trim());
+                log.info("mvm: $assign: " + varName + ": " + cl + "/" + cl.getContext() + ": " + ast.toString());
+                response = Mecha.getMVM().nativeAssignment(cl.getContext(), varName, ast);
+                
+            /*
+             * WarpDelegate "shortcut" to send a JSON control channel message.
+            */
+            } else if (cmd.equals("$control")) {
+                String channel = parts[1];
+                JSONObject ast = 
+                    new JSONObject(request.substring(cmd.length() + channel.length() + 2).trim());
+                log.info("mvm: $control: " + channel + ": " + cl + "/" + cl.getContext() + ": " + ast.toString());
+                Mecha.getMVM().nativeControlMessage(cl.getContext(), channel, ast);
+                
+            /*
+             * WarpDelegate "shortcut" to send a JSON data channel message.
+            */
+            } else if (cmd.equals("$data")) {
+                String channel = parts[1];
+                JSONObject ast = 
+                    new JSONObject(request.substring(cmd.length() + channel.length() + 2).trim());
+                log.info("mvm: $data: " + channel + ": " + cl + "/" + cl.getContext() + ": " + ast.toString());
+                Mecha.getMVM().nativeDataMessage(cl.getContext(), channel, ast);
+                
             /*
              * Block definition commands.
             */

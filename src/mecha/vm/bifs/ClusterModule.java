@@ -2,6 +2,8 @@ package mecha.vm.bifs;
 
 import java.util.*;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.*;
+import java.lang.ref.*;
 import java.io.*;
 import java.net.*;
 import java.util.logging.*;
@@ -12,6 +14,8 @@ import mecha.jinterface.*;
 import mecha.util.HashUtils;
 import mecha.json.*;
 import mecha.vm.*;
+import mecha.client.*;
+import mecha.client.net.*;
 
 public class ClusterModule extends MVMModule {
     final private static Logger log = 
@@ -26,22 +30,215 @@ public class ClusterModule extends MVMModule {
     
     public void moduleUnload() throws Exception {
     }
-    
+
     /*
-     * XXX FINISH
-    */
+     * Warp allows a 'transparent proxy' or 'delegate connection'
+     *  to another mecha node.  Anything executed remotely is passed
+     *  downstream to any local consumers; any control message sent
+     *  to the local Warp instance is passed to the remote node.
+    */    
     public class Warp extends MVMFunction {
+        class WarpDelegate extends MechaClientHandler {
+            final String host;
+            final TextClient textClient;
+            final AtomicBoolean ready;
+            final WeakReference<Warp> localFun;
+            
+            public WarpDelegate(String host, Warp fun) throws Exception {
+                this.host = host;
+                final String password = Mecha.getConfig().getString("password");
+                final int port = Mecha.getConfig().getInt("client-port");
+                ready = new AtomicBoolean(false);
+                localFun = new WeakReference<Warp>(fun);
+                textClient = new TextClient(host, port, password, this);
+            }
+            
+            public void close() throws Exception {
+                textClient.close();
+            }
+            
+            public boolean isReady() {
+                return ready.get();
+            }
+            
+            public void waitUntilReady() throws Exception {
+                waitUntilReady(60000);
+            }
+            
+            public void waitUntilReady(long timeout) throws Exception {
+                long t_st = System.currentTimeMillis();
+                while(true) {
+                    if (System.currentTimeMillis() - t_st > timeout) {
+                        throw new Exception("WarpDelegate: connection timeout to " + host);
+                    }
+                    if (ready.get()) break;
+                    Thread.sleep(5);
+                }
+            }
+            
+            private Warp getWarp() {
+                return localFun.get();
+            }
+            
+            public void onMessage(String message) {
+                if (message.startsWith(":OK")) {
+                    log.info("WarpDelegate: <" + host + "> " + message);
+                } else {
+                    try {
+                        JSONObject msg = new JSONObject(message);
+                        // Channel message
+                        if (msg.has("c") && msg.has("o")) {
+                            final String channel = msg.getString("c");
+                            final JSONObject obj = msg.getJSONObject("o");
+                            obj.put("$delegate-channel", channel);
+                            if (obj.has("$type") &&
+                                obj.getString("$type").equals("done")) {
+                                getWarp().onDoneEvent(obj);
+                            } else if (obj.has("$type") &&
+                                obj.getString("$type").equals("control")) {
+                                getWarp().onControlMessage(obj);
+                            } else if (obj.has("$type") &&
+                                obj.getString("$type").equals("cancel")) {
+                                getWarp().onCancelEvent(obj);
+                            } else {
+                                getWarp().onDataMessage(obj);
+                            }
+                        // unknown json message?
+                        } else {
+                            log.info("WarpDelegate: <" + host + "/system-message> " + 
+                                msg.toString(2));
+                        }
+                    // unknown non-json message?
+                    } catch (Exception ex) {
+                        log.info("WarpDelegate: <" + host + "/info> " + message);
+                    }
+                }
+            }
+            
+            public void onOpen() {
+                ready.set(true);
+            }
+            
+            public void onClose() {
+                try {
+                    textClient.close();
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                } finally {
+                    ready.set(false);
+                }
+            }
+                    
+            public void onError() {
+                try {
+                    textClient.close();
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                } finally {
+                    ready.set(false);
+                }
+            }
+            
+            public void send(String cmd) throws Exception {
+                textClient.send(cmd);
+            }
+
+        }
+        
         final String host;
         final String remoteVar;
+        final JSONObject doAst;
+        final WarpDelegate warpDelegate;
+        final long timeout;
         
         public Warp(String refId, MVMContext ctx, JSONObject config) throws Exception {
             super(refId, ctx, config);
             host = config.getString("host");
             remoteVar = Mecha.guid(Warp.class);
-            /*
-             * XXX FINISH
-            */
-            log.info(config.toString(2));
+            doAst = config.getJSONObject("do");
+            
+            if (config.has("timeout")) {
+                timeout = Long.parseLong(config.getString("timeout"));
+            } else {
+                timeout = 60000;
+            }
+            
+            warpDelegate = new WarpDelegate(host, this);
+            log.info("Waiting for warp delegate to connect to <" + host + ">");
+            warpDelegate.waitUntilReady(timeout);
+            log.info("Warp delegate successfully connected to <" + host + ">");
+            log.info("Registering '" + remoteVar + "' on <" + host + ">");
+            warpDelegate.send("$assign " + remoteVar + " " + doAst.toString());
+            warpDelegate.send("me = (client-sink)");
+            warpDelegate.send(remoteVar + " -> me");
+            log.info("Registration complete on <"  + host + ">");
+        }
+        
+        /*
+         * Forward all start events upstream.
+        */
+        public void onStartEvent(JSONObject msg) throws Exception {
+            if (msg.has("$delegate-channel")) {
+                // FROM remote
+                log.info("Remote startEvent <" + host + "> " + msg.toString(2));
+            } else {
+                // TO remote
+                warpDelegate.send("$control " + remoteVar + " " + msg.toString());
+            }
+        }
+        
+        /*
+         * Forward all control messages upstream.
+        */
+        public void onControlMessage(JSONObject msg) throws Exception {
+            if (msg.has("$delegate-channel")) {
+                // FROM remote
+                log.info("Remote controlMessage <" + host + "> " + msg.toString(2));
+            } else {
+                // TO remote
+                warpDelegate.send("$control " + remoteVar + " " + msg.toString());
+            }
+        }
+        
+        /*
+         * Forward all cancel messages upstream.
+        */
+        public void onCancelEvent(JSONObject msg) throws Exception {
+            if (msg.has("$delegate-channel")) {
+                // FROM remote
+                log.info("Remote cancelEvent <" + host + "> " + msg.toString(2));
+            } else {
+                // TO remote
+                warpDelegate.send("$control " + remoteVar + " " + msg.toString());
+                warpDelegate.close();
+            }
+        }
+        
+        /*
+         * Forward all data messages downstream.
+        */
+        public void onDataMessage(JSONObject msg) throws Exception {
+            if (msg.has("$delegate-channel")) {
+                // FROM remote
+                log.info("Remote dataMessage <" + host + "> " + msg.toString(2));
+                broadcastDataMessage(msg);
+            } else {
+                // TO remote
+                warpDelegate.send("$data " + remoteVar + " " + msg.toString());
+            }
+        }
+        
+        public void onDoneEvent(JSONObject msg) throws Exception {
+            if (msg.has("$delegate-channel")) {
+                // FROM remote
+                log.info("Remote doneEvent <" + host + "> " + msg.toString(2));
+                broadcastDone(msg);
+                log.info("Warp delegate disconnecting from <" + host + ">");
+                warpDelegate.close();
+            } else {
+                // TO remote
+                warpDelegate.send("$control " + remoteVar + " " + msg.toString());
+            }
         }
     }
     

@@ -347,6 +347,19 @@ public class MVM {
     }
     
     /*
+     * Send an arbitrary data message to an assigned var (pointing
+     *  to an instance of a module:verb).
+     *
+     * This is currently only used by the Server "shortcut" operation $data,
+     *  which in turn is used only by a WarpDelegate on behalf of a Warp
+     *  MVMFunction instance.
+    */
+    public void nativeDataMessage(MVMContext ctx, String channel, JSONObject msg) throws Exception {
+        String dataChannelName = ctx.resolveAssignmentToRefId(channel);
+        Mecha.getChannels().getChannel(dataChannelName).send(msg);
+    }
+    
+    /*
      * Perform "a = (expr ...)" assignment to ctx.
     */
     public String nativeAssignment(MVMContext ctx, String var, JSONObject ast) throws Exception {

@@ -32,6 +32,16 @@ public class TextClientHandler extends SimpleChannelUpstreamHandler {
     }
 
     @Override
+    public void channelConnected(ChannelHandlerContext ctx, ChannelStateEvent e) throws Exception {
+        handler.onOpen();
+    }
+    
+    @Override
+    public void channelDisconnected(ChannelHandlerContext ctx, ChannelStateEvent e) throws Exception {
+        handler.onClose();
+    }
+    
+    @Override
     public void messageReceived(
             ChannelHandlerContext ctx, MessageEvent e) {
         String msg = (String) e.getMessage();
