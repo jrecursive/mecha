@@ -73,7 +73,7 @@ public class ClusterModule extends MVMModule {
                         throw new Exception("WarpDelegate: connection timeout to " + host);
                     }
                     if (ready.get()) break;
-                    Thread.sleep(1);
+                    Thread.yield();
                 }
             }
             

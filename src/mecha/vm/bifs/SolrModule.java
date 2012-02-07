@@ -134,7 +134,6 @@ public class SolrModule extends MVMModule {
                                                 break;
                                             }
                                             Thread.yield();
-                                            //Thread.sleep(1);
                                         }
                                         if (earlyExit.get()) {
                                             break;
