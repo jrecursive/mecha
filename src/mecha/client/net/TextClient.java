@@ -74,7 +74,6 @@ public class TextClient {
     
     public void close() throws Exception {
         channel.close();
-        bootstrap.releaseExternalResources();
     }
     
     public void send(String msg) throws Exception {

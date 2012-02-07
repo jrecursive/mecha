@@ -42,15 +42,16 @@ public class ClusterModule extends MVMModule {
             final String host;
             final TextClient textClient;
             final AtomicBoolean ready;
-            final WeakReference<Warp> localFun;
+            final String localFunRefId;
             
             public WarpDelegate(String host, Warp fun) throws Exception {
                 this.host = host;
                 final String password = Mecha.getConfig().getString("password");
                 final int port = Mecha.getConfig().getInt("client-port");
                 ready = new AtomicBoolean(false);
-                localFun = new WeakReference<Warp>(fun);
+                localFunRefId = fun.getDataChannelName();
                 textClient = new TextClient(host, port, password, this);
+                waitUntilReady();
             }
             
             public void close() throws Exception {
@@ -72,17 +73,13 @@ public class ClusterModule extends MVMModule {
                         throw new Exception("WarpDelegate: connection timeout to " + host);
                     }
                     if (ready.get()) break;
-                    Thread.sleep(5);
+                    Thread.sleep(1);
                 }
             }
             
-            private Warp getWarp() {
-                return localFun.get();
-            }
-            
             public void onMessage(String message) {
-                if (message.startsWith(":OK")) {
-                    log.info("WarpDelegate: <" + host + "> " + message);
+                if (message.equals("OK") ||
+                    message.startsWith(":OK")) {
                 } else {
                     try {
                         JSONObject msg = new JSONObject(message);
@@ -93,15 +90,15 @@ public class ClusterModule extends MVMModule {
                             obj.put("$delegate-channel", channel);
                             if (obj.has("$type") &&
                                 obj.getString("$type").equals("done")) {
-                                getWarp().onDoneEvent(obj);
+                                sendControl(localFunRefId, obj);
                             } else if (obj.has("$type") &&
                                 obj.getString("$type").equals("control")) {
-                                getWarp().onControlMessage(obj);
+                                sendControl(localFunRefId, obj);
                             } else if (obj.has("$type") &&
                                 obj.getString("$type").equals("cancel")) {
-                                getWarp().onCancelEvent(obj);
+                                sendControl(localFunRefId, obj);
                             } else {
-                                getWarp().onDataMessage(obj);
+                                sendData(localFunRefId, obj);
                             }
                         // unknown json message?
                         } else {
@@ -110,6 +107,7 @@ public class ClusterModule extends MVMModule {
                         }
                     // unknown non-json message?
                     } catch (Exception ex) {
+                        ex.printStackTrace();
                         log.info("WarpDelegate: <" + host + "/info> " + message);
                     }
                 }
@@ -145,16 +143,16 @@ public class ClusterModule extends MVMModule {
 
         }
         
-        final String host;
-        final String remoteVar;
-        final JSONObject doAst;
-        final WarpDelegate warpDelegate;
-        final long timeout;
+        private final String host;
+        private final String remoteVar;
+        private final JSONObject doAst;
+        private final WarpDelegate warpDelegate;
+        private final long timeout;
         
         public Warp(String refId, MVMContext ctx, JSONObject config) throws Exception {
             super(refId, ctx, config);
             host = config.getString("host");
-            remoteVar = Mecha.guid(Warp.class);
+            remoteVar = "warp-var";
             doAst = config.getJSONObject("do");
             
             if (config.has("timeout")) {
@@ -164,14 +162,7 @@ public class ClusterModule extends MVMModule {
             }
             
             warpDelegate = new WarpDelegate(host, this);
-            log.info("Waiting for warp delegate to connect to <" + host + ">");
-            warpDelegate.waitUntilReady(timeout);
-            log.info("Warp delegate successfully connected to <" + host + ">");
-            log.info("Registering '" + remoteVar + "' on <" + host + ">");
-            warpDelegate.send("$assign " + remoteVar + " " + doAst.toString());
-            warpDelegate.send("me = (client-sink)");
-            warpDelegate.send(remoteVar + " -> me");
-            log.info("Registration complete on <"  + host + ">");
+            log.info("Warp delegate connecting to <" + host + ">");
         }
         
         /*
@@ -183,6 +174,15 @@ public class ClusterModule extends MVMModule {
                 log.info("Remote startEvent <" + host + "> " + msg.toString(2));
             } else {
                 // TO remote
+                log.info("waiting until warp delegate is ready... ");
+                warpDelegate.waitUntilReady(timeout);
+                log.info("Warp delegate successfully connected to <" + host + ">");
+                log.info("Registering '" + remoteVar + "' on <" + host + ">");
+                warpDelegate.send("$assign " + remoteVar + " " + doAst.toString());
+                warpDelegate.send("me = (client-sink)");
+                warpDelegate.send(remoteVar + " -> me");
+                log.info("Registration complete on <"  + host + ">");
+                log.info("delegate ready!  starting...");
                 warpDelegate.send("$control " + remoteVar + " " + msg.toString());
             }
         }
@@ -194,6 +194,7 @@ public class ClusterModule extends MVMModule {
             if (msg.has("$delegate-channel")) {
                 // FROM remote
                 log.info("Remote controlMessage <" + host + "> " + msg.toString(2));
+                broadcastControlMessage(msg);
             } else {
                 // TO remote
                 warpDelegate.send("$control " + remoteVar + " " + msg.toString());
@@ -207,6 +208,7 @@ public class ClusterModule extends MVMModule {
             if (msg.has("$delegate-channel")) {
                 // FROM remote
                 log.info("Remote cancelEvent <" + host + "> " + msg.toString(2));
+                broadcastControlMessage(msg);
             } else {
                 // TO remote
                 warpDelegate.send("$control " + remoteVar + " " + msg.toString());
@@ -220,7 +222,6 @@ public class ClusterModule extends MVMModule {
         public void onDataMessage(JSONObject msg) throws Exception {
             if (msg.has("$delegate-channel")) {
                 // FROM remote
-                log.info("Remote dataMessage <" + host + "> " + msg.toString(2));
                 broadcastDataMessage(msg);
             } else {
                 // TO remote
@@ -231,10 +232,8 @@ public class ClusterModule extends MVMModule {
         public void onDoneEvent(JSONObject msg) throws Exception {
             if (msg.has("$delegate-channel")) {
                 // FROM remote
-                log.info("Remote doneEvent <" + host + "> " + msg.toString(2));
+                //log.info("Remote doneEvent <" + host + "> " + msg.toString(2));
                 broadcastDone(msg);
-                log.info("Warp delegate disconnecting from <" + host + ">");
-                warpDelegate.close();
             } else {
                 // TO remote
                 warpDelegate.send("$control " + remoteVar + " " + msg.toString());
@@ -481,9 +480,14 @@ public class ClusterModule extends MVMModule {
                 log.info("\n\n\n!! This should never happen! " + origin + " \n\n\n\n");
             }
             refIdToObj.put(origin, msg);
+            processTable();
+        }
+        
+        private void processTable() throws Exception {
             if (refIdToObj.keySet().size() == (proxyVars.size() - doneCount)) {
                 JSONObject[] values = 
                     (JSONObject[]) refIdToObj.values().toArray(new JSONObject[0]);
+                if (values.length == 0) return;
                 Arrays.<JSONObject>sort(values, comparatorFun);
                 JSONObject winner = values[0];
                 String winnerOrigin = 
@@ -522,6 +526,8 @@ public class ClusterModule extends MVMModule {
                 JSONObject doneMsg = new JSONObject();
                 doneMsg.put("complete", doneCount);
                 broadcastDone(doneMsg);
+            } else {
+                processTable();
             }
         }
     }

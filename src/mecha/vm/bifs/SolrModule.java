@@ -115,7 +115,10 @@ public class SolrModule extends MVMModule {
                                  * Document results.
                                 */  
                                 rawFound = res.getResults().getNumFound();
-                                if (res.getResults().getNumFound() == 0) break;
+                                if (res.getResults().getNumFound() == 0) {
+                                    log.info("no results! " + getConfig().toString());
+                                    break;
+                                }
                                 if (rowLimit == -1) {
                                     rowLimit = res.getResults().getNumFound();
                                 }
@@ -130,7 +133,8 @@ public class SolrModule extends MVMModule {
                                                 earlyExit.set(true);
                                                 break;
                                             }
-                                            Thread.sleep(5);
+                                            Thread.yield();
+                                            //Thread.sleep(1);
                                         }
                                         if (earlyExit.get()) {
                                             break;
@@ -170,9 +174,7 @@ public class SolrModule extends MVMModule {
                             long t_elapsed = System.currentTimeMillis() - t_st;
                             
                             doneMsg.put("elapsed", t_elapsed);
-                            doneMsg.put("count", count);
                             doneMsg.put("found", rawFound);
-                            broadcastDone(doneMsg);
 
                         } catch (Exception ex) {
                             log.info("iterator thread exception!");
@@ -183,6 +185,7 @@ public class SolrModule extends MVMModule {
                         }
                         doneMsg.put("stopped", earlyExit.get());
                         doneMsg.put("count", count);
+                        doneMsg.put("$solr-config", getConfig());
                         broadcastDone(doneMsg);
                     } catch (Exception ex1) {
                         ex1.printStackTrace();
@@ -194,6 +197,10 @@ public class SolrModule extends MVMModule {
         
         public void onStartEvent(JSONObject startEventMsg) throws Exception {
             iteratorThread.start();
+            while(!iteratorThread.isAlive()) {
+                log.info("waiting for iterator thread...");
+                Thread.sleep(1000);
+            }
         }
         
         public void onCancelEvent(JSONObject msg) throws Exception {
@@ -204,11 +211,6 @@ public class SolrModule extends MVMModule {
         }
         
         public void onControlMessage(JSONObject msg) throws Exception {
-                        if (!iteratorThread.isAlive()) {
-                log.info("iterator thread has not been started!");
-                return;
-            }
-            
             final String verb = msg.getString("$");
             
             stateLock.lock();
@@ -217,6 +219,11 @@ public class SolrModule extends MVMModule {
                  * "next" - send one record down the pipeline.
                 */
                 if (verb.equals("next")) {
+                    if (!iteratorThread.isAlive()) {
+                        //log.info("iterator thread is dead >>>> " + msg.toString(2));
+                        //broadcastDone(msg);
+                        return;
+                    }
                     next.set(true);
                     
                 /*

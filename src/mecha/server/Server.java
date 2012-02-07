@@ -166,7 +166,7 @@ public class Server {
                 JSONObject ast = 
                     new JSONObject(request.substring(cmd.length() + varName.length() + 2).trim());
                 log.info("mvm: $assign: " + varName + ": " + cl + "/" + cl.getContext() + ": " + ast.toString());
-                response = Mecha.getMVM().nativeAssignment(cl.getContext(), varName, ast);
+                Mecha.getMVM().nativeAssignment(cl.getContext(), varName, ast);
                 
             /*
              * WarpDelegate "shortcut" to send a JSON control channel message.
@@ -175,7 +175,7 @@ public class Server {
                 String channel = parts[1];
                 JSONObject ast = 
                     new JSONObject(request.substring(cmd.length() + channel.length() + 2).trim());
-                log.info("mvm: $control: " + channel + ": " + cl + "/" + cl.getContext() + ": " + ast.toString());
+                //log.info("mvm: $control: " + channel + ": " + cl + "/" + cl.getContext() + ": " + ast.toString());
                 Mecha.getMVM().nativeControlMessage(cl.getContext(), channel, ast);
                 
             /*
@@ -185,7 +185,7 @@ public class Server {
                 String channel = parts[1];
                 JSONObject ast = 
                     new JSONObject(request.substring(cmd.length() + channel.length() + 2).trim());
-                log.info("mvm: $data: " + channel + ": " + cl + "/" + cl.getContext() + ": " + ast.toString());
+                //log.info("mvm: $data: " + channel + ": " + cl + "/" + cl.getContext() + ": " + ast.toString());
                 Mecha.getMVM().nativeDataMessage(cl.getContext(), channel, ast);
                 
             /*
