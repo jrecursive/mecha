@@ -16,6 +16,14 @@ public abstract class MVMFunction {
         Logger.getLogger(MVMFunction.class.getName());
     
     /*
+     * ScriptEngine implements $preprocess and $postprocess
+     *  functions universally.
+    */
+    final private ScriptEngine scriptEngine;
+    final private List<String> preprocessFunctions;
+    final private List<String> postprocessFunctions;
+        
+    /*
      * Field in universal MVMFunction message template that
      *  holds the message type (control or data).
     */
@@ -95,6 +103,9 @@ public abstract class MVMFunction {
         dataChannelCallback = null;
         controlChannelName = null;
         controlChannelCallback = null;
+        scriptEngine = null;
+        preprocessFunctions = null;
+        postprocessFunctions = null;
     }
     
     /*
@@ -134,6 +145,84 @@ public abstract class MVMFunction {
                 }
             }
         };
+        
+        /*
+         * Scripted pre- and post-processors
+        */
+        preprocessFunctions = new ArrayList<String>();
+        postprocessFunctions = new ArrayList<String>();
+        if (config.has("$preprocess") ||
+            config.has("$postprocess")) {
+            scriptEngine = new ScriptEngine("js");
+            scriptEngine.bind("$log", log);
+            if (config.has("$preprocess")) {
+                if (config.get("$preprocess") instanceof ArrayList) {
+                    JSONArray preprocessorNames = config.getJSONArray("$preprocess");
+                    for(int i=0; i<preprocessorNames.length(); i++) {
+                        preprocessFunctions.add(preprocessorNames.getString(i));
+                    }
+                } else if (config.get("$preprocess") instanceof String) {
+                    preprocessFunctions.add(config.getString("$preprocess"));
+                }
+            }
+            if (config.has("$postprocess")) {
+                if (config.get("$postprocess") instanceof ArrayList) {
+                    JSONArray postprocessorNames = config.getJSONArray("$postprocess");
+                    for(int i=0; i<postprocessorNames.length(); i++) {
+                        postprocessFunctions.add(postprocessorNames.getString(i));
+                    }
+                } else if (config.get("$postprocess") instanceof String) {
+                    postprocessFunctions.add(config.getString("$postprocess"));
+                }
+            }
+            
+            if (preprocessFunctions.size() > 0) {
+                StringBuffer invocationStr = new StringBuffer();
+                for(String processorName : preprocessFunctions) {
+                    StringBuffer codeBlock = new StringBuffer();
+                    for(String line : context.getBlock(processorName)) {
+                        codeBlock.append(line);
+                        codeBlock.append("\n");
+                    }
+                    log.info("eval/preprocessor/" + processorName);
+                    scriptEngine.eval(codeBlock.toString());
+                    invocationStr.append(processorName);
+                    invocationStr.append("(");
+                }
+                invocationStr.append("obj");
+                for(int i=0; i<preprocessFunctions.size(); i++) {
+                    invocationStr.append(")");
+                }
+                invocationStr.append(";");
+                scriptEngine.eval("var $preprocess = function(obj) { return " + invocationStr.toString() + " };\n");
+                log.info("$preprocess registered");
+            }
+            
+            if (postprocessFunctions.size() > 0) {
+                StringBuffer invocationStr = new StringBuffer();
+                for(String processorName : postprocessFunctions) {
+                    StringBuffer codeBlock = new StringBuffer();
+                    for(String line : context.getBlock(processorName)) {
+                        codeBlock.append(line);
+                        codeBlock.append("\n");
+                    }
+                    log.info("eval/postprocessor/" + processorName);
+                    scriptEngine.eval(codeBlock.toString());
+                    invocationStr.append(processorName);
+                    invocationStr.append("(");
+                }
+                invocationStr.append("obj");
+                for(int i=0; i<postprocessFunctions.size(); i++) {
+                    invocationStr.append(")");
+                }
+                invocationStr.append(";");
+                scriptEngine.eval("var $postprocess = function(obj) { return " + invocationStr.toString() + " };\n");
+                log.info("$postprocess registered");
+            }
+            
+        } else {
+            scriptEngine = null;
+        }
         
         onCreate(refId, context, config);
     }
@@ -190,10 +279,29 @@ public abstract class MVMFunction {
     }
     
     /*
+     * Preprocess an outgoing data message (via 
+     *  $preprocess directive).
+    */
+    public JSONObject preprocessDataMessage(JSONObject obj) throws Exception {
+        if (scriptEngine == null || preprocessFunctions.size() == 0) return obj;
+        return (JSONObject) scriptEngine.invoke("$preprocess", obj);
+    }
+    
+    /*
+     * Postprocess an outgoing data message (via 
+     *  $postprocess directive).
+    */
+    public JSONObject postprocessDataMessage(JSONObject obj) throws Exception {
+        if (scriptEngine == null || postprocessFunctions.size() == 0) return obj;
+        return (JSONObject) scriptEngine.invoke("$postprocess", obj);
+    }
+    
+    /*
      * Broadcast a data message to all outgoingChannels.
     */
     public void broadcastDataMessage(JSONObject msg) throws Exception {
         msg.put("$origin", getRefId());
+        msg = postprocessDataMessage(msg);
         for(PubChannel channel : outgoingChannels) {
             channel.send(msg);
         }
@@ -249,6 +357,7 @@ public abstract class MVMFunction {
     public void sendData(String channel, JSONObject obj) throws Exception {
         PubChannel dataChannel = Mecha.getChannels().getChannel(channel);
         obj.put("$origin", getRefId());
+        obj = postprocessDataMessage(obj);
         dataChannel.send(obj);
     }
         
@@ -322,6 +431,7 @@ public abstract class MVMFunction {
     }
     
     public void data(JSONObject msg) throws Exception {
+        msg = preprocessDataMessage(msg);
         onDataMessage(msg);
     }
     

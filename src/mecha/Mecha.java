@@ -11,7 +11,7 @@ import mecha.server.*;
 import mecha.http.*;
 import mecha.db.*;
 import mecha.jinterface.*;
-import mecha.vm.MVM;
+import mecha.vm.*;
 import mecha.vm.channels.*;
 
 public class Mecha {
@@ -71,6 +71,9 @@ public class Mecha {
         
         log.info("* starting mecha vm");
         mvm = new MVM();
+        
+        log.info("* script engines:");
+        ScriptEngine.dumpScriptEngines();
         
         log.info("* starting socket server");
         server = new Server();

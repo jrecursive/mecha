@@ -219,12 +219,10 @@ public class SolrModule extends MVMModule {
                 */
                 if (verb.equals("next")) {
                     if (!iteratorThread.isAlive()) {
-                        //log.info("iterator thread is dead >>>> " + msg.toString(2));
-                        //broadcastDone(msg);
                         return;
                     }
                     next.set(true);
-                    
+
                 /*
                  * "stop" - cancel the iteration.
                 */

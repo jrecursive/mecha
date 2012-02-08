@@ -13,6 +13,7 @@ import mecha.Mecha;
 import mecha.server.net.*;
 import mecha.util.*;
 import mecha.vm.*;
+import mecha.vm.parser.*;
 import mecha.vm.channels.*;
 import mecha.db.MDB;
 import mecha.json.*;
@@ -153,7 +154,7 @@ public class Server {
             // used by "warp" (and other rpc mechanisms) to execute
             //  a pre-generated AST
             if (cmd.equals("$execute")) {
-                String astStr = cmd.substring(cmd.length()+1);
+                String astStr = request.substring(cmd.length()+1);
                 JSONObject ast = new JSONObject(astStr);
                 log.info("mvm: $execute: " + cl + "/" + cl.getContext() + ": " + ast.toString());
                 response = Mecha.getMVM().execute(cl.getContext(), ast);
@@ -193,11 +194,20 @@ public class Server {
             */
             } else if (cmd.equals("#define")) {
                 String blockName = parts[1];
-                log.info("blockName = " + blockName);
                 cl.clearBlock();
                 cl.setWithinBlock(true);
                 cl.setBlockName(blockName);
                 return;
+
+            /*
+             * Return the AST for a given line of instruction(s).
+            */
+            } else if (cmd.equals("$parse")) {
+                String str = request.substring(cmd.length()+1);
+                MVMParser mvmParser = new MVMParser();
+                JSONObject ast = 
+                    mvmParser.parse(str);
+                cl.getContext().send(ast);
 
             // execute mecha vm command
             } else {

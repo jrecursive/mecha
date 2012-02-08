@@ -177,6 +177,19 @@ public class ClusterModule extends MVMModule {
                 log.info("waiting until warp delegate is ready... ");
                 warpDelegate.waitUntilReady(timeout);
                 log.info("Warp delegate successfully connected to <" + host + ">");
+                
+                log.info("Transferring " + getContext().getBlockMap().keySet().size() + " blocks..");
+                for(Map.Entry<String,List<String>> entry : getContext().getBlockMap().entrySet()) {
+                    String blockName = entry.getKey();
+                    List<String> blockCode = entry.getValue();
+                    warpDelegate.send("#define " + blockName);
+                    for(String line : blockCode) {
+                        warpDelegate.send(line);
+                    }
+                    warpDelegate.send("#end " + blockName);
+                    log.info("blocks: " + blockName + ": ok");
+                }
+                
                 log.info("Registering '" + remoteVar + "' on <" + host + ">");
                 warpDelegate.send("$assign " + remoteVar + " " + doAst.toString());
                 warpDelegate.send("me = (client-sink)");
