@@ -280,9 +280,13 @@ public class SolrModule extends MVMModule {
                 selectParams.remove("start");
             }
             
-            if (selectParams.has("rows")) {
+            if (selectParams.has("rows") && !selectParams.has("facet")) {
                 rowLimit = Long.parseLong("" + selectParams.get("rows"));
                 selectParams.remove("rows");
+            }
+            
+            if (selectParams.has("facet")) {
+                batchSize = 0;
             }
             
             while(true) {
@@ -310,6 +314,7 @@ public class SolrModule extends MVMModule {
                             broadcastDataMessage(msg);
                         }
                     }
+                    break;
                 }
                 
                 /*
@@ -343,4 +348,38 @@ public class SolrModule extends MVMModule {
             broadcastDone(doneMsg);
         }
     }
+    
+    /*
+     * Process stream of faceted value points & reduce on done.
+    */
+    public class FacetReducer extends MVMFunction {
+        Map<String, Integer> facetMap;
+        
+        public FacetReducer(String refId, MVMContext ctx, JSONObject config) throws Exception {
+            super(refId, ctx, config);
+            facetMap = new HashMap<String, Integer>();
+        }
+        
+        public void onDataMessage(JSONObject msg) throws Exception {
+            String term = msg.getString("value");
+            int count = msg.getInt("count");
+            if (facetMap.containsKey(term)) {
+                count += facetMap.get(term);
+            }
+            facetMap.put(term, count);
+        }
+        
+        public void onDoneEvent(JSONObject msg) throws Exception {
+            JSONObject dataMsg = new JSONObject();
+            for(String term : facetMap.keySet()) {
+                dataMsg.put(term, facetMap.get(term));
+            }
+            broadcastDataMessage(dataMsg);
+            broadcastDone(msg);
+        }
+        
+    }
+    
+
+    
 }
