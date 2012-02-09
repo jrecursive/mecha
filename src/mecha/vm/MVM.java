@@ -42,6 +42,9 @@ public class MVM {
         "#if ($_is_macro)",
         "${sink} = (macro-sink)",
         "#end",
+        "#if (!$_is_macro && !$args.sink)",
+        "${sink} = (client-sink)",
+        "#end",
         "#if (!$sink) #set ($sink = $args.sink) #end",
         "#if (!$root) #set ($root = $guid) #end"
     };
