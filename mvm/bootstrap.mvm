@@ -49,10 +49,11 @@ ${guid}-extractor -> $sink
 //
 
 #define-global facet
+#if (!$args.filter) #set ($args.filter = "") #end
 #if (!$args.mincount) #set ($args.mincount = "1") #end
 #if (!$args.limit) #set ($args.limit = "100") #end
 #if (!$args.start) #set ($args.start = "0") #end
-${root} = (with-coverage partition-marker:"<<${guid}-p>>" host-marker:"<<${guid}-h>>" bucket:${args.bucket} do:(warp host:<<${guid}-h>> do:(solr-select params:(facet:true facet.limit:${args.limit} facet.field:${args.field} facet.mincount:${args.mincount} start:${args.start} rows:0 q:"partition:<<${guid}-p>> AND bucket:${args.bucket}"))))
+${root} = (with-coverage partition-marker:"<<${guid}-p>>" host-marker:"<<${guid}-h>>" bucket:${args.bucket} do:(warp host:<<${guid}-h>> do:(solr-select params:(facet:true facet.limit:${args.limit} facet.field:${args.field} facet.mincount:${args.mincount} start:${args.start} rows:0 q:"partition:<<${guid}-p>> AND bucket:${args.bucket} ${args.filter}"))))
 ${guid}-reducer = (value-count-reducer)
 ${root} -> ${guid}-reducer
 ${guid}-reducer -> ${sink}

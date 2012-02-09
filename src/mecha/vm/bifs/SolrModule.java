@@ -306,6 +306,7 @@ public class SolrModule extends MVMModule {
                 */
                 if (res.getFacetFields() != null) {
                     for (FacetField facetField : res.getFacetFields()) {
+                        if (facetField.getValues() == null) continue;
                         for (FacetField.Count facetFieldCount : facetField.getValues()) {
                             JSONObject msg = new JSONObject();
                             msg.put("field", facetField.getName());
