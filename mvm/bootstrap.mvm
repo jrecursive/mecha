@@ -71,3 +71,16 @@ ${root} -> ${guid}-reducer
 ${guid}-reducer -> ${sink}
 #end count
 
+//
+// query-keys
+//
+
+#define-global query-keys
+#if (!$args.start) #set ($args.start = "0") #end
+#if (!$args.count) #set ($args.count = "100") #end
+#if (!$args.filter) #set ($args.filter = "") #end
+${root} = (with-sorted-coverage sort-field:key sort-order:asc partition-marker:"<<${guid}-p>>" host-marker:"<<${guid}-h>>" bucket:${args.bucket} do:(warp host:<<${guid}-h>> do:(solr-select-iterator params:(q:"partition:<<${guid}-p>> AND bucket:${args.bucket} ${args.filter}" rows:${args.count} start:${args.start} fl:key sort:"key asc"))))
+${guid}-limit = (limit count:${args.count})
+${root} -> ${guid}-limit
+${guid}-limit -> ${sink}
+#end query-keys
