@@ -130,6 +130,7 @@ index-stream ! (start)
 
 
 auth me3ch4a
+
 (subscribe channel:x)
 a = (stream-partition-bucket bucket:zipcodes partition:1141798154164767904846628775559596109106197299200)
 c = (extract-riak-value position:0)
@@ -264,11 +265,333 @@ zipcodes-iter ! (next)
 
 zipcodes-iter = (with-sorted-coverage sort-field:key sort-order:asc partition-marker:"<<p>>" bucket:zipcodes do:(partition-bucket-iterator iterator-name:zipcode-iter-0 bucket:zipcodes partition:<<p>>))
 riak-extractor = (extract-riak-value position:0)
-projection = (project fields:(city_s zipcode_s loc_ll))
+projection = (project fields:(city_s zipcode_s))
 me = (client-sink)
 zipcodes-iter -> riak-extractor
 riak-extractor -> projection
 projection -> me
 zipcodes-iter ! (start)
+
+zipcodes-iter = (with-sorted-coverage sort-field:key sort-order:asc partition-marker:"<<p>>" bucket:zipcodes do:(solr-select-iterator iterator-name:solr-iter-0 params:(q:"partition:<<p>> AND bucket:zipcodes" sort:"key asc")))
+me = (client-sink)
+zipcodes-iter -> me
+zipcodes-iter ! (start)
+
+
+zipcodes-iter = (with-sorted-coverage sort-field:last_modified sort-order:asc partition-marker:"<<p>>" bucket:zipcodes do:(solr-select-iterator iterator-name:solr-iter-0 params:(q:"partition:<<p>> AND bucket:zipcodes" sort:"last_modified asc")))
+projection = (project fields:(key))
+me = (client-sink)
+zipcodes-iter -> projection
+projection -> me
+zipcodes-iter ! (start)
+
+
+#define sorted-bucket-keys
+${args.iterator-name} = (with-sorted-coverage sort-field:key sort-order:asc bucket:$args.bucket do:(solr-select-iterator params:(q:"partition:<<partition>> AND bucket:${args.bucket}" sort:"key asc"))
+${args.iterator-name}-projection = (project fields:(key))
+${args.iterator-name} -> ${args.iterator-name}-projection
+${args.iterator-name}-projection -> ${args.sink}
+#end sorted-bucket-keys
+
+me = (client-sink)
+(#sorted-bucket-keys bucket:zipcodes sink:me iterator-name:iter)
+
+
+
+#define query-get
+
+${guid}-iter = (with-sorted-coverage partition-marker:"<<p-${guid}>>" host-marker:"<<h-${guid}>>" sort-field:key sort-order:${args.sort-order} bucket:$args.bucket do:(solr-select-iterator host:<<h-${guid}>> params:(q:"partition:<<p-${guid}>> AND bucket:${args.bucket} ${args.q}" sort:"key asc"))
+${guid}-solr-materializer = (materialize-pbk-stream)
+${guid}-riak-extractor = (extract-riak-value position:0)
+${guid}-projection = (project fields:(city_s zipcode_s loc_ll))
+${guid}-limit = (limit count:5)
+
+${guid}-iter -> ${guid}-solr-materializer
+${guid}-solr-materializer -> ${guid}-riak-extractor
+${guid}-riak-extractor -> ${guid}-projection
+${guid}-projection -> ${guid}-limit
+${guid}-limit -> ${args.sink}
+${guid}-iter ! (start)
+
+#end query-get
+
+me = (client-sink)
+(#query-get bucket:zipcodes sink:me q:"city_t:f*" sort-order:asc)
+
+
+
+
+
+zipcodes-iter = (with-sorted-coverage sort-field:key sort-order:asc partition-marker:"<<p>>" bucket:zipcodes do:(solr-select-iterator iterator-name:solr-iter-0 params:(q:"partition:<<p>> AND bucket:zipcodes AND city_t:minneapolis" sort:"key asc")))
+projection = (project fields:(key))
+me = (client-sink)
+zipcodes-iter -> projection
+projection -> me
+zipcodes-iter ! (start)
+
+
+
+zipcodes-iter = (with-sorted-coverage sort-field:last_modified sort-order:asc partition-marker:"<<p>>" host-marker:"<<h>>" bucket:zipcodes do:(warp host:<<h>> do:(solr-select-iterator iterator-name:solr-iter-0 params:(q:"partition:<<p>> AND bucket:zipcodes" sort:"last_modified asc"))))
+projection = (project fields:(key))
+me = (client-sink)
+zipcodes-iter -> projection
+projection -> me
+zipcodes-iter ! (start)
+
+
+
+
+
+zipcodes-iter = (with-sorted-coverage sort-field:key sort-order:asc partition-marker:"<<p>>" host-marker:"<<h>>" bucket:zipcodes do:(warp host:<<h>> do:(solr-select-iterator iterator-name:solr-iter-0 params:(q:"partition:<<p>> AND bucket:zipcodes AND key:94*" sort:"key asc"))))
+projection = (project fields:(key))
+me = (client-sink)
+zipcodes-iter -> projection
+projection -> me
+zipcodes-iter ! (start)
+
+
+
+a = (with-sorted-coverage sort-field:key sort-order:asc partition-marker:"<<p>>" host-marker:"<<h>>" bucket:zipcodes do:(warp host:<<h>> do:(solr-select-iterator iterator-name:solr-iter-0 params:(q:"partition:<<p>> AND bucket:zipcodes AND key:94*" sort:"key asc"))))
+b = (materialize-pbk-stream)
+c = (client-map)
+
+#define post_map/js
+post_map = function(obj) {
+ obj.put(obj.getString("city_s").toUpperCase());
+};
+#end post_map/js
+
+#define ll_split/js
+ll_split = function(obj) {
+ var parts = obj.getString("loc_ll").split(",");
+ obj.put("lat_d", parts[0]);
+ obj.put("lon_d", parts[1]);
+};
+#end ll_split/js
+
+b ^ pre:(function:post-map/js)
+b ^ post:(function:ll-split/js)
+
+a -> b
+b -> c
+
+a ! (start)
+
+
+
+#define post_map
+post_map = function(obj) {
+ obj.put("city_s", obj.getString("city_s").toUpperCase());
+ return obj;
+};
+#end post_map
+
+#define normalize
+normalize = function(obj) {
+ obj.put("state_s", obj.getString("state_s").toLowerCase());
+ return obj;
+};
+#end normalize
+
+#define ll_split
+ll_split = function(obj) {
+ if (obj.has("loc_ll")) {
+   var parts = obj.getString("loc_ll").split(",");
+   obj.put("lat_d", parts[0]);
+   obj.put("lon_d", parts[1]);
+ }
+ return obj;
+};
+#end ll_split
+
+a = (with-sorted-coverage sort-field:key sort-order:asc partition-marker:"<<p>>" host-marker:"<<h>>" bucket:zipcodes do:(warp host:<<h>> do:(solr-select-iterator iterator-name:solr-iter-0 params:(q:"partition:<<p>> AND bucket:zipcodes AND key:94*" sort:"key asc"))))
+b = (materialize-pbk-stream)
+b1 = (extract-riak-value position:0 $postprocess:(ll_split))
+c = (client-sink $preprocess:(post_map normalize))
+a -> b
+b -> b1
+b1 -> c
+a ! (start)
+
+
+
+
+
+
+
+
+
+
+
+#define post_map
+post_map = function(obj) {
+ obj.put("city_s", obj.getString("city_s").toUpperCase());
+ return obj;
+};
+#end post_map
+
+#define normalize
+normalize = function(obj) {
+ obj.put("state_s", obj.getString("state_s").toLowerCase());
+ return obj;
+};
+#end normalize
+
+#define ll_split
+ll_split = function(obj) {
+ if (obj.has("loc_ll")) {
+   var parts = obj.getString("loc_ll").split(",");
+   obj.put("lat_d", parts[0]);
+   obj.put("lon_d", parts[1]);
+   obj.remove("loc_ll");
+ }
+ obj.remove("city_t");
+ return obj;
+};
+#end ll_split
+
+a = (with-coverage partition-marker:"<<p>>" host-marker:"<<h>>" bucket:zipcodes do:(warp host:<<h>> do:(solr-select params:(q:"partition:<<p>> AND bucket:zipcodes AND key:9*" sort:"key asc"))))
+b = (materialize-pbk-stream)
+b1 = (extract-riak-value position:0 $postprocess:(ll_split))
+c = (client-sink $preprocess:(post_map normalize))
+a -> b
+b -> b1
+b1 -> c
+a ! (start)
+
+
+
+#define facet_reducer
+facet_table = {};
+facet_reducer = function(obj) {
+	var term = obj.getString("value");
+	var count = obj.getInt("count");
+	if (!facet_table[term]) {
+		facet_table[term] = count;
+	} else {
+		facet_table[term] = facet_table[term] + count;
+	}
+/*
+	for(t in facet_table) {
+		$log.info(t + ": " + facet_table[t]);
+	}
+*/
+	return obj;
+}
+#end facet_reducer
+
+a = (with-coverage partition-marker:"<<p>>" host-marker:"<<h>>" bucket:zipcodes do:(warp host:<<h>> do:(solr-select params:(facet:true facet.limit:10 facet.field:state_s facet.mincount:1 start:0 rows:0 q:"partition:<<p>> AND bucket:zipcodes"))))
+b = (value-count-reducer)
+c = (client-sink)
+a -> b
+b -> c
+a ! (start)
+
+
+
+
+
+a = (with-coverage partition-marker:"<<p>>" host-marker:"<<h>>" bucket:zipcodes do:(warp host:<<h>> do:(solr-select params:(q:"partition:<<p>> AND bucket:zipcodes") count-only:true)))
+b = (value-count-reducer)
+c = (client-sink)
+a -> b
+b -> c
+a ! (start)
+
+
+
+
+
+a = (with-coverage partition-marker:"<<p>>" host-marker:"<<h>>" bucket:zipcodes do:(warp host:<<h>> do:(solr-select params:(q:"partition:<<p>> AND bucket:zipcodes" sfield:loc_ll pt:"55.616026,-132.54936" d:50 fq:"{!bbox}"))))
+b = (materialize-pbk-stream)
+c = (extract-riak-value position:0)
+d = (client-sink)
+a -> b
+b -> c
+c -> d
+a ! (start)
+
+
+
+#define spatial-query
+#if (!$args.filter) {
+	#set ($args.filter = "")
+#end
+${guid}-a = (with-coverage partition-marker:"<<${guid}-p>>" host-marker:"<<${guid}-h>>" bucket:${args.bucket} do:(warp host:<<${guid}-h>> do:(solr-select params:(q:"partition:<<${guid}-p>> AND bucket:${args.bucket} ${args.filter}" sfield:${args.field} pt:"${args.lat},${args.lon}" d:${args.radius} fq:"{!bbox}"))))
+${guid}-a -> ${args.sink}
+${guid}-a ! (start)
+#end spatial-query
+
+my-sink = (client-sink)
+(#spatial-query bucket:zipcodes field:loc_ll lat:55.616026 lon:-132.54936 radius:5 sink:my-sink)
+
+
+
+
+
+
+#define spatial-query
+#if ($_is_macro) ${sink} = (macro-sink) #end
+#if (!$sink) #set ($sink = $args.sink) #end
+#if (!$root) #set ($root = $guid) #end
+
+#if (!$args.filter) #set ($args.filter = "") #end
+${root} = (with-coverage partition-marker:"<<${guid}-p>>" host-marker:"<<${guid}-h>>" bucket:${args.bucket} do:(warp host:<<${guid}-h>> do:(solr-select params:(q:"partition:<<${guid}-p>> AND bucket:${args.bucket} ${args.filter}" sfield:${args.field} pt:"${args.lat},${args.lon}" d:${args.radius} fq:"{!bbox}"))))
+${root} -> ${sink}
+
+#if (!$_is_macro) ${root} ! (start) #end
+#end spatial-query
+
+///
+
+#define spatial-query
+
+#if (!$args.filter) #set ($args.filter = "") #end
+${root} = (with-coverage partition-marker:"<<${guid}-p>>" host-marker:"<<${guid}-h>>" bucket:${args.bucket} do:(warp host:<<${guid}-h>> do:(solr-select params:(q:"partition:<<${guid}-p>> AND bucket:${args.bucket} ${args.filter}" sfield:${args.field} pt:"${args.lat},${args.lon}" d:${args.radius} fq:"{!bbox}"))))
+${root} -> ${sink}
+
+#end spatial-query
+
+///
+
+my-sink = (client-sink)
+(#spatial-query bucket:zipcodes field:loc_ll lat:55.616026 lon:-132.54936 radius:5)
+
+
+///
+
+
+#define spatial-query
+#if (!$args.filter) #set ($args.filter = "") #end
+${root} = (with-coverage partition-marker:"<<${guid}-p>>" host-marker:"<<${guid}-h>>" bucket:${args.bucket} do:(warp host:<<${guid}-h>> do:(solr-select params:(q:"partition:<<${guid}-p>> AND bucket:${args.bucket} ${args.filter}" sfield:${args.field} pt:"${args.lat},${args.lon}" d:${args.radius} fq:"{!bbox}"))))
+${root} -> ${sink}
+#end spatial-query
+
+#define riak-materialize
+${root} = (materialize-pbk-stream)
+${guid}-extractor = (extract-riak-value position:0)
+${root} -> ${guid}-extractor
+${guid}-extractor -> $sink
+#end riak-materialize
+
+a = (#spatial-query bucket:zipcodes field:loc_ll lat:55.616026 lon:-132.54936 radius:50)
+b = (#riak-materialize)
+c = (client-sink)
+a -> b
+b -> c
+a ! (start)
+
+
+
+a = (#spatial-query bucket:zipcodes field:loc_ll lat:55.616026 lon:-132.54936 radius:5)
+b = (materialize-pbk-stream)
+c = (extract-riak-value position:0)
+d = (client-sink)
+a -> b
+b -> c
+c -> d
+a ! (start)
+
+
 
 
