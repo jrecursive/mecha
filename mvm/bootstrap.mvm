@@ -59,3 +59,15 @@ ${root} -> ${guid}-reducer
 ${guid}-reducer -> ${sink}
 #end facet
 
+//
+// count
+//
+
+#define-global count
+#if (!$args.filter) #set ($args.filter = "") #end
+${root} = (with-coverage partition-marker:"<<${guid}-p>>" host-marker:"<<${guid}-h>>" bucket:${args.bucket} do:(warp host:<<${guid}-h>> do:(solr-select params:(q:"partition:<<${guid}-p>> AND bucket:${args.bucket} ${args.filter}") count-only:true)))
+${guid}-reducer = (value-count-reducer)
+${root} -> ${guid}-reducer
+${guid}-reducer -> ${sink}
+#end count
+
