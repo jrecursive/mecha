@@ -3,6 +3,7 @@ package mecha.vm;
 import java.util.*;
 import java.util.logging.*;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.*;
 import java.io.*;
 import java.net.*;
 
@@ -23,6 +24,8 @@ import org.apache.velocity.exception.MethodInvocationException;
 import mecha.Mecha;
 import mecha.db.*;
 import mecha.util.*;
+import mecha.client.*;
+import mecha.client.net.*;
 import mecha.server.*;
 import mecha.vm.parser.*;
 import mecha.vm.flows.*;
@@ -51,6 +54,11 @@ public class MVM {
     final private String[] postMacroDef = {
         "#if (!$_is_macro) ${root} ! (start) #end"
     };
+    
+    /*
+     * Maps a "global block name" to a "block" (list of strings)
+    */
+    final private ConcurrentHashMap<String, List<String>> globalBlocks;
         
     /*
      * Namespaced verb to RegisteredFunction (which describes
@@ -73,16 +81,72 @@ public class MVM {
     public MVM() throws Exception {
         verbMap = new ConcurrentHashMap<String, RegisteredFunction>();
         moduleMap = new ConcurrentHashMap<String, MVMModule>();
+        globalBlocks = new ConcurrentHashMap<String, List<String>>();
         Velocity.init();
-        
-        bootstrap();
     }
     
-    private void bootstrap() throws Exception {
-        exec(null, "./mvm/bootstrap.mvm");
+    public void bootstrap() throws Exception {
+        /*
+         * Connect as a client and execute bootstrap.mvm
+         *  functions via "$exec ./mvm/bootstrap.mvm".
+        */
+        final List<String> bootstrapCommands = 
+            TextFile.getLines("./mvm/bootstrap.mvm");
+        final String host = 
+            Mecha.getConfig()
+                 .getJSONObject("riak-config")
+                 .getString("pb-ip");
+        final String password = Mecha.getConfig().getString("password");
+        final int port = Mecha.getConfig().getInt("client-port");
+        final AtomicBoolean ready =
+            new AtomicBoolean(false);
+        final AtomicBoolean bootstrapped =
+            new AtomicBoolean(false);
+        log.info("bootstrapping...");
+        Thread.sleep(1000);
+        final TextClient textClient = new TextClient(host, port, password, 
+            new MechaClientHandler() {
+                public void onMessage(String message) {
+                    log.info("bootstrap: message: " + message);
+                }
+                
+                public void onOpen() {
+                    log.info("bootstrap client connected");
+                    ready.set(true);
+                }
+                
+                public void onClose() {
+                    log.info("bootstrap client disconnected.");
+                    log.info("system ready.");
+                    bootstrapped.set(true);
+                }
+                
+                public void onError() {
+                    log.info("error bootstrapping!");
+                }
+            });
+        final Thread bootstrapThread = new Thread(new Runnable() {
+            public void run() {
+                try {
+                    while(!ready.get()) { Thread.sleep(5); }
+                    log.info("executing bootstrap commands");
+                    for(String line : bootstrapCommands) {
+                        textClient.send(line);
+                        log.info("bootstrap>> " + line);
+                    }
+                    log.info("bye!");
+                    textClient.send("$bye");
+                    log.info("waiting for bootstrap disconnection...");
+                    while(!bootstrapped.get()) { Thread.sleep(5); }
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                }
+            }
+        });
+        bootstrapThread.start();
     }
     
-    private void exec(MVMContext ctx, String filename) throws Exception {
+    public void exec(MVMContext ctx, String filename) throws Exception {
         exec(ctx, new File(filename));
     }
         
@@ -121,7 +185,7 @@ public class MVM {
             if (cmd.equals("")) {
                 return null;
             }
-            if (cmd.startsWith("##")) {
+            if (cmd.startsWith("//")) {
                 log.info(cmd);
                 return null;
             }
@@ -399,7 +463,7 @@ public class MVM {
         
         if (verb.startsWith("#")) {
             String macroName = verb.substring(1);
-            List<String> blockDef = ctx.getBlock(macroName);
+            List<String> blockDef = resolveBlock(ctx, macroName);
             StringBuffer blockStrBuf = new StringBuffer();
             /*
              * Pre-macro wrapper code.
@@ -444,7 +508,7 @@ public class MVM {
             
             String[] renderedMacro = w.toString().split("\n");
             for(String line : renderedMacro) {
-                log.info("n\nExecute: " + line + "\n\n");
+                //log.info("n\nExecute: " + line + "\n\n");
                 execute(ctx, line);
             }
             
@@ -581,7 +645,7 @@ public class MVM {
         throws Exception {
         
         String macroName = verb.substring(1);
-        List<String> blockDef = ctx.getBlock(macroName);
+        List<String> blockDef = resolveBlock(ctx, macroName);
         StringBuffer blockStrBuf = new StringBuffer();
         /*
          * Pre-macro wrapper code.
@@ -650,6 +714,11 @@ public class MVM {
             blocks.put(k, ctx.getBlock(k));
         }
         
+        JSONObject glBlocks = new JSONObject();
+        for(String k : getGlobalBlockMap().keySet()) {
+            glBlocks.put(k, getGlobalBlock(k));
+        }
+        
         /*
          * Flow.
         */
@@ -674,7 +743,8 @@ public class MVM {
         JSONObject result = new JSONObject();
         result.put("assignments", vars);
         result.put("memory-channels", memoryChannels);
-        result.put("blocks", blocks);
+        result.put("local-blocks", blocks);
+        result.put("global-blocks", glBlocks);
         result.put("flow", flow);
         
         ctx.send(result);
@@ -707,8 +777,30 @@ public class MVM {
     }
     
     /*
-     * flow
+     * global blocks, helpers
     */
     
+    public List<String> resolveBlock(MVMContext ctx, String blockName) {
+        List<String> block = ctx.getBlock(blockName);
+        if (block == null) {
+            block = getGlobalBlock(blockName);
+        }
+        return block;
+    }
     
+    public void setGlobalBlock(String blockName, List<String> block) {
+        globalBlocks.put(blockName, block);
+    }
+    
+    public void removeGlobalBlock(String blockName) {
+        globalBlocks.remove(blockName);
+    }
+    
+    public List<String> getGlobalBlock(String blockName) {
+        return globalBlocks.get(blockName);
+    }
+    
+    public ConcurrentHashMap<String, List<String>> getGlobalBlockMap() {
+        return globalBlocks;
+    }
 }

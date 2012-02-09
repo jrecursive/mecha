@@ -117,8 +117,15 @@ public class Server {
                  * End of block.
                 */
                 if (request.equals("#end " + cl.getBlockName())) {
+                    if (cl.withinGlobalBlock()) {
+                        Mecha.getMVM().setGlobalBlock(cl.getBlockName(), cl.getBlock());
+                        log.info("defined global block " + cl.getBlockName());
+                    } else {
+                        cl.getContext().setBlock(cl.getBlockName(), cl.getBlock());
+                        log.info("defined local block " + cl.getBlockName());
+                    }
                     cl.setWithinBlock(false);
-                    cl.getContext().setBlock(cl.getBlockName(), cl.getBlock());
+                    cl.setWithinGlobalBlock(false);
                     send(connection, OK_RESPONSE + HashUtils.sha1(cl.getBlockName()));
                     cl.setBlockName(null);
                     cl.clearBlock();
@@ -188,9 +195,20 @@ public class Server {
                     new JSONObject(request.substring(cmd.length() + channel.length() + 2).trim());
                 //log.info("mvm: $data: " + channel + ": " + cl + "/" + cl.getContext() + ": " + ast.toString());
                 Mecha.getMVM().nativeDataMessage(cl.getContext(), channel, ast);
+
+            /*
+             * Client-scoped block definition "start" command.
+            */
+            } else if (cmd.equals("#define-global")) {
+                String blockName = parts[1];
+                cl.clearBlock();
+                cl.setWithinBlock(true);
+                cl.setWithinGlobalBlock(true);
+                cl.setBlockName(blockName);
+                return;
                 
             /*
-             * Block definition commands.
+             * Client-scoped block definition "start" command.
             */
             } else if (cmd.equals("#define")) {
                 String blockName = parts[1];
@@ -199,6 +217,19 @@ public class Server {
                 cl.setBlockName(blockName);
                 return;
 
+            /*
+             * Execute a set of MVM commands from a local file.
+            */
+            } else if (cmd.equals("$exec")) {
+                String filename = parts[1];
+                response = Mecha.getMVM().execute(cl.getContext(), filename);
+
+            /*
+             * disconnect.
+            */
+            } else if (cmd.equals("$bye")) {
+                connection.getChannel().close();
+                return;
             /*
              * Return the AST for a given line of instruction(s).
             */

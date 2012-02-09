@@ -30,6 +30,7 @@ public class Client implements ChannelConsumer {
      * Blocks.
     */
     private boolean withinBlock = false;
+    private boolean withinGlobalBlock = false;
     private List<String> block;
     private String blockName;
     
@@ -110,8 +111,16 @@ public class Client implements ChannelConsumer {
         return withinBlock;
     }
     
+    public boolean withinGlobalBlock() {
+        return withinGlobalBlock;
+    }
+    
     public void setWithinBlock(boolean isWithinBlock) {
         withinBlock = isWithinBlock;
+    }
+    
+    public void setWithinGlobalBlock(boolean isWithinGlobalBlock) {
+        withinGlobalBlock = isWithinGlobalBlock;
     }
     
     public void clearBlock() {

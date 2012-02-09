@@ -110,6 +110,7 @@ public class Mecha {
         mdb.startMDB();
         riakConnector.startConnector();
         server.start();
+        mvm.bootstrap();
         httpServer.start();
     }
     

@@ -30,6 +30,9 @@ public class Bucket {
     final private SolrServer server;
     final private LinkedBlockingQueue<SolrInputDocument> solrDocQueue;
     
+    // config
+    final private boolean syncOnWrite;
+    
     public Bucket(String partition, 
                   byte[] bucket, 
                   String dataDir,
@@ -42,6 +45,7 @@ public class Bucket {
         this.dataDir = dataDir;
         this.server = server;
         this.solrDocQueue = solrDocQueue;
+        syncOnWrite = Mecha.getConfig().getJSONObject("leveldb").<Boolean>get("sync-on-write");
         
         Options options = new Options()
             .createIfMissing(true)
@@ -52,8 +56,7 @@ public class Bucket {
     }
     
     private WriteOptions getWriteOptions() {
-        // TODO: configuration driven
-        return new WriteOptions(); // .sync(true);
+        return new WriteOptions().sync(syncOnWrite);
     }
     
     private void queueForIndexing(SolrInputDocument doc) throws Exception {

@@ -90,6 +90,7 @@
         ##
         ## Bytes of memory to allocate per bucket for leveldb cache.
         ##
-        "cache-per-bucket": 104857600
+        "cache-per-bucket": 104857600,
+        "sync-on-write": true
     }
 }

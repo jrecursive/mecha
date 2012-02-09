@@ -25,7 +25,7 @@ public class TextFile {
         return contents.toString();
     }
   
-    public static List<String> getlines(String fn) throws Exception {
+    public static List<String> getLines(String fn) throws Exception {
         File aFile = new File(fn);
         List<String> lines = new ArrayList<String>();
         BufferedReader input = new BufferedReader(new FileReader(aFile));

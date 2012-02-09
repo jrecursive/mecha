@@ -1,7 +1,7 @@
 
-## 
-## register mecha.vm.bifs.* system verbs
-## 
+// 
+// register mecha.vm.bifs.* system verbs
+// 
 
 register namespace:$ module-class:mecha.vm.bifs.RiakClientModule verbs:(get:Get put:Put delete:Delete)
 
@@ -13,9 +13,34 @@ register namespace:$ module-class:mecha.vm.bifs.SolrModule verbs:(solr-select:Se
 
 register namespace:$ module-class:mecha.vm.bifs.MDBModule verbs:(materialize-pbk-stream:MaterializePBKStream stream-partition-bucket:StreamPartitionBucket partition-bucket-iterator:PartitionBucketIterator)
 
-register namespace:$ module-class:mecha.vm.bifs.ETLModule verbs:(project:Project extract-riak-value:ExtractRiakValue vector-sequencer:VectorSequencer)
+register namespace:$ module-class:mecha.vm.bifs.ETLModule verbs:(project:Project extract-riak-value:ExtractRiakValue)
 
 register namespace:$ module-class:mecha.vm.bifs.ClusterModule verbs:(with-coverage:WithCoverage with-iterated-coverage:WithIteratedCoverage with-sorted-coverage:WithSortedCoverage warp:Warp)
 
 register namespace:$ module-class:mecha.vm.bifs.StreamModule verbs:(vector-sequencer:VectorSequencer eat:Eat limit:Limit)
+
+/////////////
+// globals //
+/////////////
+
+//
+// spatial-query
+//
+
+#define-global spatial-query
+#if (!$args.filter) #set ($args.filter = "") #end
+${root} = (with-coverage partition-marker:"<<${guid}-p>>" host-marker:"<<${guid}-h>>" bucket:${args.bucket} do:(warp host:<<${guid}-h>> do:(solr-select params:(q:"partition:<<${guid}-p>> AND bucket:${args.bucket} ${args.filter}" sfield:${args.field} pt:"${args.lat},${args.lon}" d:${args.radius} fq:"{!bbox}"))))
+${root} -> ${sink}
+#end spatial-query
+
+//
+// riak-materialize
+//
+
+#define-global riak-materialize
+${root} = (materialize-pbk-stream)
+${guid}-extractor = (extract-riak-value position:0)
+${root} -> ${guid}-extractor
+${guid}-extractor -> $sink
+#end riak-materialize
 

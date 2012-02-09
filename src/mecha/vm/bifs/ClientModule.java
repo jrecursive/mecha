@@ -34,31 +34,25 @@ public class ClientModule extends MVMModule {
     public class MacroSink extends MVMFunction {
         public MacroSink(String refId, MVMContext ctx, JSONObject config) throws Exception {
             super(refId, ctx, config);
-            log.info("MacroSink <constructor>");
         }
         
         public void onControlMessage(JSONObject msg) throws Exception {
-            log.info("Control message: " + msg.toString(2));
             broadcastControlMessage(msg);
         }
 
         public void onDataMessage(JSONObject msg) throws Exception {
-            log.info("Data message: " + msg.toString(2));
             broadcastDataMessage(msg);
         }
         
         public void onStartEvent(JSONObject msg) throws Exception {
-            log.info("onStartEvent: " + msg.toString(2));
             broadcastControlMessage(msg);
         }
         
         public void onCancelEvent(JSONObject msg) throws Exception {
-            log.info("onCancelEvent: " + msg.toString(2));
             broadcastControlMessage(msg);
         }
         
         public void onDoneEvent(JSONObject msg) throws Exception {
-            log.info("onDoneEvent: " + msg.toString(2));
             broadcastControlMessage(msg);
         }
     }
