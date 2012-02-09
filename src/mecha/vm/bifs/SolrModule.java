@@ -321,6 +321,20 @@ public class SolrModule extends MVMModule {
                  * Document results.
                 */  
                 rawFound = res.getResults().getNumFound();
+
+                /*
+                 * "count-only" 'short-circuit'.
+                */
+                if (getConfig().has("count-only") &&
+                    getConfig().getString("count-only").equals("true")) {
+                    JSONObject countMsg = new JSONObject();
+                    countMsg.put("value", "count");
+                    countMsg.put("count", rawFound);
+                    broadcastDataMessage(countMsg);
+                    broadcastDone();
+                    return;
+                }
+                
                 if (res.getResults().getNumFound() == 0) break;
                 if (rowLimit == -1) {
                     rowLimit = res.getResults().getNumFound();
@@ -351,11 +365,13 @@ public class SolrModule extends MVMModule {
     
     /*
      * Process stream of faceted value points & reduce on done.
+     *  Can be used for anything that passes messages with a
+     *  "value" and "count" field (one per pair).
     */
-    public class FacetReducer extends MVMFunction {
+    public class ValueCountReducer extends MVMFunction {
         Map<String, Integer> facetMap;
         
-        public FacetReducer(String refId, MVMContext ctx, JSONObject config) throws Exception {
+        public ValueCountReducer(String refId, MVMContext ctx, JSONObject config) throws Exception {
             super(refId, ctx, config);
             facetMap = new HashMap<String, Integer>();
         }

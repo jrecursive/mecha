@@ -19,7 +19,16 @@ import mecha.vm.channels.*;
 public class MVMContext {
     final private static Logger log = 
         Logger.getLogger(MVMContext.class.getName());
-
+    
+        
+    /*
+     * Macro expansion "vertex delegate" map; maps
+     *  "reference variable" (e.g., "a") to the
+     *  "true destination" (ultimately, the macro's
+     *  generated (guid) '$sink'.
+    */
+    final private ConcurrentHashMap<String, String> vertexDelegates;
+    
     /*
      * Primitive function assignment -> ref maps.
     */
@@ -63,6 +72,8 @@ public class MVMContext {
         fiberFactory = new PoolFiberFactory(functionExecutor);
         memoryChannelMap = new ConcurrentHashMap<String, Channel<JSONObject>>();
         fibers = new HashSet<Fiber>();
+        
+        vertexDelegates = new ConcurrentHashMap<String, String>();
     }
     
     /*
@@ -99,6 +110,28 @@ public class MVMContext {
     
     public void clearFunRefs() {
         funRefs.clear();
+    }
+    
+    /* 
+     * Resolve destination vertex variables to a delegate if one is defined,
+     *  or itself if not.
+    */
+    public String resolveVertexDelegate(String var) throws Exception {
+        if (vertexDelegates.containsKey(var)) {
+            log.info("resolveVertexDelegate(" + var + ") -> " + 
+                vertexDelegates.get(var));
+            return vertexDelegates.get(var);
+        } else {
+            return var;
+        }
+    }
+    
+    public void setVertexDelegate(String var, String delegateVar) throws Exception {
+        vertexDelegates.put(var, delegateVar);
+    }
+    
+    public void clearVertexDelegates() {
+        vertexDelegates.clear();
     }
     
     /*
@@ -318,6 +351,7 @@ public class MVMContext {
     public void reset() throws Exception {
         cancelAllFunctions("reset");
         resetJetlangPrimitives();
+        clearVertexDelegates();
         clearVars();
         clearBlocks();
         clearFunRefs();

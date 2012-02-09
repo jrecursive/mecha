@@ -42,11 +42,15 @@ public class MDBModule extends MVMModule {
             final String partition = msg.getString("partition");
             final String bucket = msg.getString("bucket");
             final String key = msg.getString("key");
+            byte[] bytes = Mecha.getMDB()
+                                .getBucket(partition, bucket)
+                                .get(key.getBytes());
+            if (bytes == null) {
+                log.info("Can't find record: " + msg.toString());
+                return;
+            }
             broadcastDataMessage(
-                new JSONObject(new String(
-                    Mecha.getMDB()
-                         .getBucket(partition, bucket)
-                         .get(key.getBytes()))));
+                new JSONObject(new String(bytes)));
         }
     }
     

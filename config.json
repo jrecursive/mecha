@@ -18,7 +18,7 @@
     ## riak-nodename: full node name of local riak node
     ## riak-cookie: cookie for riak cluster
     ## 
-    "riak-nodename": "riak@127.0.0.1",
+    "riak-nodename": "riak@75.125.240.202",
     "riak-cookie": "re14ak",
     
     ##

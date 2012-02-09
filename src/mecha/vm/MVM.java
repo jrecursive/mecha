@@ -34,6 +34,20 @@ public class MVM {
     
     final private static String SYSTEM_NAMESPACE = "$";
     final private static String NS_SEP = ".";
+    
+    /*
+     * Macro pre- and post- expansions.
+    */
+    final private String[] preMacroDef = {
+        "#if ($_is_macro)",
+        "${sink} = (macro-sink)",
+        "#end",
+        "#if (!$sink) #set ($sink = $args.sink) #end",
+        "#if (!$root) #set ($root = $guid) #end"
+    };
+    final private String[] postMacroDef = {
+        "#if (!$_is_macro) ${root} ! (start) #end"
+    };
         
     /*
      * Namespaced verb to RegisteredFunction (which describes
@@ -312,9 +326,19 @@ public class MVM {
     public String nativeFlowAddEdge(MVMContext ctx, String from, String to) throws Exception {
         //log.info("nativeFlowAddEdge: from: " + from + " to: " + to);
         
+        /*
+         * Resolve any origin vertex delegate values.
+        */
+        from = ctx.resolveVertexDelegate(from);
+        
         String fromRefId = ctx.<String>get(from);
         String toRefId = ctx.<String>get(to);
         
+        if (fromRefId.equals(toRefId)) {
+            throw new Exception("Cannot create a cycle in the data flow graph! " + 
+                from + " -> " + to);
+        }
+            
         String edgeRefId = Mecha.guid(Edge.class);
         JSONObject edgeData = newBaseFlowDataObject(ctx);
         edgeData.put(Flow.REF_ID, edgeRefId);
@@ -363,6 +387,80 @@ public class MVM {
      * Perform "a = (expr ...)" assignment to ctx.
     */
     public String nativeAssignment(MVMContext ctx, String var, JSONObject ast) throws Exception {
+        
+        /*
+         * Process "in-line" (#macro ...) expansions.
+        */
+        
+        String verb = ast.getString("$");
+        
+        if (verb.startsWith("#")) {
+            String macroName = verb.substring(1);
+            List<String> blockDef = ctx.getBlock(macroName);
+            StringBuffer blockStrBuf = new StringBuffer();
+            /*
+             * Pre-macro wrapper code.
+            */
+            for(String s : preMacroDef) {
+                blockStrBuf.append(s);
+                blockStrBuf.append("\n");
+            }
+            /*
+             * Macro body.
+            */
+            for(String s : blockDef) {
+                blockStrBuf.append(s);
+                blockStrBuf.append("\n");
+            }
+            /*
+             * Post-macro wrapper code.
+            */
+            for(String s : postMacroDef) {
+                blockStrBuf.append(s);
+                blockStrBuf.append("\n");
+            }
+            String blockStr = blockStrBuf.toString();
+            
+            String sinkDelegateVar = Mecha.guid(Velocity.class) + "-macro-delegate";
+            /*
+             * The sink delegate var is actually registered AFTER
+             *  the macro is expanded; otherwise it will inevitably
+             *  create a cycle in the data flow graph.
+            */
+            
+            VelocityContext context = new VelocityContext();
+            context.put("ctx", ctx);
+            context.put("args", ast);
+            context.put("_is_macro", "true");
+            context.put("root", var);
+            context.put("sink", sinkDelegateVar);
+            context.put("guid", Mecha.guid(Velocity.class));
+            
+            StringWriter w = new StringWriter();
+            Velocity.evaluate(context, w, "#" + verb, blockStr);
+            
+            String[] renderedMacro = w.toString().split("\n");
+            for(String line : renderedMacro) {
+                log.info("n\nExecute: " + line + "\n\n");
+                execute(ctx, line);
+            }
+            
+            ctx.setVertexDelegate(var, sinkDelegateVar);
+            /*
+             * By the time we reach this line, the recursive calls
+             *  have defined the passed variable, so we will resolve
+             *  the variable to the vertexRefId assigned to it and
+             *  return it (since it is the functional source of the
+             *  [potential] chain of vertices.
+            */
+            return ctx.<String>get(var);
+        }
+
+        
+        /*
+         * Standard assignemnt.
+        */
+        
         String vertexRefId = Mecha.guid(Vertex.class);
         JSONObject vertexData = newBaseFlowDataObject(ctx);
         vertexData.put(Flow.REF_ID, vertexRefId);
@@ -482,7 +580,24 @@ public class MVM {
         String macroName = verb.substring(1);
         List<String> blockDef = ctx.getBlock(macroName);
         StringBuffer blockStrBuf = new StringBuffer();
+        /*
+         * Pre-macro wrapper code.
+        */
+        for(String s : preMacroDef) {
+            blockStrBuf.append(s);
+            blockStrBuf.append("\n");
+        }
+        /*
+         * Macro body.
+        */
         for(String s : blockDef) {
+            blockStrBuf.append(s);
+            blockStrBuf.append("\n");
+        }
+        /*
+         * Post-macro wrapper code.
+        */
+        for(String s : postMacroDef) {
             blockStrBuf.append(s);
             blockStrBuf.append("\n");
         }
