@@ -44,3 +44,17 @@ ${root} -> ${guid}-extractor
 ${guid}-extractor -> $sink
 #end riak-materialize
 
+//
+// facet
+//
+
+#define-global facet
+#if (!$args.mincount) #set ($args.mincount = "1") #end
+#if (!$args.limit) #set ($args.limit = "100") #end
+#if (!$args.start) #set ($args.start = "0") #end
+${root} = (with-coverage partition-marker:"<<${guid}-p>>" host-marker:"<<${guid}-h>>" bucket:${args.bucket} do:(warp host:<<${guid}-h>> do:(solr-select params:(facet:true facet.limit:${args.limit} facet.field:${args.field} facet.mincount:${args.mincount} start:${args.start} rows:0 q:"partition:<<${guid}-p>> AND bucket:${args.bucket}"))))
+${guid}-reducer = (value-count-reducer)
+${root} -> ${guid}-reducer
+${guid}-reducer -> ${sink}
+#end facet
+
