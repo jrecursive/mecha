@@ -3,6 +3,7 @@ package mecha.http.servlets;
 import java.util.*;
 import java.util.logging.*;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.*;
 import java.io.*;
 
 import mecha.Mecha;
@@ -38,7 +39,7 @@ public class MacroServlet extends HttpServlet {
             System.out.println("request.getQueryString = " + request.getQueryString());
             System.out.println("request.getParameterMap = " + request.getParameterMap());
             
-            JSONObject params = new JSONObject();
+            final JSONObject params = new JSONObject();
             Map<String, String[]> requestParamMap = request.getParameterMap();
             for(String k : requestParamMap.keySet()) {
                 String[] values = requestParamMap.get(k);
@@ -49,26 +50,94 @@ public class MacroServlet extends HttpServlet {
                 }
             }
             
-            String[] parts = request.getPathInfo().substring(1).split("/");
-            String namespace = parts[0];
-            String macroName = parts[1];
-            
+            String[] parts = request.getPathInfo().substring(1).split("/");            
             if (parts.length == 1) {
-                params.put("$", "#" + macroName);
+                params.put("$", "#" + parts[0]);
             } else if (parts.length == 2) {
-                params.put("$", "#" + namespace + "." + macroName);
+                params.put("$", "#" + parts[0] + "." + parts[1]);
             } else {
                 writeError(response, "Invalid request");
                 return;
             }
             
+            final String host = 
+                Mecha.getConfig()
+                     .getJSONObject("riak-config")
+                     .getString("pb-ip");
+            final String password = Mecha.getConfig().getString("password");
+            final int port = Mecha.getConfig().getInt("client-port");
+            
             log.info("params: " + params.toString(2));
-            //response.setContentType("application/json");
+            
+            final JSONArray dataResult = new JSONArray();
+            final AtomicBoolean ready = new AtomicBoolean(false);
+            final AtomicBoolean done = new AtomicBoolean(false);
+            final MechaClientHandler mechaClientHandler = new MechaClientHandler() {
+                public void onSystemMessage(JSONObject msg) throws Exception {
+                    log.info("<system> " + msg.toString(2));
+                }
+                
+                public void onOpen() throws Exception {
+                    //log.info("<connected>");
+                    ready.set(true);
+                }
+    
+                public void onClose() throws Exception {
+                    //log.info("<disconnected>");
+                    done.set(true);
+                }
+    
+                public void onError(Exception ex) {
+                    //log.info("<error> " + ex.toString());
+                    done.set(true);
+                    ex.printStackTrace();
+                }
+                
+                public void onMessage(String msg) {
+                    log.info("this should never happen: " + msg);
+                }
+    
+                public void onDataMessage(String channel, JSONObject msg) throws Exception {
+                    //log.info("<data: " + channel + "> " + msg.toString(2));
+                    JSONObject msg1 = new JSONObject();
+                    for(String k : JSONObject.getNames(msg)) {
+                        if (k.startsWith("$")) continue;
+                        msg1.put(k, msg.get(k));
+                    }
+                    dataResult.put(msg1);
+                }
+    
+                public void onDoneEvent(String channel, JSONObject msg) throws Exception {
+                    log.info("<done: " + channel + "> " + msg.toString(2));
+                    done.set(true);
+                    getTextClient().send("$bye");
+                }
+                
+                public void onControlEvent(String channel, JSONObject msg) throws Exception {
+                    log.info("<control: " + channel + "> " + msg.toString(2));
+                }
+                
+                public void onOk(String msg) throws Exception {
+                    //log.info("<ok> " + msg);
+                }
+                
+                public void onInfo(String msg) throws Exception {
+                    log.info("<info> " + msg);
+                }
+            };
+            
+            MechaClient mechaClient = new MechaClient(host, port, password, mechaClientHandler);
+            while(!ready.get()) { Thread.yield(); }
+            mechaClient.exec("$execute " + params.toString());
+            long t_st = System.currentTimeMillis();
+            while(!done.get()) { Thread.yield(); }
+            long t_elapsed = System.currentTimeMillis() - t_st;
             response.setContentType("text/plain");
             response.setStatus(HttpServletResponse.SC_OK);
-            
-            
-            
+            JSONObject result = new JSONObject();
+            result.put("elapsed", t_elapsed);
+            result.put("result", dataResult);
+            response.getWriter().println(result.toString(2));
         } catch (Exception ex) {
             ex.printStackTrace();
         }

@@ -77,6 +77,7 @@ public class MechaClient extends MechaClientHandler {
         this.password = password;
         this.handler = handler;
         textClient = new TextClient(host, port, password, this);
+        handler.setTextClient(textClient);
     }
     
     public void onMessage(String message) {

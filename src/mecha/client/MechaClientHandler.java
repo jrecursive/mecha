@@ -1,8 +1,20 @@
 package mecha.client;
 
+import java.lang.ref.*;
 import mecha.json.*;
+import mecha.client.net.*;
 
 public abstract class MechaClientHandler {
+
+    private WeakReference<TextClient> textClientRef = null;
+    
+    public void setTextClient(TextClient textClient) {
+        textClientRef = new WeakReference<TextClient>(textClient);
+    }
+    
+    public TextClient getTextClient() {
+        return textClientRef.get();
+    }
     
     public void onSystemMessage(JSONObject msg) throws Exception {
         System.out.println("<system> " + msg.toString(2));
