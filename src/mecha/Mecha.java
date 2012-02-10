@@ -81,9 +81,6 @@ public class Mecha {
         log.info("* starting http server");
         httpServer = new HTTPServer();
         
-        // log.info("* starting web services");
-        // TODO: jetty ws integ
-        
         log.info("* starting riak connector");
         riakConnector = new RiakConnector(mdb);
     }

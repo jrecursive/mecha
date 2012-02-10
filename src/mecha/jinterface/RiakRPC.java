@@ -86,7 +86,7 @@ public class RiakRPC {
             new HashMap<String, Set<String>>();
         OtpErlangObject[] args = { new OtpErlangBinary(bucket.getBytes()) };
         OtpErlangList obj = 
-            (OtpErlangList) rpc("riak_kv_fabric_backend", "bucket_coverage", args);
+            (OtpErlangList) rpc("riak_kv_mecha_backend", "bucket_coverage", args);
         OtpErlangObject[] coverageTuples = obj.elements();
         for(OtpErlangObject tupObj: coverageTuples) {
             OtpErlangTuple coverageTuple = (OtpErlangTuple) tupObj;
@@ -103,6 +103,51 @@ public class RiakRPC {
             coveragePlan.put(host, partitions);
         }
         return coveragePlan;
+    }
+    
+    /*
+     * compute preflist for a bucket, key pair.
+     *
+     * [{{548063113999088594326381812268606132370974703616,
+     *    'riak@75.125.240.202'},
+     *   primary},
+     *  {{593735040165679310520246963290989976735222595584,
+     *    'riak@75.125.240.202'},
+     *   primary},
+     *  {{639406966332270026714112114313373821099470487552,
+     *    'riak@75.125.240.202'},
+     *   primary}]
+     * 
+     * returns a map of host -> set[ partition, partition, ... ]
+     * 
+    */
+    
+    public Map<String, Set<String>> 
+        getBKeyPreflist(String bucket, String key) throws Exception {
+        Map<String, Set<String>> preflist =
+            new HashMap<String, Set<String>>();
+        OtpErlangObject[] args = { new OtpErlangBinary(bucket.getBytes()),
+                                   new OtpErlangBinary(key.getBytes()) };
+        OtpErlangList obj = 
+            (OtpErlangList) rpc("riak_kv_mecha_backend", "bkey_preflist", args);
+        OtpErlangObject[] preflistTuples = obj.elements();
+        for(OtpErlangObject tupObj: preflistTuples) {
+            OtpErlangTuple preflistTuple1 = (OtpErlangTuple) tupObj;
+            OtpErlangTuple preflistTuple = 
+                (OtpErlangTuple) preflistTuple1.elementAt(0);
+            String partition = "" + preflistTuple.elementAt(0);
+            String node = ((OtpErlangAtom) preflistTuple.elementAt(1)).atomValue();
+            String host = node.split("@")[1];
+            Set<String> partitions;
+            if (null == preflist.get(host)) {
+                partitions = new HashSet<String>();
+            } else {
+                partitions = preflist.get(host);
+            }
+            partitions.add(partition);
+            preflist.put(host, partitions);
+        }
+        return preflist;
     }
     
     /*
