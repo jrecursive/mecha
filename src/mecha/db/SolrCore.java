@@ -54,8 +54,8 @@ public class SolrCore {
     }
     
     public void shutdown() throws Exception {
-        log.info("forcing shutdown commit .. ");
+        System.out.println("forcing shutdown commit .. ");
         server.commit(true, false);
-        log.info(coreName + ": shutdown ok.");
+        System.out.println(coreName + ": shutdown ok.");
     }
 }

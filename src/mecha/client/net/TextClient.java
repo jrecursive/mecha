@@ -52,17 +52,13 @@ public class TextClient {
                         bootstrap.releaseExternalResources();
                     }
                     channel = future.getChannel();
-                    System.out.println("writing password .. " + password);
                     channel.write("auth " + password + "\n");
                     ready.set(true);
                 }
             }
         );
-        
-        log.info("Waiting for ready state...");
-        while(!ready.get()) {
-            Thread.sleep(5);
-        }
+        // TODO: timeout
+        while(!ready.get()) Thread.yield();
         if (channel == null) {
             throw new Exception("Unable to connect " + host + ":" + port);
         }

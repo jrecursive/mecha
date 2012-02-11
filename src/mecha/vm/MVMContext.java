@@ -68,7 +68,7 @@ public class MVMContext {
         refId = Mecha.guid(MVMContext.class);
         blocks = new ConcurrentHashMap<String, List<String>>();
         
-        functionExecutor = Executors.newCachedThreadPool();
+        functionExecutor = Executors.newFixedThreadPool(4); // newCachedThreadPool();
         fiberFactory = new PoolFiberFactory(functionExecutor);
         memoryChannelMap = new ConcurrentHashMap<String, Channel<JSONObject>>();
         fibers = new HashSet<Fiber>();
@@ -118,8 +118,10 @@ public class MVMContext {
     */
     public String resolveVertexDelegate(String var) throws Exception {
         if (vertexDelegates.containsKey(var)) {
+            /*
             log.info("resolveVertexDelegate(" + var + ") -> " + 
                 vertexDelegates.get(var));
+            */
             return vertexDelegates.get(var);
         } else {
             return var;
@@ -230,7 +232,6 @@ public class MVMContext {
             }
     
             public void onMessage(String channel, JSONObject message) throws Exception {
-                //log.info(channel + " -> " + message.toString(2));
                 if (!channel.equals(mechaChannelName)) {
                     log.info("!! " + channel + " != " + mechaChannelName);
                 }
@@ -281,7 +282,9 @@ public class MVMContext {
             WeakReference<MVMFunction> funRef = funRefs.get(refId);
             MVMFunction fun = funRef.get();
             if (fun != null) {
-                log.info("cancel: " + refId + ": reason: " + reason);
+                if (!reason.equals("reset")) {
+                    log.info("cancel: " + refId + ": reason: " + reason);
+                }
                 JSONObject cancelMsg = new JSONObject();
                 cancelMsg.put("$", "cancel");
                 cancelMsg.put("reason", reason);
@@ -306,7 +309,7 @@ public class MVMContext {
     
     private void disposeFibers() throws Exception {
         for(Fiber fiber : fibers) {
-            log.info("fiber.dispose: " + fiber);
+            //log.info("fiber.dispose: " + fiber);
             fiber.dispose();
         }
     }
@@ -339,7 +342,7 @@ public class MVMContext {
         clearChannels();
         shutdownFunctionExecutor();
 
-        functionExecutor = Executors.newCachedThreadPool();
+        functionExecutor = Executors.newFixedThreadPool(4); // newCachedThreadPool();
         fiberFactory = new PoolFiberFactory(functionExecutor);
         memoryChannelMap = new ConcurrentHashMap<String, Channel<JSONObject>>();
         fibers = new HashSet<Fiber>();

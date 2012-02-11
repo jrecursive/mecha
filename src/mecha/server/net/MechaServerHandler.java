@@ -45,10 +45,19 @@ public class MechaServerHandler extends SimpleChannelUpstreamHandler {
     
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, ExceptionEvent e) {
+        /*
+         * Any exception at this point should just kill the channel
+         *  which will cause a cascade of cleanup activities; almost
+         *  all non-static functionality (e.g., user, data driven)
+         *  relies on a connection -- if there is a problem, it should
+         *  all be dumped ASAP.
+        */
+        /*
         log.log(
                 Level.WARNING,
                 "Unexpected exception from downstream.",
                 e.getCause());
+        */
         e.getChannel().close();
     }
 }

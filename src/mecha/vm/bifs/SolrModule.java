@@ -45,6 +45,7 @@ public class SolrModule extends MVMModule {
         final private ReentrantLock stateLock;
         final private Thread iteratorThread;
         final private String iterationLabel;
+        final private boolean materialize;
     
         public SelectIterator(String refId, MVMContext ctx, JSONObject config) throws Exception {
             super(refId, ctx, config);
@@ -56,6 +57,13 @@ public class SolrModule extends MVMModule {
                 iterationLabel = config.getString("iterator-name");
             } else {
                 iterationLabel = null;
+            }
+            
+            if (config.has("materialize") &&
+                config.getString("materialize").equals("true")) {
+                materialize = true;
+            } else {
+                materialize = false;
             }
             
             /*
@@ -141,9 +149,16 @@ public class SolrModule extends MVMModule {
                                         // bubble early exit up
                                         stateLock.lock();
                                         try {
-                                            JSONObject msg = new JSONObject();
-                                            for(String fieldName : doc.getFieldNames()) {
-                                                msg.put(fieldName, doc.get(fieldName));
+                                            JSONObject msg;
+                                            if (materialize) {
+                                                msg = materializePBK("" + doc.get("partition"),
+                                                                     "" + doc.get("bucket"),
+                                                                     "" + doc.get("key"));
+                                            } else {
+                                                msg = new JSONObject();
+                                                for(String fieldName : doc.getFieldNames()) {
+                                                    msg.put(fieldName, doc.get(fieldName));
+                                                }
                                             }
                                             broadcastDataMessage(msg);
                                             count++;
@@ -249,8 +264,16 @@ public class SolrModule extends MVMModule {
      *  Stream implementation.
     */
     public class Select extends MVMFunction {
+        final private boolean materialize;
+        
         public Select(String refId, MVMContext ctx, JSONObject config) throws Exception {
             super(refId, ctx, config);
+            if (config.has("materialize") &&
+                config.getString("materialize").equals("true")) {
+                materialize = true;
+            } else {
+                materialize = false;
+            }
         }
         
         public void onStartEvent(JSONObject startEventMsg) throws Exception {
@@ -341,9 +364,16 @@ public class SolrModule extends MVMModule {
                     rowLimit = res.getResults().getNumFound();
                 }
                 for(SolrDocument doc : res.getResults()) {
-                    JSONObject msg = new JSONObject();
-                    for(String fieldName : doc.getFieldNames()) {
-                        msg.put(fieldName, doc.get(fieldName));
+                    JSONObject msg;
+                    if (materialize) {
+                        msg = materializePBK("" + doc.get("partition"),
+                                             "" + doc.get("bucket"),
+                                             "" + doc.get("key"));
+                    } else {
+                        msg = new JSONObject();
+                        for(String fieldName : doc.getFieldNames()) {
+                            msg.put(fieldName, doc.get(fieldName));
+                        }
                     }
                     broadcastDataMessage(msg);
                     count++; 
@@ -372,7 +402,8 @@ public class SolrModule extends MVMModule {
     public class ValueCountReducer extends MVMFunction {
         Map<String, Integer> facetMap;
         
-        public ValueCountReducer(String refId, MVMContext ctx, JSONObject config) throws Exception {
+        public ValueCountReducer(String refId, MVMContext ctx, JSONObject config) 
+            throws Exception {
             super(refId, ctx, config);
             facetMap = new HashMap<String, Integer>();
         }
@@ -397,6 +428,17 @@ public class SolrModule extends MVMModule {
         
     }
     
+    private JSONObject materializePBK(String partition, String bucket, String key) 
+        throws Exception {
+        JSONObject obj = new JSONObject(
+            new String(Mecha.getMDB()
+                            .getBucket(partition, bucket)
+                            .get(key.getBytes())));
+        return new JSONObject(
+            obj.getJSONArray("values")
+               .getJSONObject(0)
+               .getString("data"));
+    }
 
     
 }

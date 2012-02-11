@@ -57,7 +57,7 @@ public class Client implements ChannelConsumer {
                 UUID.randomUUID() + "-" +
                 System.currentTimeMillis()
              );
-        log.info("new client: " + id);
+        //log.info("new client: " + id);
     
         state = new ConcurrentHashMap<String, String>();
         this.connection = new WeakReference<ChannelHandlerContext>(connection);

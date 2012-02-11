@@ -33,6 +33,8 @@ public class MDBModule extends MVMModule {
     public void moduleUnload() throws Exception {
     }
     
+    
+    
     public class MaterializePBKStream extends MVMFunction {
         public MaterializePBKStream(String refId, MVMContext ctx, JSONObject config) throws Exception {
             super(refId, ctx, config);
@@ -45,10 +47,6 @@ public class MDBModule extends MVMModule {
             byte[] bytes = Mecha.getMDB()
                                 .getBucket(partition, bucket)
                                 .get(key.getBytes());
-            if (bytes == null) {
-                log.info("Can't find record: " + msg.toString());
-                return;
-            }
             broadcastDataMessage(
                 new JSONObject(new String(bytes)));
         }

@@ -22,12 +22,9 @@ register namespace:$ module-class:mecha.vm.bifs.StreamModule verbs:(vector-seque
 
 #define-global spatial-query
 #if (!$args.filter) #set ($args.filter = "") #end
-${root} = (with-coverage partition-marker:"<<${guid}-p>>" host-marker:"<<${guid}-h>>" bucket:${args.bucket} do:(warp host:<<${guid}-h>> do:(solr-select params:(q:"partition:<<${guid}-p>> AND bucket:${args.bucket} ${args.filter}" sfield:${args.field} pt:"${args.lat},${args.lon}" d:${args.radius} fq:"{!bbox}"))))
-${guid}-m = (materialize-pbk-stream)
-${guid}-extractor = (extract-riak-value position:0)
-${root} -> ${guid}-m
-${guid}-m -> ${guid}-extractor
-${guid}-extractor -> ${sink}
+#if (!$args.materialize) #set ($args.materialize = "true") #end
+${root} = (with-coverage partition-marker:"<<${guid}-p>>" host-marker:"<<${guid}-h>>" bucket:${args.bucket} do:(warp host:<<${guid}-h>> do:(solr-select params:(q:"partition:<<${guid}-p>> AND bucket:${args.bucket} ${args.filter}" sfield:${args.field} pt:"${args.lat},${args.lon}" d:${args.radius} fq:"{!bbox}") materialize:${args.materialize})))
+${root} -> ${sink}
 #end spatial-query
 
 //
@@ -72,13 +69,16 @@ ${guid}-reducer -> ${sink}
 // query-keys
 //
 
-#define-global query-keys
+#define-global query
 #if (!$args.start) #set ($args.start = "0") #end
-#if (!$args.count) #set ($args.count = "100") #end
+#if (!$args.count) #set ($args.count = "10") #end
 #if (!$args.filter) #set ($args.filter = "") #end
-${root} = (with-sorted-coverage sort-field:key sort-order:asc partition-marker:"<<${guid}-p>>" host-marker:"<<${guid}-h>>" bucket:${args.bucket} do:(warp host:<<${guid}-h>> do:(solr-select-iterator params:(q:"partition:<<${guid}-p>> AND bucket:${args.bucket} ${args.filter}" rows:${args.count} start:${args.start} fl:key sort:"key asc"))))
+#if (!$args.materialize) #set ($args.materialize = "true") #end
+${root} = (with-sorted-coverage sort-field:key sort-order:asc partition-marker:"<<${guid}-p>>" host-marker:"<<${guid}-h>>" bucket:${args.bucket} do:(warp host:<<${guid}-h>> do:(solr-select-iterator params:(q:"partition:<<${guid}-p>> AND bucket:${args.bucket} ${args.filter}" rows:${args.count} sort:"key asc") materialize:${args.materialize})))
+${guid}-start = (eat count:${args.start})
 ${guid}-limit = (limit count:${args.count})
-${root} -> ${guid}-limit
+${root} -> ${guid}-start
+${guid}-start -> ${guid}-limit
 ${guid}-limit -> ${sink}
-#end query-keys
+#end query
 

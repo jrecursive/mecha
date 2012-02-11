@@ -273,4 +273,8 @@ public class Bucket {
             String.format("%1$s,%2$s,%3$s",
                 partition, bucketStr, new String(key)));
     }
+    
+    public String getBucketName() {
+        return bucketStr;
+    }
 }

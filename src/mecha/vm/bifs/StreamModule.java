@@ -44,10 +44,8 @@ public class StreamModule extends MVMModule {
         public void onDataMessage(JSONObject msg) throws Exception {
             eaten++;
             if (eaten <= total) {
-                log.info("bitbucketed " + eaten + " of " + total);
                 return;
             }
-            log.info("passing through " + msg);
             broadcastDataMessage(msg);
         }
     }

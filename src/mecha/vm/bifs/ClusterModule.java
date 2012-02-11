@@ -162,7 +162,7 @@ public class ClusterModule extends MVMModule {
             }
             
             warpDelegate = new WarpDelegate(host, this);
-            log.info("Warp delegate connecting to <" + host + ">");
+            //log.info("Warp delegate connecting to <" + host + ">");
         }
         
         /*
@@ -174,11 +174,11 @@ public class ClusterModule extends MVMModule {
                 log.info("Remote startEvent <" + host + "> " + msg.toString(2));
             } else {
                 // TO remote
-                log.info("waiting until warp delegate is ready... ");
+                //log.info("waiting until warp delegate is ready... ");
                 warpDelegate.waitUntilReady(timeout);
-                log.info("Warp delegate successfully connected to <" + host + ">");
+                //log.info("Warp delegate successfully connected to <" + host + ">");
                 
-                log.info("Transferring " + getContext().getBlockMap().keySet().size() + " blocks..");
+                //log.info("Transferring " + getContext().getBlockMap().keySet().size() + " blocks..");
                 for(Map.Entry<String,List<String>> entry : getContext().getBlockMap().entrySet()) {
                     String blockName = entry.getKey();
                     List<String> blockCode = entry.getValue();
@@ -187,15 +187,15 @@ public class ClusterModule extends MVMModule {
                         warpDelegate.send(line);
                     }
                     warpDelegate.send("#end " + blockName);
-                    log.info("blocks: " + blockName + ": ok");
+                    //log.info("blocks: " + blockName + ": ok");
                 }
                 
-                log.info("Registering '" + remoteVar + "' on <" + host + ">");
+                //log.info("Registering '" + remoteVar + "' on <" + host + ">");
                 warpDelegate.send("$assign " + remoteVar + " " + doAst.toString());
                 warpDelegate.send("me = (client-sink)");
                 warpDelegate.send(remoteVar + " -> me");
-                log.info("Registration complete on <"  + host + ">");
-                log.info("delegate ready!  starting...");
+                //log.info("Registration complete on <"  + host + ">");
+                //log.info("delegate ready!  starting...");
                 warpDelegate.send("$control " + remoteVar + " " + msg.toString());
             }
         }
@@ -206,7 +206,7 @@ public class ClusterModule extends MVMModule {
         public void onControlMessage(JSONObject msg) throws Exception {
             if (msg.has("$delegate-channel")) {
                 // FROM remote
-                log.info("Remote controlMessage <" + host + "> " + msg.toString(2));
+                //log.info("Remote controlMessage <" + host + "> " + msg.toString(2));
                 broadcastControlMessage(msg);
             } else {
                 // TO remote
@@ -220,7 +220,7 @@ public class ClusterModule extends MVMModule {
         public void onCancelEvent(JSONObject msg) throws Exception {
             if (msg.has("$delegate-channel")) {
                 // FROM remote
-                log.info("Remote cancelEvent <" + host + "> " + msg.toString(2));
+                //log.info("Remote cancelEvent <" + host + "> " + msg.toString(2));
                 broadcastControlMessage(msg);
             } else {
                 // TO remote

@@ -93,26 +93,22 @@ public class Server {
         if (cl == null) return;
         clientIdMap.remove(cl.getId());
         if (null != cl) {
-            log.info("* client cleanup: " + connection);
             for (String chan: cl.getSubscriptions()) {
                 PubChannel pchan = 
                     Mecha.getChannels().getChannel(chan);
                 if (pchan != null) {
                     pchan.removeMember(cl);
                 }
-                log.info("removed subscription to " + chan + 
-                    " for " + cl + " <" + connection + ">");
+                //log.info("removed subscription to " + chan + 
+                //    " for " + cl + " <" + connection + ">");
             }
             try {
-                log.info("resetting context");
                 cl.getContext().reset();
-                log.info("cleanup complete <" + cl.toString() + ">");
             } catch (Exception ex) {
                 ex.printStackTrace();
             }
         }
         clientMap.remove(connection);
-        log.info("disconnect: " + connection);
     }
     
     public void onMessage(ChannelHandlerContext connection, String request) {
@@ -187,7 +183,7 @@ public class Server {
             if (cmd.equals("$execute")) {
                 String astStr = request.substring(cmd.length()+1);
                 JSONObject ast = new JSONObject(astStr);
-                log.info("mvm: $execute: " + cl + "/" + cl.getContext() + ": " + ast.toString());
+                //log.info("mvm: $execute: " + cl + "/" + cl.getContext() + ": " + ast.toString());
                 response = Mecha.getMVM().execute(cl.getContext(), ast);
             
             /*
@@ -197,7 +193,7 @@ public class Server {
                 String varName = parts[1];
                 JSONObject ast = 
                     new JSONObject(request.substring(cmd.length() + varName.length() + 2).trim());
-                log.info("mvm: $assign: " + varName + ": " + cl + "/" + cl.getContext() + ": " + ast.toString());
+                //log.info("mvm: $assign: " + varName + ": " + cl + "/" + cl.getContext() + ": " + ast.toString());
                 Mecha.getMVM().nativeAssignment(cl.getContext(), varName, ast);
                 
             /*
@@ -266,7 +262,7 @@ public class Server {
 
             // execute mecha vm command
             } else {
-                log.info("mvm: execute: " + cl + "/" + cl.getContext() + ": " + request);
+                //log.info("mvm: execute: " + cl + "/" + cl.getContext() + ": " + request);
                 response = Mecha.getMVM().execute(cl.getContext(), request);
             }
             

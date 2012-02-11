@@ -79,9 +79,10 @@ public class MDB {
     
     public void shutdown() throws Exception {
         for(String partition : getActivePartitions()) {
-            log.info("stopping partition " + partition);
+            System.out.println("stopping partition " + partition);
             stop(partition);
         }
+        System.out.println("mdb stopped.");
     }
     
     
@@ -105,10 +106,11 @@ public class MDB {
     public void stop(String partition) throws Exception {
         if (null == partitionBuckets.get(partition)) return;
         for(Bucket bw: partitionBuckets.get(partition).values()) {
+            System.out.println("stop: " + partition + ": " + bw.getBucketName());
             bw.stop();
         }
         partitionBuckets.remove(partition);
-        log.info("stop: " + partition);
+        System.out.println("stop: " + partition);
     }
     
     public byte[] get(String partition, byte[] bucket, byte[] key) throws Exception {

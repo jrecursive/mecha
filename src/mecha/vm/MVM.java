@@ -107,7 +107,7 @@ public class MVM {
         final TextClient textClient = new TextClient(host, port, password, 
             new MechaClientHandler() {
                 public void onMessage(String message) {
-                    log.info("bootstrap: message: " + message);
+                    //log.info("bootstrap: message: " + message);
                 }
                 
                 public void onOpen() {
@@ -129,12 +129,10 @@ public class MVM {
             public void run() {
                 try {
                     while(!ready.get()) { Thread.sleep(5); }
-                    log.info("executing bootstrap commands");
+                    log.info("executing bootstrap commands...");
                     for(String line : bootstrapCommands) {
                         textClient.send(line);
-                        log.info("bootstrap>> " + line);
                     }
-                    log.info("bye!");
                     textClient.send("$bye");
                     log.info("waiting for bootstrap disconnection...");
                     while(!bootstrapped.get()) { Thread.sleep(5); }
@@ -186,7 +184,7 @@ public class MVM {
                 return null;
             }
             if (cmd.startsWith("//")) {
-                log.info(cmd);
+                //log.info(cmd);
                 return null;
             }
             
