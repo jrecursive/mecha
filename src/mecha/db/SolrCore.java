@@ -52,4 +52,10 @@ public class SolrCore {
     public CoreContainer getCoreContainer() {
         return container;
     }
+    
+    public void shutdown() throws Exception {
+        log.info("forcing shutdown commit .. ");
+        server.commit(true, false);
+        log.info(coreName + ": shutdown ok.");
+    }
 }

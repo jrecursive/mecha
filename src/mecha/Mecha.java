@@ -277,7 +277,7 @@ public class Mecha {
 
     /*
      * Shutdown hook.
-    */  
+    */
     
     static {
         Runtime.getRuntime().addShutdownHook(
@@ -285,11 +285,22 @@ public class Mecha {
                 public void run() {
                     System.out.println("* shutting down...");
                     try {
-                        System.out.println("* shutting down riak link");
+                        if (Mecha.getConfig().<Boolean>get("shutdown-erlang")) {
+                            System.out.println("* shutting down riak link");
+                            Mecha.getRiakRPC().shutdown();
+                        } else {
+                            System.out.println("! not forcing erlang shutdown !");
+                        }
+                        
                         System.out.println("* terminating socket server");
-                        System.out.println("* terminating mvm");
+                        Mecha.getServer().shutdown();
+                        
                         System.out.println("* shutting down mdb");
+                        Mecha.getMDB().shutdown();
+                        
                         System.out.println("* shutting down solr");
+                        Mecha.getSolrManager().shutdown();
+                        
                         System.out.println("* shutdown complete");
                     } catch (Exception ex) {
                         ex.printStackTrace();

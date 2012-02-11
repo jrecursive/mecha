@@ -92,5 +92,11 @@
         ##
         "cache-per-bucket": 104857600,
         "sync-on-write": true
-    }
+    },
+    
+    ##
+    ## if set to false, it will not shut down the erlang vm
+    ##  on mecha shutdown (used for development).
+    ##
+    "shutdown-erlang": false
 }

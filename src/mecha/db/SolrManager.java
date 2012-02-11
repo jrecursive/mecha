@@ -46,4 +46,9 @@ public class SolrManager {
         return getCore(INDEX_CORE).getServer();
     }
     
+    public void shutdown() throws Exception {
+        log.info("shutting down " + INDEX_CORE + "...");
+        getCore(INDEX_CORE).shutdown();
+    }
+    
 }

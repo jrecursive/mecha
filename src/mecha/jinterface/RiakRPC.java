@@ -151,6 +151,16 @@ public class RiakRPC {
     }
     
     /*
+     * Shutdown the erlang vm.
+    */
+    
+    public void shutdown() throws Exception {
+        OtpErlangObject[] args = { };
+        OtpErlangObject obj = rpc("init", "stop", args);
+        log.info("Riak shutdown: " + obj.toString());
+    }
+    
+    /*
      * application:get_env(atom, atom)
      *
      * (riak@127.0.0.1)7> application:get_env(riak_core, http).

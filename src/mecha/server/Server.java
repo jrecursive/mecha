@@ -6,6 +6,7 @@ import java.util.*;
 import java.util.logging.*;
 import java.util.zip.*;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.*;
 import java.security.MessageDigest;
 import java.net.*;
 
@@ -26,9 +27,7 @@ public class Server {
         Logger.getLogger(Server.class.getName());
     
     final private static String OK_RESPONSE = ":OK ";
-    
     final private Thread netServerThread;
-    
     final private String password;
     private int connectionCount;
         
@@ -38,6 +37,8 @@ public class Server {
     */
     final private Map<ChannelHandlerContext, Client> clientMap;
     final private Map<String, Client> clientIdMap;
+    
+    final private AtomicBoolean serverActive;
         
     public Server() throws Exception {
         this.password = Mecha.getConfig().getString("password");
@@ -46,15 +47,30 @@ public class Server {
         
         int port = Mecha.getConfig().getInt("client-port");
         netServerThread = new Thread(new MechaServer(port));
+        serverActive = new AtomicBoolean(false);
     }
     
     public void start() throws Exception {
         netServerThread.start();
+        serverActive.set(true);
         log.info("started");
+    }
+    
+    public void shutdown() throws Exception {
+        serverActive.set(false);
+        netServerThread.interrupt();
     }
     
     public void onOpen(ChannelHandlerContext connection) {
         try {
+            /*
+             * If we're just starting up or shutting down, disconnect clients
+             *  no matter what.
+            */
+            if (!serverActive.get()) {
+                connection.getChannel().close();
+            }
+
             connectionCount++;
             Client cl = new Client(connection);
             
@@ -101,6 +117,14 @@ public class Server {
     
     public void onMessage(ChannelHandlerContext connection, String request) {
         try {
+            /*
+             * If we're just starting up or shutting down, disconnect clients
+             *  no matter what.
+            */
+            if (!serverActive.get()) {
+                connection.getChannel().close();
+            }
+            
             Client cl = clientMap.get(connection);
             
             if (cl == null) {

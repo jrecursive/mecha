@@ -69,12 +69,27 @@ public class MDB {
         log.info("started");
     }
     
+    public Set<String> getActivePartitions() throws Exception {
+        return partitionBuckets.keySet();
+    }
+    
+    public Set<String> getPartitionBuckets(String partition) throws Exception {
+        return partitionBuckets.get(partition).keySet();
+    }
+    
+    public void shutdown() throws Exception {
+        for(String partition : getActivePartitions()) {
+            log.info("stopping partition " + partition);
+            stop(partition);
+        }
+    }
+    
+    
     /* 
      * storage
     */
     
     public void start(String partition) throws Exception {
-        // TODO: Consistently distribute data across all named directories (if array of names configured)
         try {
             String dataDirRoot = Mecha.getConfig().getString("data-directory");
             String dataDir = dataDirRoot + "/" + partition;
