@@ -108,6 +108,7 @@ public class SolrModule extends MVMModule {
                         
                         try {
                             while(true) {
+                                if (start > 0 && start < batchSize) break;
                                 ModifiableSolrParams solrParams = new ModifiableSolrParams();
                                 for(String k : JSONObject.getNames(selectParams)) {
                                     solrParams.set(k, "" + selectParams.get(k));
