@@ -449,7 +449,6 @@ public class ClusterModule extends MVMModule {
         */
         public void onControlMessage(JSONObject msg) throws Exception {
             for(String proxyVar : proxyVars) {
-                log.info("<control> "  + proxyVar + ": " + msg.toString());
                 Mecha.getMVM().nativeControlMessage(getContext(), proxyVar, msg);
             }
         }
@@ -459,7 +458,6 @@ public class ClusterModule extends MVMModule {
         */
         public void onCancelEvent(JSONObject msg) throws Exception {
             for(String proxyVar : proxyVars) {
-                log.info("<cancel> "  + proxyVar + ": " + msg.toString());
                 Mecha.getMVM().nativeControlMessage(getContext(), proxyVar, msg);
             }
         }
