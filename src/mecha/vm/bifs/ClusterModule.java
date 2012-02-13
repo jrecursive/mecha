@@ -49,9 +49,13 @@ public class ClusterModule extends MVMModule {
                 final String password = Mecha.getConfig().getString("password");
                 final int port = Mecha.getConfig().getInt("client-port");
                 ready = new Semaphore(1,true);
+                ready.acquire();
                 localFunRefId = fun.getDataChannelName();
                 textClient = new TextClient(host, port, password, this);
-                ready.release();
+            }
+            
+            public void waitUntilReady() throws Exception {
+                ready.acquire();
             }
             
             public void close() throws Exception {
@@ -151,10 +155,7 @@ public class ClusterModule extends MVMModule {
                 log.info("Remote startEvent <" + host + "> " + msg.toString(2));
             } else {
                 // TO remote
-                //log.info("waiting until warp delegate is ready... ");
-                //warpDelegate.waitUntilReady(timeout);
-                //log.info("Warp delegate successfully connected to <" + host + ">");
-                
+                warpDelegate.waitUntilReady();
                 //log.info("Transferring " + getContext().getBlockMap().keySet().size() + " blocks..");
                 for(Map.Entry<String,List<String>> entry : getContext().getBlockMap().entrySet()) {
                     String blockName = entry.getKey();
