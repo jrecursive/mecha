@@ -75,7 +75,7 @@ public class SolrModule extends MVMModule {
                         JSONObject selectParams = getConfig().getJSONObject("params");
                         long t_st = System.currentTimeMillis();
                         long start = 0;
-                        long batchSize = 1000;
+                        long batchSize = 100;
                         long count = 0;
                         long rowLimit = -1;
                         long rawFound = 0;
@@ -135,6 +135,7 @@ public class SolrModule extends MVMModule {
                                         /*
                                          * Wait for iterator control "next" state.
                                         */
+                                        
                                         while(!next.get()) {
                                             if (stop.get()) {
                                                 // trigger early exit bubble
@@ -160,6 +161,8 @@ public class SolrModule extends MVMModule {
                                                     msg.put(fieldName, doc.get(fieldName));
                                                 }
                                             }
+                                            msg.put("key", "" + doc.get("key"));
+                                            msg.put("bucket", "" + doc.get("bucket"));
                                             broadcastDataMessage(msg);
                                             count++;
                                             next.set(false);
@@ -254,9 +257,6 @@ public class SolrModule extends MVMModule {
                 stateLock.unlock();
             }
         }
-    
-        
-
     }
     
     /*
@@ -280,7 +280,7 @@ public class SolrModule extends MVMModule {
             JSONObject selectParams = getConfig().getJSONObject("params");
             long t_st = System.currentTimeMillis();
             long start = 0;
-            long batchSize = 1000;
+            long batchSize = 100;
             long count = 0;
             long rowLimit = -1;
             long rawFound = 0;

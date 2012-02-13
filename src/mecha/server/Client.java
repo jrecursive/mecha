@@ -202,7 +202,7 @@ public class Client implements ChannelConsumer {
     }
     
     public void send(String message) throws Exception {
-        connection.get().getChannel().write(message + "\n").awaitUninterruptibly();
+        connection.get().getChannel().write(message + "\n"); // .awaitUninterruptibly();
     }
     
     public void send(byte[] message) throws Exception {

@@ -5,7 +5,8 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.InetSocketAddress;
 import java.util.concurrent.Executors;
-import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.*;
+import java.util.concurrent.atomic.*;
 import java.util.logging.*;
 
 import org.jboss.netty.bootstrap.ClientBootstrap;
@@ -27,7 +28,7 @@ public class TextClient {
     private final ClientBootstrap bootstrap;
     private ChannelFuture future = null;
     private Channel channel = null;
-    private final AtomicBoolean ready;
+    private final Semaphore ready;
     
     public TextClient(final String host, 
                       final int port, 
@@ -37,11 +38,17 @@ public class TextClient {
         this.port = port;
         this.handler = handler;
         this.password = password;
-        ready = new AtomicBoolean(false);
+        ready = new Semaphore(1);
+        ready.acquire();
         bootstrap = new ClientBootstrap(
                 new NioClientSocketChannelFactory(
                         Executors.newCachedThreadPool(),
                         Executors.newCachedThreadPool()));
+        bootstrap.setOption("child.tcpNoDelay", true);
+        bootstrap.setOption("child.sendBufferSize", 1048576);
+        bootstrap.setOption("child.receiveBufferSize", 1048576);
+        bootstrap.setOption("writeBufferLowWaterMark", 32 * 1024);
+        bootstrap.setOption("writeBufferHighWaterMark", 64 * 1024);
         bootstrap.setPipelineFactory(new TextClientPipelineFactory(handler));
         bootstrap.connect(new InetSocketAddress(host, port)).addListener(
             new ChannelFutureListener() {
@@ -53,12 +60,12 @@ public class TextClient {
                     }
                     channel = future.getChannel();
                     channel.write("auth " + password + "\n");
-                    ready.set(true);
+                    ready.release();
                 }
             }
         );
         // TODO: timeout
-        while(!ready.get()) Thread.yield();
+        ready.acquire();
         if (channel == null) {
             throw new Exception("Unable to connect " + host + ":" + port);
         }
@@ -75,4 +82,9 @@ public class TextClient {
     public void send(String msg) throws Exception {
         channel.write(msg + "\n");
     }
+    
+    public String getHost() {
+        return host;
+    }
+    
 }

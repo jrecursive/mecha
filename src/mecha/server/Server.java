@@ -250,6 +250,16 @@ public class Server {
             } else if (cmd.equals("$bye")) {
                 connection.getChannel().close();
                 return;
+            
+            } else if (cmd.equals("$interrupt")) {
+                for (String clientId : clientIdMap.keySet()) {
+                    Client _cl = clientIdMap.get(clientId);
+                    log.info(">> " + clientId + ": " + _cl);
+                    MVMContext ctx = _cl.getContext();
+                    ctx.reset();
+                    log.info("--");
+                }
+                
             /*
              * Return the AST for a given line of instruction(s).
             */

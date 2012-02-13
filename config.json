@@ -95,6 +95,19 @@
     },
     
     ##
+    ## The number of documents to retrieve and buffer in any
+    ##  iterator or iterator-derived functions (e.g., 
+    ##  SolrSelectIterator).
+    ##
+    "iterator-buffer-size": 5000,
+    "fair-iterator-queues": false,
+    ## 
+    ## in seconds:
+    ##
+    "queue-offer-timeout": 1,
+    "iterator-poll-timeout": 30,
+    
+    ##
     ## If you start having problems with really large
     ##  objects or are using large vector sequences and
     ##  seeing framing or interest changes, double this.

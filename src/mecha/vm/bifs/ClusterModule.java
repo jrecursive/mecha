@@ -41,40 +41,21 @@ public class ClusterModule extends MVMModule {
         class WarpDelegate extends MechaClientHandler {
             final String host;
             final TextClient textClient;
-            final AtomicBoolean ready;
+            final Semaphore ready;
             final String localFunRefId;
             
             public WarpDelegate(String host, Warp fun) throws Exception {
                 this.host = host;
                 final String password = Mecha.getConfig().getString("password");
                 final int port = Mecha.getConfig().getInt("client-port");
-                ready = new AtomicBoolean(false);
+                ready = new Semaphore(1,true);
                 localFunRefId = fun.getDataChannelName();
                 textClient = new TextClient(host, port, password, this);
-                waitUntilReady();
+                ready.release();
             }
             
             public void close() throws Exception {
                 textClient.close();
-            }
-            
-            public boolean isReady() {
-                return ready.get();
-            }
-            
-            public void waitUntilReady() throws Exception {
-                waitUntilReady(60000);
-            }
-            
-            public void waitUntilReady(long timeout) throws Exception {
-                long t_st = System.currentTimeMillis();
-                while(true) {
-                    if (System.currentTimeMillis() - t_st > timeout) {
-                        throw new Exception("WarpDelegate: connection timeout to " + host);
-                    }
-                    if (ready.get()) break;
-                    Thread.yield();
-                }
             }
             
             public void onMessage(String message) {
@@ -114,7 +95,7 @@ public class ClusterModule extends MVMModule {
             }
             
             public void onOpen() {
-                ready.set(true);
+                ready.release();
             }
             
             public void onClose() {
@@ -122,8 +103,6 @@ public class ClusterModule extends MVMModule {
                     textClient.close();
                 } catch (Exception ex) {
                     ex.printStackTrace();
-                } finally {
-                    ready.set(false);
                 }
             }
                     
@@ -132,8 +111,6 @@ public class ClusterModule extends MVMModule {
                     textClient.close();
                 } catch (Exception ex) {
                     ex.printStackTrace();
-                } finally {
-                    ready.set(false);
                 }
             }
             
@@ -175,7 +152,7 @@ public class ClusterModule extends MVMModule {
             } else {
                 // TO remote
                 //log.info("waiting until warp delegate is ready... ");
-                warpDelegate.waitUntilReady(timeout);
+                //warpDelegate.waitUntilReady(timeout);
                 //log.info("Warp delegate successfully connected to <" + host + ">");
                 
                 //log.info("Transferring " + getContext().getBlockMap().keySet().size() + " blocks..");
@@ -471,6 +448,7 @@ public class ClusterModule extends MVMModule {
         */
         public void onControlMessage(JSONObject msg) throws Exception {
             for(String proxyVar : proxyVars) {
+                log.info("<control> "  + proxyVar + ": " + msg.toString());
                 Mecha.getMVM().nativeControlMessage(getContext(), proxyVar, msg);
             }
         }
@@ -480,6 +458,7 @@ public class ClusterModule extends MVMModule {
         */
         public void onCancelEvent(JSONObject msg) throws Exception {
             for(String proxyVar : proxyVars) {
+                log.info("<cancel> "  + proxyVar + ": " + msg.toString());
                 Mecha.getMVM().nativeControlMessage(getContext(), proxyVar, msg);
             }
         }
@@ -550,7 +529,7 @@ public class ClusterModule extends MVMModule {
      * WithIteratedCoverage
      *
      * This functions as WithCoverage does except that
-     *  it will equally iterate all upstream functiosn
+     *  it will equally iterate all upstream functions
      *  via the control message ! (next), systematically
      *  exhausting them.
      * 
@@ -624,6 +603,7 @@ public class ClusterModule extends MVMModule {
         */
         public void onCancelEvent(JSONObject msg) throws Exception {
             for(String proxyVar : proxyVars) {
+                log.info(proxyVar + ": " + msg.toString());
                 Mecha.getMVM().nativeControlMessage(getContext(), proxyVar, msg);
             }
         }

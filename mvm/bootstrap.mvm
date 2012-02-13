@@ -82,3 +82,27 @@ ${guid}-start -> ${guid}-limit
 ${guid}-limit -> ${sink}
 #end query
 
+
+#define-global query1
+#if (!$args.start) #set ($args.start = "0") #end
+#if (!$args.count) #set ($args.count = "10") #end
+#if (!$args.filter) #set ($args.filter = "") #end
+#if (!$args.materialize) #set ($args.materialize = "true") #end
+${root} = (with-sorted-coverage sort-field:key sort-order:asc partition-marker:"<<${guid}-p>>" host-marker:"<<${guid}-h>>" bucket:${args.bucket} do:(solr-select-iterator params:(q:"partition:<<${guid}-p>> AND bucket:${args.bucket} ${args.filter}" rows:${args.count} sort:"key asc") materialize:${args.materialize}))
+${guid}-start = (eat count:${args.start})
+${guid}-limit = (limit count:${args.count})
+${root} -> ${guid}-start
+${guid}-start -> ${guid}-limit
+${guid}-limit -> ${sink}
+#end query1
+
+
+
+#define-global query2
+#if (!$args.start) #set ($args.start = "0") #end
+#if (!$args.count) #set ($args.count = "10") #end
+#if (!$args.filter) #set ($args.filter = "") #end
+#if (!$args.materialize) #set ($args.materialize = "true") #end
+${root} = (with-sorted-coverage sort-field:key sort-order:asc partition-marker:"<<${guid}-p>>" host-marker:"<<${guid}-h>>" bucket:${args.bucket} do:(warp host:<<${guid}-h>> do:(solr-select-iterator params:(q:"partition:<<${guid}-p>> AND bucket:${args.bucket} ${args.filter}" rows:${args.count} sort:"key asc") materialize:${args.materialize})))
+${root} -> ${sink}
+#end query2

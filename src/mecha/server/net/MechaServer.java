@@ -18,6 +18,11 @@ public class MechaServer implements Runnable {
                 new NioServerSocketChannelFactory(
                         Executors.newCachedThreadPool(),
                         Executors.newCachedThreadPool()));
+        bootstrap.setOption("child.tcpNoDelay", true);
+        bootstrap.setOption("child.sendBufferSize", 1048576);
+        bootstrap.setOption("child.receiveBufferSize", 1048576);
+        bootstrap.setOption("writeBufferLowWaterMark", 32 * 1024);
+        bootstrap.setOption("writeBufferHighWaterMark", 64 * 1024);
         bootstrap.setPipelineFactory(new MechaServerPipelineFactory());
         bootstrap.bind(new InetSocketAddress(port));
     }

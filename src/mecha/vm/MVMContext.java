@@ -20,7 +20,6 @@ public class MVMContext {
     final private static Logger log = 
         Logger.getLogger(MVMContext.class.getName());
     
-        
     /*
      * Macro expansion "vertex delegate" map; maps
      *  "reference variable" (e.g., "a") to the
@@ -68,7 +67,7 @@ public class MVMContext {
         refId = Mecha.guid(MVMContext.class);
         blocks = new ConcurrentHashMap<String, List<String>>();
         
-        functionExecutor = Executors.newFixedThreadPool(4); // newCachedThreadPool();
+        functionExecutor = getExecutorService();
         fiberFactory = new PoolFiberFactory(functionExecutor);
         memoryChannelMap = new ConcurrentHashMap<String, Channel<JSONObject>>();
         fibers = new HashSet<Fiber>();
@@ -342,7 +341,7 @@ public class MVMContext {
         clearChannels();
         shutdownFunctionExecutor();
 
-        functionExecutor = Executors.newFixedThreadPool(4); // newCachedThreadPool();
+        functionExecutor = getExecutorService();
         fiberFactory = new PoolFiberFactory(functionExecutor);
         memoryChannelMap = new ConcurrentHashMap<String, Channel<JSONObject>>();
         fibers = new HashSet<Fiber>();
@@ -359,6 +358,10 @@ public class MVMContext {
         clearBlocks();
         clearFunRefs();
         clearFlow();
+    }
+    
+    private ExecutorService getExecutorService() {
+        return Executors.newFixedThreadPool(4);
     }
     
 }

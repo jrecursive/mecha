@@ -432,7 +432,11 @@ public class MVM {
     public void nativeControlMessage(MVMContext ctx, String channel, JSONObject msg) throws Exception {
         String resolvedChannel = ctx.resolveAssignmentToRefId(channel);
         String controlChannelName = MVMFunction.deriveControlChannelName(resolvedChannel);
-        Mecha.getChannels().getChannel(controlChannelName).send(msg);
+        try {
+            Mecha.getChannels().getChannel(controlChannelName).send(msg);
+        } catch (Exception ex) {
+            log.info("Exception on control message: " + msg.toString());
+        }
     }
     
     /*
