@@ -68,6 +68,7 @@ public class ClusterModule extends MVMModule {
                 } else {
                     try {
                         JSONObject msg = new JSONObject(message);
+                        
                         // Channel message
                         if (msg.has("c") && msg.has("o")) {
                             final String channel = msg.getString("c");
@@ -85,11 +86,13 @@ public class ClusterModule extends MVMModule {
                             } else {
                                 sendData(localFunRefId, obj);
                             }
+                            
                         // unknown json message?
                         } else {
                             log.info("WarpDelegate: <" + host + "/system-message> " + 
                                 msg.toString(2));
                         }
+                        
                     // unknown non-json message?
                     } catch (Exception ex) {
                         ex.printStackTrace();
@@ -141,22 +144,20 @@ public class ClusterModule extends MVMModule {
             } else {
                 timeout = 60000;
             }
-            
             warpDelegate = new WarpDelegate(host, this);
-            //log.info("Warp delegate connecting to <" + host + ">");
         }
         
         /*
          * Forward all start events upstream.
         */
         public void onStartEvent(JSONObject msg) throws Exception {
+            // FROM remote
             if (msg.has("$delegate-channel")) {
-                // FROM remote
                 log.info("Remote startEvent <" + host + "> " + msg.toString(2));
+                
+            // TO remote
             } else {
-                // TO remote
                 warpDelegate.waitUntilReady();
-                //log.info("Transferring " + getContext().getBlockMap().keySet().size() + " blocks..");
                 for(Map.Entry<String,List<String>> entry : getContext().getBlockMap().entrySet()) {
                     String blockName = entry.getKey();
                     List<String> blockCode = entry.getValue();
@@ -165,15 +166,10 @@ public class ClusterModule extends MVMModule {
                         warpDelegate.send(line);
                     }
                     warpDelegate.send("#end " + blockName);
-                    //log.info("blocks: " + blockName + ": ok");
                 }
-                
-                //log.info("Registering '" + remoteVar + "' on <" + host + ">");
                 warpDelegate.send("$assign " + remoteVar + " " + doAst.toString());
                 warpDelegate.send("me = (client-sink)");
                 warpDelegate.send(remoteVar + " -> me");
-                //log.info("Registration complete on <"  + host + ">");
-                //log.info("delegate ready!  starting...");
                 warpDelegate.send("$control " + remoteVar + " " + msg.toString());
             }
         }
@@ -182,12 +178,12 @@ public class ClusterModule extends MVMModule {
          * Forward all control messages upstream.
         */
         public void onControlMessage(JSONObject msg) throws Exception {
+            // FROM remote
             if (msg.has("$delegate-channel")) {
-                // FROM remote
-                //log.info("Remote controlMessage <" + host + "> " + msg.toString(2));
                 broadcastControlMessage(msg);
+                
+            // TO remote
             } else {
-                // TO remote
                 warpDelegate.send("$control " + remoteVar + " " + msg.toString());
             }
         }
@@ -196,12 +192,12 @@ public class ClusterModule extends MVMModule {
          * Forward all cancel messages upstream.
         */
         public void onCancelEvent(JSONObject msg) throws Exception {
+            // FROM remote
             if (msg.has("$delegate-channel")) {
-                // FROM remote
-                //log.info("Remote cancelEvent <" + host + "> " + msg.toString(2));
                 broadcastControlMessage(msg);
+                
+            // TO remote
             } else {
-                // TO remote
                 warpDelegate.send("$control " + remoteVar + " " + msg.toString());
                 warpDelegate.close();
             }
@@ -211,11 +207,12 @@ public class ClusterModule extends MVMModule {
          * Forward all data messages downstream.
         */
         public void onDataMessage(JSONObject msg) throws Exception {
+            // FROM remote
             if (msg.has("$delegate-channel")) {
-                // FROM remote
                 broadcastDataMessage(msg);
+            
+            // TO remote
             } else {
-                // TO remote
                 warpDelegate.send("$data " + remoteVar + " " + msg.toString());
             }
         }
@@ -504,6 +501,7 @@ public class ClusterModule extends MVMModule {
         public void onDoneEvent(JSONObject msg) throws Exception {
             doneCount++;
             if (doneCount == proxyVars.size()) {
+            
                 /*
                  * Empty the remaining entries in the map.
                 */
