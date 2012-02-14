@@ -53,7 +53,7 @@ public class ClientModule extends MVMModule {
         }
         
         public void onDoneEvent(JSONObject msg) throws Exception {
-            broadcastControlMessage(msg);
+            broadcastDataMessage(msg);
         }
     }
     

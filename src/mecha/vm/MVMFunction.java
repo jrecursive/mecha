@@ -300,8 +300,10 @@ public abstract class MVMFunction {
      * Broadcast a data message to all outgoingChannels.
     */
     public void broadcastDataMessage(JSONObject msg) throws Exception {
-        msg.put("$origin", getRefId());
-        msg = postprocessDataMessage(msg);
+        if (!msg.has("$type")) {
+            msg.put("$origin", getRefId());
+            msg = postprocessDataMessage(msg);
+        }
         for(PubChannel channel : outgoingChannels) {
             channel.send(msg);
         }
@@ -344,11 +346,14 @@ public abstract class MVMFunction {
     public void broadcastDone(JSONObject msg) throws Exception {
         msg.put("$", "done");
         msg.put("$type", "done");
-        broadcastControlMessage(msg);
+        broadcastDataMessage(msg);
     }
     
     public void broadcastDoneUpstream(JSONObject msg) throws Exception {
-        broadcastControlMessageUpstream(msg);
+        msg.put("$origin", getRefId());
+        for(PubChannel dataChannel : incomingChannels) {
+            dataChannel.send(msg);
+        }
     }
 
     /*
@@ -417,8 +422,9 @@ public abstract class MVMFunction {
             cancel(msg);
         
         } else if (cmd.equals("done")) {
-            done(msg);
-        
+            log.info(msg.toString(2));
+            throw new Exception("Should not be receiving a done message via control channel!");
+
         } else if (cmd.equals("ping")) {
             log.info("pong");
         
@@ -431,8 +437,13 @@ public abstract class MVMFunction {
     }
     
     public void data(JSONObject msg) throws Exception {
-        msg = preprocessDataMessage(msg);
-        onDataMessage(msg);
+        if (msg.has("$") &&
+            msg.getString("$").equals("done")) {
+            done(msg);
+        } else {
+            msg = preprocessDataMessage(msg);
+            onDataMessage(msg);
+        }
     }
     
     /*
@@ -456,12 +467,7 @@ public abstract class MVMFunction {
     
     public void onDoneEvent(JSONObject msg) throws Exception {
         /*
-         * Default behavior is to forward "done" messages.
-        */
-        
-        /*
-         * NOTE: should we automatically destroy the Jetlang
-         *       fiber here?
+         * Default behavior is to forward "done" messages downstream.
         */
         broadcastDone(msg);
     }

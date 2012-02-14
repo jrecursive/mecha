@@ -76,7 +76,7 @@ public class ClusterModule extends MVMModule {
                             obj.put("$delegate-channel", channel);
                             if (obj.has("$type") &&
                                 obj.getString("$type").equals("done")) {
-                                sendControl(localFunRefId, obj);
+                                sendData(localFunRefId, obj);
                             } else if (obj.has("$type") &&
                                 obj.getString("$type").equals("control")) {
                                 sendControl(localFunRefId, obj);
@@ -224,7 +224,7 @@ public class ClusterModule extends MVMModule {
                 broadcastDone(msg);
             } else {
                 // TO remote
-                warpDelegate.send("$control " + remoteVar + " " + msg.toString());
+                warpDelegate.send("$data " + remoteVar + " " + msg.toString());
             }
         }
     }
