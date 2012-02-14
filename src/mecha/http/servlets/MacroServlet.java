@@ -70,8 +70,10 @@ public class MacroServlet extends HttpServlet {
             log.info("params: " + params.toString(2));
             
             final JSONArray dataResult = new JSONArray();
-            final AtomicBoolean ready = new AtomicBoolean(false);
-            final AtomicBoolean done = new AtomicBoolean(false);
+            final Semaphore ready = new Semaphore(1,true);
+            final Semaphore done = new Semaphore(1,true);
+            ready.acquire();
+            done.acquire();
             final MechaClientHandler mechaClientHandler = new MechaClientHandler() {
                 public void onSystemMessage(JSONObject msg) throws Exception {
                     log.info("<system> " + msg.toString(2));
@@ -79,17 +81,17 @@ public class MacroServlet extends HttpServlet {
                 
                 public void onOpen() throws Exception {
                     //log.info("<connected>");
-                    ready.set(true);
+                    ready.release();
                 }
     
                 public void onClose() throws Exception {
                     //log.info("<disconnected>");
-                    done.set(true);
+                    done.release();
                 }
     
                 public void onError(Exception ex) {
                     //log.info("<error> " + ex.toString());
-                    done.set(true);
+                    done.release();
                     ex.printStackTrace();
                 }
                 
@@ -109,7 +111,7 @@ public class MacroServlet extends HttpServlet {
     
                 public void onDoneEvent(String channel, JSONObject msg) throws Exception {
                     log.info("<done: " + channel + "> " + msg.toString(2));
-                    done.set(true);
+                    done.release();
                     getTextClient().send("$bye");
                 }
                 
@@ -127,10 +129,10 @@ public class MacroServlet extends HttpServlet {
             };
             
             MechaClient mechaClient = new MechaClient(host, port, password, mechaClientHandler);
-            while(!ready.get()) { Thread.yield(); }
+            ready.acquire();
             mechaClient.exec("$execute " + params.toString());
             long t_st = System.currentTimeMillis();
-            while(!done.get()) { Thread.yield(); }
+            done.acquire();
             long t_elapsed = System.currentTimeMillis() - t_st;
             response.setContentType("text/plain");
             response.setStatus(HttpServletResponse.SC_OK);
