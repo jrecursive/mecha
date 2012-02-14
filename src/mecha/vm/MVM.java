@@ -388,7 +388,9 @@ public class MVM {
      * Returns a cluster-wide (globally) unique refId.
      *
     */
-    public String nativeFlowAddEdge(MVMContext ctx, String from, String to) throws Exception {
+    public String nativeFlowAddEdge(MVMContext ctx, String from, String to) 
+        throws Exception {
+        
         //log.info("nativeFlowAddEdge: from: " + from + " to: " + to);
         
         /*

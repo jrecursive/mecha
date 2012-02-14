@@ -203,7 +203,6 @@ public class Flow {
         return neighbors;
     }
     
-    
     /*
      * Misc helpers
     */

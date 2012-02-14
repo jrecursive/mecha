@@ -31,8 +31,6 @@ public class MVMParser {
         String currentField = "";
         String currentValue = "";
         
-        //obj.put("$_", q);
-        
         for(int i=0; i<q.length(); i++) {
             String ch = q.substring(i,i+1);
             

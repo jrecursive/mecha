@@ -68,7 +68,6 @@ public class Edge<Vertex> extends DefaultWeightedEdge {
     }
     
     public JSONObject getExpr() throws Exception {
-        //return this.<JSONObject>get(Flow.EXPR);
         return new JSONObject(this.<Map>get(Flow.EXPR));
     }
     

@@ -10,6 +10,7 @@ import org.jetlang.core.Callback;
 import mecha.Mecha;
 import mecha.json.*;
 import mecha.vm.channels.PubChannel;
+import mecha.vm.flows.*;
 
 public abstract class MVMFunction {
     final private static Logger log = 
@@ -83,7 +84,7 @@ public abstract class MVMFunction {
     */
     final private Set<PubChannel> incomingChannels;
     final private Set<PubChannel> outgoingChannels;
-    
+        
     /*
      * Handler for jetlang messages via ProxyChannelConsumer.
     */
