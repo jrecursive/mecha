@@ -46,7 +46,12 @@ public class MechaClient extends MechaClientHandler {
                 log.info("this should never happen: " + msg);
             }
 
-            public void onDataMessage(String channel, JSONObject msg) throws Exception {
+            public void onDataMessage(String channel, JSONObject msg1) throws Exception {
+                JSONObject msg = new JSONObject();
+                for(String f : JSONObject.getNames(msg1)) {
+                    if (f.startsWith("$")) continue;
+                    msg.put(f, msg1.get(f));
+                }
                 log.info("<data: " + channel + "> " + msg.toString(2));
             }
 
