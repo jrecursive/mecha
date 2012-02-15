@@ -40,7 +40,7 @@ public class SolrModule extends MVMModule {
         /*
          * Dedicated iterator thread & control channel communication mechanisms.
         */
-        final private AtomicBoolean next;
+        final private Semaphore next;
         final private AtomicBoolean stop;
         final private ReentrantLock stateLock;
         final private Thread iteratorThread;
@@ -49,9 +49,10 @@ public class SolrModule extends MVMModule {
     
         public SelectIterator(String refId, MVMContext ctx, JSONObject config) throws Exception {
             super(refId, ctx, config);
-            next = new AtomicBoolean(false);
+            next = new Semaphore(1, true);
             stop = new AtomicBoolean(false);
             stateLock = new ReentrantLock();
+            next.acquire();
             
             if (config.has("iterator-name")) {
                 iterationLabel = config.getString("iterator-name");
@@ -138,13 +139,11 @@ public class SolrModule extends MVMModule {
                                          * Wait for iterator control "next" state.
                                         */
                                         
-                                        while(!next.get()) {
-                                            if (stop.get()) {
-                                                // trigger early exit bubble
-                                                earlyExit.set(true);
-                                                break;
-                                            }
-                                            Thread.yield();
+                                        next.acquire();
+                                        if (stop.get()) {
+                                            // trigger early exit bubble
+                                            earlyExit.set(true);
+                                            break;
                                         }
                                         if (earlyExit.get()) {
                                             break;
@@ -167,7 +166,6 @@ public class SolrModule extends MVMModule {
                                             msg.put("bucket", "" + doc.get("bucket"));
                                             broadcastDataMessage(msg);
                                             count++;
-                                            next.set(false);
                                         } finally {
                                             stateLock.unlock();
                                         }
@@ -244,7 +242,7 @@ public class SolrModule extends MVMModule {
                     if (!iteratorThread.isAlive()) {
                         return;
                     }
-                    next.set(true);
+                    next.release();
 
                 /*
                  * "stop" - cancel the iteration.
