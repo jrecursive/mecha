@@ -65,10 +65,6 @@ public class RelationalModule extends MVMModule {
             collator = Collator.getInstance();
         }
         
-        public void onControlMessage(JSONObject msg) throws Exception {
-            //log.info("<control> " + msg.toString());
-        }
-
         public void onDataMessage(JSONObject msg) throws Exception {
             String origin = msg.getString("$origin");
             if (!leftDone && origin.equals(leftOriginRefId)) {
@@ -106,10 +102,18 @@ public class RelationalModule extends MVMModule {
                     advanceRight();
                     
                 } else if (compareValue < 0) {
-                    advanceLeft();
+                    if (leftDone) {
+                        broadcastDone();
+                    } else {
+                        advanceLeft();
+                    }
                     
                 } else if (compareValue > 0) {
-                    advanceRight();
+                    if (rightDone) {
+                        broadcastDone();
+                    } else {
+                        advanceRight();
+                    }
                 }
             } else {
                 if (left == null) {
@@ -117,6 +121,9 @@ public class RelationalModule extends MVMModule {
                 } else if (right == null) {
                     log.info("right null?");
                 }
+            }
+            if (leftDone && rightDone) {
+                broadcastDone();
             }
         }
         
@@ -150,7 +157,7 @@ public class RelationalModule extends MVMModule {
             } else {
                 log.info("<done> unknown origin for done event! " + msg.toString());
             }
-            if (leftDone && rightDone) {
+            if (leftDone || rightDone) {
                 log.info("<done> " + msg.toString());
                 broadcastDone(msg);
             }

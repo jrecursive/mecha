@@ -124,6 +124,7 @@ public class SolrModule extends MVMModule {
                                  * Document results.
                                 */  
                                 rawFound = res.getResults().getNumFound();
+                                if (start == rawFound) break;
                                 if (res.getResults().getNumFound() == 0) {
                                     log.info("no results! " + getConfig().toString());
                                     break;

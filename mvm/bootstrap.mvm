@@ -25,7 +25,10 @@ register namespace:$ module-class:mecha.vm.bifs.IteratorModule verbs:(buffered-i
 #define-global spatial-query
 #if (!$args.filter) #set ($args.filter = "") #end
 #if (!$args.materialize) #set ($args.materialize = "true") #end
-${root} = (with-coverage partition-marker:"<<${guid}-p>>" host-marker:"<<${guid}-h>>" bucket:${args.bucket} do:(warp host:<<${guid}-h>> do:(solr-select params:(q:"partition:<<${guid}-p>> AND bucket:${args.bucket} ${args.filter}" sfield:${args.field} pt:"${args.lat},${args.lon}" d:${args.radius} fq:"{!bbox}") materialize:${args.materialize})))
+#if (!$args.sort-field) #set ($args.sort-field = "key") #end
+#if (!$args.sort-dir) #set ($args.sort-dir = "asc") #end
+
+${root} = (with-sorted-coverage sort-field:${args.sort-field} sort-order:${args.sort-dir} partition-marker:"<<${guid}-p>>" host-marker:"<<${guid}-h>>" bucket:${args.bucket} do:(warp host:<<${guid}-h>> do:(solr-select-iterator params:(q:"partition:<<${guid}-p>> AND bucket:${args.bucket} ${args.filter}" sfield:${args.field} pt:"${args.lat},${args.lon}" d:${args.radius} fq:"{!bbox}" sort:"${args.sort-field} ${args.sort-dir}") materialize:${args.materialize})))
 ${root} -> ${sink}
 #end spatial-query
 
