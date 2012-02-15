@@ -53,7 +53,8 @@ public class ClientModule extends MVMModule {
         }
         
         public void onDoneEvent(JSONObject msg) throws Exception {
-            broadcastDataMessage(msg);
+            log.info("<done> " + msg.toString());
+            broadcastDone(msg);
         }
     }
     

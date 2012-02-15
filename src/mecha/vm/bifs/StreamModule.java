@@ -55,13 +55,15 @@ public class StreamModule extends MVMModule {
      *  through it.
     */
     public class Limit extends MVMFunction {
-        final int total;
-        int count;
+        final private int total;
+        private int count;
+        private JSONObject doneMsg;
         
         public Limit(String refId, MVMContext ctx, JSONObject config) throws Exception {
             super(refId, ctx, config);
             total = Integer.parseInt(config.getString("count"));
             count = 0;
+            doneMsg = null;
         }
         
         public void onDataMessage(JSONObject msg) throws Exception {
@@ -70,7 +72,12 @@ public class StreamModule extends MVMModule {
             } else if (count < total) {
                 broadcastDataMessage(msg);
             } else if (count == total) {
-                broadcastDone();
+                if (doneMsg != null) {
+                    broadcastDone(doneMsg);
+                } else {
+                    // wait for doneMsg to filter through
+                    return;
+                }
             }
             count++;
         }
@@ -86,7 +93,10 @@ public class StreamModule extends MVMModule {
              *  the maximum count).
             */
             if (count <= total) {
+                log.info("<done> limit: " + msg.toString());
                 broadcastDone(msg);
+            } else {
+                doneMsg = msg;
             }
         }
     }

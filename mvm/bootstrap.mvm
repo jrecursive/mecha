@@ -11,6 +11,8 @@ register namespace:$ module-class:mecha.vm.bifs.MDBModule verbs:(materialize-pbk
 register namespace:$ module-class:mecha.vm.bifs.ETLModule verbs:(project:Project extract-riak-value:ExtractRiakValue)
 register namespace:$ module-class:mecha.vm.bifs.ClusterModule verbs:(with-coverage:WithCoverage with-iterated-coverage:WithIteratedCoverage with-sorted-coverage:WithSortedCoverage warp:Warp)
 register namespace:$ module-class:mecha.vm.bifs.StreamModule verbs:(vector-sequencer:VectorSequencer eat:Eat limit:Limit)
+register namespace:$ module-class:mecha.vm.bifs.RelationalModule verbs:(sort-merge-equijoin:SortMergeEquiJoin)
+register namespace:$ module-class:mecha.vm.bifs.IteratorModule verbs:(buffered-iterator:BufferedIterator)
 
 /////////////
 // globals //
@@ -76,7 +78,8 @@ ${guid}-reducer -> ${sink}
 #if (!$args.sort-field) #set ($args.sort-field = "key") #end
 #if (!$args.sort-dir) #set ($args.sort-dir = "asc") #end
 #if (!$args.materialize) #set ($args.materialize = "true") #end
-${root} = (with-sorted-coverage sort-field:${args.sort-field} sort-order:${args.sort-dir} partition-marker:"<<${guid}-p>>" host-marker:"<<${guid}-h>>" bucket:${args.bucket} do:(warp host:<<${guid}-h>> do:(solr-select-iterator params:(q:"partition:<<${guid}-p>> AND bucket:${args.bucket} ${args.filter}" rows:${args.count} sort:"${args.sort-field} ${args.sort-dir}") materialize:${args.materialize})))
+#if (!$args.external-iterator) #set ($args.external-iterator = "false") #end
+${root} = (with-sorted-coverage sort-field:${args.sort-field} sort-order:${args.sort-dir} partition-marker:"<<${guid}-p>>" host-marker:"<<${guid}-h>>" bucket:${args.bucket} do:(warp host:<<${guid}-h>> do:(solr-select-iterator params:(q:"*:*" fq:"partition:<<${guid}-p>> AND bucket:${args.bucket} ${args.filter}" rows:${args.count} sort:"${args.sort-field} ${args.sort-dir}") materialize:${args.materialize} external-iterator:${args.external-iterator})))
 ${guid}-start = (eat count:${args.start})
 ${guid}-limit = (limit count:${args.count})
 ${root} -> ${guid}-start

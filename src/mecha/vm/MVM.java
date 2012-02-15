@@ -437,7 +437,10 @@ public class MVM {
         try {
             Mecha.getChannels().getChannel(controlChannelName).send(msg);
         } catch (Exception ex) {
-            log.info("Exception on control message: " + msg.toString());
+            log.info("Exception on control message to channel '" + channel + "' '" + 
+                resolvedChannel + "'  '" + controlChannelName + "': " + msg.toString());
+            nativeDumpVars(ctx);
+            ex.printStackTrace();
         }
     }
     
@@ -751,6 +754,7 @@ public class MVM {
         result.put("global-blocks", glBlocks);
         result.put("flow", flow);
         
+        log.info(result.toString(2));
         ctx.send(result);
         
     }

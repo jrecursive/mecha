@@ -204,6 +204,7 @@ public class SolrModule extends MVMModule {
                         doneMsg.put("stopped", earlyExit.get());
                         doneMsg.put("count", count);
                         doneMsg.put("$solr-config", getConfig());
+                        log.info("<done> solr iterator " + doneMsg.toString());
                         broadcastDone(doneMsg);
                     } catch (Exception ex1) {
                         ex1.printStackTrace();
@@ -215,10 +216,12 @@ public class SolrModule extends MVMModule {
         
         public void onStartEvent(JSONObject startEventMsg) throws Exception {
             iteratorThread.start();
+            /*
             while(!iteratorThread.isAlive()) {
                 log.info("waiting for iterator thread...");
                 Thread.sleep(1000);
             }
+            */
         }
         
         public void onCancelEvent(JSONObject msg) throws Exception {

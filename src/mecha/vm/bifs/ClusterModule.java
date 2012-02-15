@@ -76,6 +76,7 @@ public class ClusterModule extends MVMModule {
                             obj.put("$delegate-channel", channel);
                             if (obj.has("$type") &&
                                 obj.getString("$type").equals("done")) {
+                                log.info("<warp-delegate> done: " + obj.toString());
                                 sendData(localFunRefId, obj);
                             } else if (obj.has("$type") &&
                                 obj.getString("$type").equals("control")) {
@@ -220,10 +221,11 @@ public class ClusterModule extends MVMModule {
         public void onDoneEvent(JSONObject msg) throws Exception {
             if (msg.has("$delegate-channel")) {
                 // FROM remote
-                //log.info("Remote doneEvent <" + host + "> " + msg.toString(2));
+                log.info("<warp> Remote doneEvent <" + host + "> " + msg.toString());
                 broadcastDone(msg);
             } else {
                 // TO remote
+                log.info("<warp> Forwarding doneEvent <" + host + "> " + msg.toString());
                 warpDelegate.send("$data " + remoteVar + " " + msg.toString());
             }
         }
@@ -434,9 +436,9 @@ public class ClusterModule extends MVMModule {
         */
         public void onStartEvent(JSONObject msg) throws Exception {
             for(String proxyVar : proxyVars) {
+                Mecha.getMVM().nativeControlMessage(getContext(), proxyVar, msg);
                 JSONObject nextMsg = new JSONObject();
                 nextMsg.put("$", "next");
-                Mecha.getMVM().nativeControlMessage(getContext(), proxyVar, msg);
                 Mecha.getMVM().nativeControlMessage(getContext(), proxyVar, nextMsg);
             }
         }
@@ -500,6 +502,7 @@ public class ClusterModule extends MVMModule {
         
         public void onDoneEvent(JSONObject msg) throws Exception {
             doneCount++;
+            log.info("<iterator> done: " + doneCount + " of " + proxyVars.size());
             if (doneCount == proxyVars.size()) {
             
                 /*
@@ -515,6 +518,7 @@ public class ClusterModule extends MVMModule {
                 JSONObject doneMsg = new JSONObject();
                 doneMsg.put("complete", doneCount);
                 broadcastDone(doneMsg);
+                log.info("<iterator> done: " + msg.toString());
             } else {
                 processTable();
             }
@@ -622,9 +626,11 @@ public class ClusterModule extends MVMModule {
         
         public void onDoneEvent(JSONObject msg) throws Exception {
             doneCount++;
+            log.info("<iterator> done: " + doneCount + " of " + proxyVars.size());
             if (doneCount == proxyVars.size()) {
                 JSONObject doneMsg = new JSONObject();
                 doneMsg.put("complete", doneCount);
+                log.info("<iterator> done: " + msg.toString());
                 broadcastDone(doneMsg);
             }
         }

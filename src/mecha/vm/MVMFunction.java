@@ -301,8 +301,8 @@ public abstract class MVMFunction {
      * Broadcast a data message to all outgoingChannels.
     */
     public void broadcastDataMessage(JSONObject msg) throws Exception {
+        msg.put("$origin", getRefId());
         if (!msg.has("$type")) {
-            msg.put("$origin", getRefId());
             msg = postprocessDataMessage(msg);
         }
         for(PubChannel channel : outgoingChannels) {

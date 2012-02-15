@@ -361,7 +361,8 @@ public class MVMContext {
     }
     
     private ExecutorService getExecutorService() {
-        return Executors.newFixedThreadPool(4);
+        //return Executors.newFixedThreadPool(4);
+        return Executors.newCachedThreadPool();
     }
     
 }
