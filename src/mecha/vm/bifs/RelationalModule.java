@@ -149,10 +149,20 @@ public class RelationalModule extends MVMModule {
         public void onDoneEvent(JSONObject msg) throws Exception {
             String origin = msg.getString("$origin");
             if (origin.equals(leftOriginRefId)) {
-                log.info("<left-done> left: " + left.toString());
+                if (left == null) {
+                    rightDone = true;
+                    log.info("No lefthand results.");
+                } else {
+                    log.info("<left-done> left: " + left.toString());
+                }
                 leftDone = true;
             } else if (origin.equals(rightOriginRefId)) {
-                log.info("<right-done> right: " + right.toString());
+                if (right == null) {
+                    leftDone = true;
+                    log.info("No righthand results.");
+                } else {
+                    log.info("<right-done> right: " + right.toString());
+                }
                 rightDone = true;
             } else {
                 log.info("<done> unknown origin for done event! " + msg.toString());

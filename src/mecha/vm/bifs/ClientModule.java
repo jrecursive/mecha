@@ -106,8 +106,11 @@ public class ClientModule extends MVMModule {
      *  endpoint (which is, for now, always a websocket connection).
     */
     public class ClientSink extends MVMFunction {
+        private boolean done;
+        
         public ClientSink(String refId, MVMContext ctx, JSONObject config) throws Exception {
             super(refId, ctx, config);
+            done = false;
         }
     
         public void onControlMessage(JSONObject msg) throws Exception {
@@ -131,8 +134,11 @@ public class ClientModule extends MVMModule {
         }
         
         public void onDoneEvent(JSONObject msg) throws Exception {
-            msg.put("$type", "done");
-            getContext().send(msg);
+            if (!done) {
+                msg.put("$type", "done");
+                getContext().send(msg);
+                done = true;
+            }
         }
     }
     
