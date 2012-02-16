@@ -156,6 +156,28 @@ ${root} -> ${sink}
 #end commit
 
 
+//
+// cluster-wide count
+//  takes parameter "type":
+//      "bucket": count for all records, broken down by bucket, globally
+//      "partition": count for all records, broken down by partition, globally
+//      "custom": requires additional parameter "field"; results are tallied as
+//                a global count (which includes all replicas) of all distinct values
+//                for the field specified in "field".
+//
+
+#define-global global-count
+#if (!${args.type}) #set (${args.type} = "bucket") #end
+#if (${args.type} == "bucket") #set ($facet_field = "bucket") #end
+#if (${args.type} == "partition") #set ($facet_field = "partition") #end
+#if (${args.type} == "custom") #set ($facet_field = ${args.field}) #end
+#if ($facet_field)
+${root} = (with-cluster-coverage host-marker:"<<${guid}-h>>" do:(warp host:<<${guid}-h>> do:(solr-select params:(facet:true facet.field:${facet_field} rows:0 q:"*:*"))))
+${guid}-reducer = (value-count-reducer)
+${root} -> ${guid}-reducer
+${guid}-reducer -> ${sink}
+#end
+#end global-count
 
 
 
