@@ -33,17 +33,6 @@ ${root} -> ${sink}
 #end spatial-query
 
 //
-// riak-materialize
-//
-
-#define-global riak-materialize
-${root} = (materialize-pbk-stream)
-${guid}-extractor = (extract-riak-value position:0)
-${root} -> ${guid}-extractor
-${guid}-extractor -> $sink
-#end riak-materialize
-
-//
 // facet
 //
 
