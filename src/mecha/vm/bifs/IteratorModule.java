@@ -42,15 +42,10 @@ public class IteratorModule extends MVMModule {
         final private LinkedBlockingQueue<JSONObject> buffer;
         final private LinkedBlockingQueue<JSONObject> controlQueue;
         final private Thread controlThread;
-        final private AtomicBoolean done;
-        private JSONObject upstreamDoneMsg;
         
         public BufferedIterator(String refId, MVMContext ctx, JSONObject config) 
             throws Exception {
             super(refId, ctx, config);
-            done = new AtomicBoolean(false);
-            done.set(false);
-            upstreamDoneMsg = null;
             buffer = new LinkedBlockingQueue<JSONObject>();
             controlQueue = new LinkedBlockingQueue<JSONObject>();
             controlThread = new Thread(new Runnable() {
@@ -58,22 +53,17 @@ public class IteratorModule extends MVMModule {
                     while(true) {
                         try {
                             JSONObject msg = controlQueue.take();
-                            if (done.get()) {
-                                log.info(msg.toString());
-                            }
                             if (msg.has("$")) {
                                 String operation = msg.<String>get("$");
                                 
                                 if (operation.equals("next")) {
                                     JSONObject bufferedData = buffer.take();
+                                    broadcastDataMessage(bufferedData);
                                     if (bufferedData.has("$") &&
                                         bufferedData.<String>get("$").equals("done")) {
                                         log.info("<control-thread> done: " + bufferedData.toString());
+                                        return;
                                     }
-                                    broadcastDataMessage(bufferedData);
-                                    
-                                    //log.info(buffer.size() + " -> " + bufferedData.toString());
-                                    
                                 } else {
                                     log.info("<controlThread> unknown operation '" + operation + "': " +
                                         msg.toString());
@@ -109,8 +99,6 @@ public class IteratorModule extends MVMModule {
         public void onDoneEvent(JSONObject msg) throws Exception {
             log.info("<done> " + msg.toString());
             buffer.put(msg);
-            log.info("Buffer queue size: " + buffer.size());
-            done.set(true);
         }
         
         public void onCancelEvent(JSONObject msg) throws Exception {
