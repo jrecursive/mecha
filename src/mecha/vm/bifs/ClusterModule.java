@@ -30,7 +30,7 @@ public class ClusterModule extends MVMModule {
     
     public void moduleUnload() throws Exception {
     }
-
+    
     /*
      * Warp allows a 'transparent proxy' or 'delegate connection'
      *  to another mecha node.  Anything executed remotely is passed
@@ -138,7 +138,12 @@ public class ClusterModule extends MVMModule {
             super(refId, ctx, config);
             host = config.getString("host");
             remoteVar = "warp-var";
-            doAst = config.getJSONObject("do");
+            if (config.get("do") instanceof String) {
+                doAst = new JSONObject();
+                doAst.put("$", config.<String>get("do"));
+            } else {
+                doAst = config.getJSONObject("do");
+            }
             
             if (config.has("timeout")) {
                 timeout = Long.parseLong(config.getString("timeout"));
@@ -227,6 +232,89 @@ public class ClusterModule extends MVMModule {
                 // TO remote
                 log.info("<warp> Forwarding doneEvent <" + host + "> " + msg.toString());
                 warpDelegate.send("$data " + remoteVar + " " + msg.toString());
+            }
+        }
+    }
+    
+    /*
+     * WithClusterCoverage executes an embedded command (via "do:(...)")
+     *  with automatic replacement of <<host>> on all mecha nodes.
+     *
+     * NOTE: Inputs are immediately passed through in the order they 
+     *  are received -- this means this function is non-deterministic!
+     *
+    */
+    public class WithClusterCoverage extends MVMFunction {
+        final private String hostMarker;
+        final private Set<String> proxyVars;
+        int doneCount = 0;
+        
+        public WithClusterCoverage(String refId, MVMContext ctx, JSONObject config) throws Exception {
+            super(refId, ctx, config);
+            proxyVars = new HashSet<String>();
+            if (config.has("host-marker")) {
+                hostMarker = config.getString("host-marker");
+            } else {
+                hostMarker = "<<host>>";
+            }
+        }
+        
+        public void onPostAssignment(MVMContext ctx, String thisInstVar, JSONObject config) throws Exception {
+            final String bucket = config.getString("bucket");
+            final Set<String> clusterHosts = Mecha.getRiakRPC().getClusterHosts();
+            
+            for(String host : clusterHosts) {
+                String proxyVar = HashUtils.sha1(Mecha.guid(WithClusterCoverage.class)) + "-" + host;
+                proxyVars.add(proxyVar);
+                
+                String doAstStr = config.getJSONObject("do").toString();
+                doAstStr = doAstStr.replaceAll(hostMarker, host);
+                JSONObject doAst = new JSONObject(doAstStr);
+                Mecha.getMVM().nativeAssignment(getContext(), proxyVar, doAst);
+                Mecha.getMVM().nativeFlowAddEdge(getContext(), proxyVar, thisInstVar);
+            }
+        }
+        
+        /*
+         * Forward all start events upstream.
+        */
+        public void onStartEvent(JSONObject msg) throws Exception {
+            for(String proxyVar : proxyVars) {
+                Mecha.getMVM().nativeControlMessage(getContext(), proxyVar, msg);
+            }
+        }
+        
+        /*
+         * Forward all control messages upstream.
+        */
+        public void onControlMessage(JSONObject msg) throws Exception {
+            for(String proxyVar : proxyVars) {
+                Mecha.getMVM().nativeControlMessage(getContext(), proxyVar, msg);
+            }
+        }
+        
+        /*
+         * Forward all cancel messages upstream.
+        */
+        public void onCancelEvent(JSONObject msg) throws Exception {
+            for(String proxyVar : proxyVars) {
+                Mecha.getMVM().nativeControlMessage(getContext(), proxyVar, msg);
+            }
+        }
+        
+        /*
+         * Forward all data messages downstream.
+        */
+        public void onDataMessage(JSONObject msg) throws Exception {
+            broadcastDataMessage(msg);
+        }
+        
+        public void onDoneEvent(JSONObject msg) throws Exception {
+            doneCount++;
+            if (doneCount == proxyVars.size()) {
+                JSONObject doneMsg = new JSONObject();
+                doneMsg.put("complete", doneCount);
+                broadcastDone(doneMsg);
             }
         }
     }

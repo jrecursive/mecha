@@ -273,6 +273,10 @@ public class Mecha {
         ex.printStackTrace(printWriter);
         return result.toString().split("\n");
     }
+    
+    public static String getHost() throws Exception {
+        return Mecha.getConfig().getJSONObject("riak-config").getString("pb-ip");
+    }
 
 
     /*

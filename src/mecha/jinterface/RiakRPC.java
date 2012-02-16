@@ -105,6 +105,27 @@ public class RiakRPC {
         return coveragePlan;
     }
     
+/*
+     * compute coverage for bucket
+     *
+     * INFO: obj = [{45671926166590716193865151022383844364247891968,'riak@10.60.40.68'},
+     *              {137015778499772148581595453067151533092743675904,'riak@10.60.40.78'}, ...
+     *
+    */
+    public Set<String> getClusterHosts() throws Exception {
+        Set<String> hosts = new HashSet<String>();
+        OtpErlangObject[] args = { };
+        OtpErlangList obj = 
+            (OtpErlangList) rpc("erlang", "nodes", args);
+        OtpErlangObject[] hostAtoms = obj.elements();
+        for(OtpErlangObject hostAtomObj: hostAtoms) {
+            OtpErlangAtom hostAtom = (OtpErlangAtom) hostAtomObj;
+            hosts.add(hostAtom.atomValue().split("@")[1]);
+        }
+        hosts.add(Mecha.getConfig().getJSONObject("riak-config").getString("pb-ip"));
+        return hosts;
+    }
+    
     /*
      * compute preflist for a bucket, key pair.
      *

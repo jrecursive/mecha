@@ -36,7 +36,12 @@ public abstract class MVMModule {
         Class funClass = Class.forName(funClassName);
         Class[] argTypes = { this.getClass(), String.class, MVMContext.class, JSONObject.class };
         Object[] args = { this, refId, ctx, initialState };
-        return (MVMFunction) funClass.getConstructor(argTypes).newInstance(args);
+        try {
+            return (MVMFunction) funClass.getConstructor(argTypes).newInstance(args);
+        } catch (java.lang.reflect.InvocationTargetException ex) {
+            log.info("** error creating new instance of mvm function '" + funName + "'");
+            throw ex;
+        }
     }
     
     public static MVMModule newModuleInstance(String moduleClassName) throws Exception {
