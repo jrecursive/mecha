@@ -100,10 +100,18 @@ public class RelationalModule extends MVMModule {
                     advanceRight();
                     
                 } else if (compareValue < 0) {
-                    advanceLeft();
+                    if (leftDone) {
+                        broadcastDone();
+                    } else {
+                        advanceLeft();
+                    }
  
                 } else if (compareValue > 0) {
-                    advanceRight();
+                    if (rightDone) {
+                        broadcastDone();
+                    } else {
+                        advanceRight();
+                    }
  
                 }
             } else {
@@ -120,14 +128,14 @@ public class RelationalModule extends MVMModule {
         }
         
         private void advanceLeft() throws Exception {
-            if (leftDone) return;
+            if (leftDone) throw new Exception("cannot advance left-hand source after end of stream");
             JSONObject nextMsg = new JSONObject();
             nextMsg.put("$", "next");
             Mecha.getMVM().nativeControlMessage(getContext(), leftInputVar, nextMsg);
         }
 
         private void advanceRight() throws Exception {
-            if (rightDone) return;
+            if (rightDone) throw new Exception("cannot advance right-hand source after end of stream");
             JSONObject nextMsg = new JSONObject();
             nextMsg.put("$", "next");
             Mecha.getMVM().nativeControlMessage(getContext(), rightInputVar, nextMsg);
