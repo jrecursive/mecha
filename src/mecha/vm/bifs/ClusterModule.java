@@ -414,7 +414,7 @@ public class ClusterModule extends MVMModule {
                 for(String partition : coveragePlan.get(host)) {
                     String doVerb = config.getJSONObject("do").getString("$");
                     String proxyVar = 
-                        HashUtils.sha1(Mecha.guid(WithCoverage.class)) + 
+                        HashUtils.sha1(Mecha.guid(WithSortedCoverage.class)) + 
                             "-" + host + 
                             "-" + doVerb;
                     proxyVars.add(proxyVar);

@@ -72,10 +72,8 @@ public class RelationalModule extends MVMModule {
             } else if (!rightDone && origin.equals(rightOriginRefId)) {
                 right = msg;
             } else {
-                if (!leftDone && !rightDone) {
-                    log.info("unknown origin ref id!  " + origin + " --> " + msg.toString());
-                    return;
-                }
+                log.info("unknown origin ref id!  " + origin + " --> " + msg.toString());
+                return;
             }
             if (left != null &&
                 right != null) {
@@ -102,18 +100,11 @@ public class RelationalModule extends MVMModule {
                     advanceRight();
                     
                 } else if (compareValue < 0) {
-                    if (leftDone) {
-                        broadcastDone();
-                    } else {
-                        advanceLeft();
-                    }
-                    
+                    advanceLeft();
+ 
                 } else if (compareValue > 0) {
-                    if (rightDone) {
-                        broadcastDone();
-                    } else {
-                        advanceRight();
-                    }
+                    advanceRight();
+ 
                 }
             } else {
                 if (left == null) {
@@ -123,6 +114,7 @@ public class RelationalModule extends MVMModule {
                 }
             }
             if (leftDone && rightDone) {
+                log.info("leftDone ++ rightDone ??? ");
                 broadcastDone();
             }
         }
@@ -148,6 +140,7 @@ public class RelationalModule extends MVMModule {
         
         public void onDoneEvent(JSONObject msg) throws Exception {
             String origin = msg.getString("$origin");
+            log.info("<<done>> msg = " + msg.toString());
             if (origin.equals(leftOriginRefId)) {
                 if (left == null) {
                     rightDone = true;
@@ -156,6 +149,7 @@ public class RelationalModule extends MVMModule {
                     log.info("<left-done> left: " + left.toString());
                 }
                 leftDone = true;
+                advanceRight();
             } else if (origin.equals(rightOriginRefId)) {
                 if (right == null) {
                     leftDone = true;
@@ -164,10 +158,11 @@ public class RelationalModule extends MVMModule {
                     log.info("<right-done> right: " + right.toString());
                 }
                 rightDone = true;
+                advanceLeft();
             } else {
                 log.info("<done> unknown origin for done event! " + msg.toString());
             }
-            if (leftDone || rightDone) {
+            if (leftDone && rightDone) {
                 log.info("<done> " + msg.toString());
                 broadcastDone(msg);
             }

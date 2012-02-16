@@ -29,6 +29,8 @@ public class MacroServlet extends HttpServlet {
                          HttpServletResponse response) 
         throws ServletException, IOException {
         try {
+            response.setCharacterEncoding("UTF-8");
+            
             log.info(">> " + request);
             log.info(">> " + request.getPathInfo());
             log.info(">> " + request.getQueryString());

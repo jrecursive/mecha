@@ -6,7 +6,7 @@
 register namespace:$ module-class:mecha.vm.bifs.RiakClientModule verbs:(get:Get put:Put delete:Delete)
 register namespace:$ module-class:mecha.vm.bifs.ChannelModule verbs:(subscribe:Subscribe unsubscribe:Unsubscribe publish:Publish)
 register namespace:$ module-class:mecha.vm.bifs.ClientModule verbs:(client-sink:ClientSink channel-sink:ChannelSink start-all-sources:StartAllSources macro-sink:MacroSink)
-register namespace:$ module-class:mecha.vm.bifs.SolrModule verbs:(solr-select:Select solr-select-iterator:SelectIterator value-count-reducer:ValueCountReducer)
+register namespace:$ module-class:mecha.vm.bifs.SolrModule verbs:(solr-select:Select solr-select-iterator:SelectIterator value-count-reducer:ValueCountReducer covered-index-select:CoveredIndexSelect)
 register namespace:$ module-class:mecha.vm.bifs.MDBModule verbs:(materialize-pbk-stream:MaterializePBKStream stream-partition-bucket:StreamPartitionBucket partition-bucket-iterator:PartitionBucketIterator)
 register namespace:$ module-class:mecha.vm.bifs.ETLModule verbs:(project:Project extract-riak-value:ExtractRiakValue)
 register namespace:$ module-class:mecha.vm.bifs.ClusterModule verbs:(with-coverage:WithCoverage with-iterated-coverage:WithIteratedCoverage with-sorted-coverage:WithSortedCoverage warp:Warp)
@@ -71,7 +71,7 @@ ${guid}-reducer -> ${sink}
 #end count
 
 //
-// query-keys
+// query
 //
 
 #define-global query
@@ -89,4 +89,60 @@ ${root} -> ${guid}-start
 ${guid}-start -> ${guid}-limit
 ${guid}-limit -> ${sink}
 #end query
+
+//
+// select
+//  (host-optimized version of 'query')
+//
+
+#define-global select
+#*
+    Setup parameter default values.
+*#
+
+#if (!$args.start) #set ($args.start = "0") #end
+#if (!$args.count) #set ($args.count = "-1") #end
+#if (!$args.sort-field) #set ($args.sort-field = "key") #end
+#if (!$args.sort-dir) #set ($args.sort-dir = "asc") #end
+#if (!$args.materialize) #set ($args.materialize = "true") #end
+
+#*
+    If a filter is specified, generate the logical AND
+    connector.
+*#
+
+#if ($args.filter) 
+	#set ($args.logical-connector = "AND") 
+#else #set ($args.logical-connector = "") #end
+#if (!$args.filter) #set ($args.filter = "") #end
+
+#*
+    Generate the chain of:
+        covered-index-select do:
+            warp <host> do: 
+                solr-select-iterator
+*#
+
+${root} = (covered-index-select sort-field:${args.sort-field} sort-order:${args.sort-dir} query-marker:"<<${guid}-q>>" host-marker:"<<${guid}-h>>" bucket:${args.bucket} do:(warp host:<<${guid}-h>> do:(solr-select-iterator params:(q:"*:*" fq:"((<<${guid}-q>>) AND bucket:${args.bucket}) ${args.logical-connector} ${args.filter}" rows:${args.count} sort:"${args.sort-field} ${args.sort-dir}") materialize:${args.materialize})))
+
+#*
+    Account for start & count (e.g., LIMIT <start>,<count>) globally.
+*#
+
+#set ($connecting_vertex = $root)
+
+#if ($args.start != "0")
+${guid}-start = (eat count:${args.start})
+${connecting_vertex} -> ${guid}-start
+#set ($connecting_vertex = "${guid}-start")
+#end
+
+#if ($args.count != "-1")
+${guid}-limit = (limit count:${args.count})
+${connecting_vertex} -> ${guid}-limit
+#set ($connecting_vertex = "${guid}-limit")
+#end
+
+${connecting_vertex} -> ${sink}
+#end select
 

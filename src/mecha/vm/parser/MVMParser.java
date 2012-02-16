@@ -34,7 +34,7 @@ public class MVMParser {
         for(int i=0; i<q.length(); i++) {
             String ch = q.substring(i,i+1);
             
-            if (ch.equals("(")) {
+            if (!isWithinPhrase && ch.equals("(")) {
                 String rest = q.substring(i + 1);
                 
                 int nestCount = 1;

@@ -58,6 +58,9 @@ public class IteratorModule extends MVMModule {
                     while(true) {
                         try {
                             JSONObject msg = controlQueue.take();
+                            if (done.get()) {
+                                log.info(msg.toString());
+                            }
                             if (msg.has("$")) {
                                 String operation = msg.<String>get("$");
                                 
@@ -106,6 +109,8 @@ public class IteratorModule extends MVMModule {
         public void onDoneEvent(JSONObject msg) throws Exception {
             log.info("<done> " + msg.toString());
             buffer.put(msg);
+            log.info("Buffer queue size: " + buffer.size());
+            done.set(true);
         }
         
         public void onCancelEvent(JSONObject msg) throws Exception {
