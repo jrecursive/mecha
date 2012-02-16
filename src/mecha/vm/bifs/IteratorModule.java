@@ -71,6 +71,8 @@ public class IteratorModule extends MVMModule {
                             } else {
                                 log.info("<controlThread> unknown controlQueue message: " + msg.toString());
                             }
+                        } catch (InterruptedException iex) {
+                            return;
                         } catch (Exception ex) {
                             ex.printStackTrace();
                             log.info("<controlThread> exiting control thread.");

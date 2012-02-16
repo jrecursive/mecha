@@ -101,14 +101,14 @@ public class RelationalModule extends MVMModule {
                     
                 } else if (compareValue < 0) {
                     if (leftDone) {
-                        broadcastDone();
+                        joinComplete();
                     } else {
                         advanceLeft();
                     }
  
                 } else if (compareValue > 0) {
                     if (rightDone) {
-                        broadcastDone();
+                        joinComplete();
                     } else {
                         advanceRight();
                     }
@@ -123,7 +123,7 @@ public class RelationalModule extends MVMModule {
             }
             if (leftDone && rightDone) {
                 log.info("leftDone ++ rightDone ??? ");
-                broadcastDone();
+                joinComplete();
             }
         }
         
@@ -172,7 +172,23 @@ public class RelationalModule extends MVMModule {
             }
             if (leftDone && rightDone) {
                 log.info("<done> " + msg.toString());
-                broadcastDone(msg);
+                joinComplete(msg);
+            }
+        }
+        
+        private void joinComplete() throws Exception {
+            joinComplete(null);
+        }
+        
+        private void joinComplete(JSONObject doneMsg) throws Exception {
+            JSONObject cancelMsg = new JSONObject();
+            cancelMsg.put("$", "cancel");
+            cancelMsg.put("reason", "join complete");
+            broadcastControlMessageUpstream(cancelMsg);
+            if (doneMsg != null) {
+                broadcastDone(doneMsg);
+            } else {
+                broadcastDone();
             }
         }
     }
