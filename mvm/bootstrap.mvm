@@ -7,7 +7,7 @@ register namespace:$ module-class:mecha.vm.bifs.RiakClientModule verbs:(get:Get 
 register namespace:$ module-class:mecha.vm.bifs.ChannelModule verbs:(subscribe:Subscribe unsubscribe:Unsubscribe publish:Publish)
 register namespace:$ module-class:mecha.vm.bifs.ClientModule verbs:(client-sink:ClientSink channel-sink:ChannelSink start-all-sources:StartAllSources macro-sink:MacroSink)
 register namespace:$ module-class:mecha.vm.bifs.SolrModule verbs:(solr-select:Select solr-select-iterator:SelectIterator value-count-reducer:ValueCountReducer covered-index-select:CoveredIndexSelect solr-commit:SolrCommit)
-register namespace:$ module-class:mecha.vm.bifs.MDBModule verbs:(materialize-pbk-stream:MaterializePBKStream stream-partition-bucket:StreamPartitionBucket partition-bucket-iterator:PartitionBucketIterator)
+register namespace:$ module-class:mecha.vm.bifs.MDBModule verbs:(materialize-pbk-stream:MaterializePBKStream stream-partition-bucket:StreamPartitionBucket partition-bucket-iterator:PartitionBucketIterator drop-partition-bucket:DropPartitionBucket global-drop-bucket:GlobalDropBucket)
 register namespace:$ module-class:mecha.vm.bifs.ETLModule verbs:(project:Project extract-riak-value:ExtractRiakValue)
 register namespace:$ module-class:mecha.vm.bifs.ClusterModule verbs:(with-coverage:WithCoverage with-iterated-coverage:WithIteratedCoverage with-sorted-coverage:WithSortedCoverage warp:Warp with-cluster-coverage:WithClusterCoverage)
 register namespace:$ module-class:mecha.vm.bifs.StreamModule verbs:(vector-sequencer:VectorSequencer eat:Eat limit:Limit)
@@ -58,6 +58,18 @@ ${guid}-reducer = (value-count-reducer)
 ${root} -> ${guid}-reducer
 ${guid}-reducer -> ${sink}
 #end count
+
+//
+// drop-bucket
+//
+#define-global drop-bucket
+#if ($args.bucket)
+${root} = (with-cluster-coverage host-marker:"<<${guid}-h>>" do:(warp host:<<${guid}-h>> do:(global-drop-bucket bucket:${args.bucket})))
+${guid}-reducer = (value-count-reducer)
+${root} -> ${guid}-reducer
+${guid}-reducer -> ${sink}
+#end
+#end drop-bucket
 
 //
 // query

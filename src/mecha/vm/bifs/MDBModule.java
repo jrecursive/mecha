@@ -33,8 +33,9 @@ public class MDBModule extends MVMModule {
     public void moduleUnload() throws Exception {
     }
     
-    
-    
+    /*
+     * materialize-pbk-stream
+    */
     public class MaterializePBKStream extends MVMFunction {
         public MaterializePBKStream(String refId, MVMContext ctx, JSONObject config) throws Exception {
             super(refId, ctx, config);
@@ -52,6 +53,73 @@ public class MDBModule extends MVMModule {
         }
     }
     
+    /*
+     * global-drop-bucket
+    */
+    public class GlobalDropBucket extends MVMFunction {
+        final private String bucketName;
+        
+        public GlobalDropBucket(String refId, MVMContext ctx, JSONObject config) throws Exception {
+            super(refId, ctx, config);
+            bucketName = config.getString("bucket");
+        }
+        
+        public void onStartEvent(JSONObject msg) throws Exception {
+            long t_st = System.currentTimeMillis();
+            int count = Mecha.getMDB().globalDropBucket(bucketName);
+            long t_elapsed = System.currentTimeMillis() - t_st;
+            JSONObject dataMsg = new JSONObject();
+            dataMsg.put("value", "cluster-time-elapsed");
+            dataMsg.put("count", t_elapsed);
+            broadcastDataMessage(dataMsg);
+            
+            dataMsg = new JSONObject();
+            dataMsg.put("value", "cluster-bucket-instances-dropped");
+            dataMsg.put("count", count);
+            broadcastDataMessage(dataMsg);
+            
+            dataMsg = new JSONObject();
+            dataMsg.put("value", Mecha.getHost() + "-time-elapsed");
+            dataMsg.put("count", t_elapsed);
+            broadcastDataMessage(dataMsg);
+
+            dataMsg = new JSONObject();
+            dataMsg.put("value", Mecha.getHost() + "-bucket-instances-dropped");
+            dataMsg.put("count", count);
+            broadcastDataMessage(dataMsg);
+            
+            broadcastDone();
+        }
+    }
+    
+    /*
+     * drop-partition-bucket
+    */
+    public class DropPartitionBucket extends MVMFunction {
+        final private String partition;
+        final private String bucketName;
+        
+        public DropPartitionBucket(String refId, MVMContext ctx, JSONObject config) throws Exception {
+            super(refId, ctx, config);
+            partition = config.getString("partition");
+            bucketName = config.getString("bucket");
+        }
+        
+        public void onStartEvent(JSONObject msg) throws Exception {
+            JSONObject dataMsg = new JSONObject();
+            long t_st = System.currentTimeMillis();
+            Mecha.getMDB().dropBucket(partition, bucketName.getBytes());
+            long t_elapsed = System.currentTimeMillis() - t_st;
+            dataMsg.put("value", "cluster-time-elapsed");
+            dataMsg.put("count", t_elapsed);
+            broadcastDataMessage(dataMsg);
+            broadcastDone();
+        }
+    }
+    
+    /*
+     * stream-partition-bucket
+    */
     public class StreamPartitionBucket extends MVMFunction {
         final private WeakReference<Bucket> bucket;
         final private String partition;
@@ -84,6 +152,9 @@ public class MDBModule extends MVMModule {
         }
     }
     
+    /*
+     * partition-bucket-iterator
+    */
     public class PartitionBucketIterator extends MVMFunction {
         final private WeakReference<Bucket> bucket;
         final private String partition;

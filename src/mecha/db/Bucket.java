@@ -245,12 +245,14 @@ public class Bucket {
         return count() == 0;
     }
     
-    public void drop() throws Exception {
+    public synchronized void drop() throws Exception {
         db.delete();
         File rc = new File(dataDir);
         deleteFile(rc);
         try {
-            server.deleteByQuery("partition:" + partition);
+            server.deleteByQuery(
+                "partition:" + partition + 
+                " AND bucket:" + bucketStr);
         } catch (Exception ex) {
             ex.printStackTrace();
         }

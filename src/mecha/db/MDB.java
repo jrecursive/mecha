@@ -66,7 +66,24 @@ public class MDB {
             new Thread(new DocumentQueueIndexer());
         documentQueueIndexerThread.start();
         
+        log.info("Starting all existing partitions...");
+        startAllPartitions();
+        
         log.info("started");
+    }
+    
+    private void startAllPartitions() throws Exception {
+        String dataDirRoot = Mecha.getConfig().getString("data-directory");
+        File rc = new File(dataDirRoot);
+        if (rc.isDirectory()) {
+            for (File f : rc.listFiles()) {
+                if (f.isDirectory()) {
+                    log.info("startAllPartitions: starting: " + f.getName() + 
+                    " path: " + f.getCanonicalPath());
+                    start(f.getName());
+                }
+            }
+        }
     }
     
     public Set<String> getActivePartitions() throws Exception {
@@ -90,7 +107,7 @@ public class MDB {
      * storage
     */
     
-    public void start(String partition) throws Exception {
+    public synchronized void start(String partition) throws Exception {
         try {
             String dataDirRoot = Mecha.getConfig().getString("data-directory");
             String dataDir = dataDirRoot + "/" + partition;
@@ -198,8 +215,29 @@ public class MDB {
     
     // TODO: consolidate drop / dropBucket overlap
     
+    public synchronized int globalDropBucket(String bucket) throws Exception {
+        log.info("globalDropBucket: bucket: " + bucket + ": starting...");
+        int count = 0;
+        synchronized(partitionBuckets) {
+            for(String partitionKey : partitionBuckets.keySet()) {
+                dropBucket(partitionKey, bucket.getBytes());
+                log.info("globalDropBucket: partition: " + partitionKey + 
+                    "bucket: " + bucket);
+                count++;
+            }
+            if (count > 0) {
+                log.info("globalDropBucket: " + bucket + ": Removing from index...");
+                solrServer.deleteByQuery("bucket:" + bucket);
+                log.info("globalDropBucket: " + bucket + ": Commiting index changes...");
+                solrServer.commit(true,true);
+                log.info("globalDropBucket: " + bucket + ": done!");
+            }
+        }
+        return count;
+    }
+    
     public synchronized void dropBucket(String partition, byte[] bucket) throws Exception {
-        log.info("drop: " + partition);
+        log.info("dropBucket: partition: " + partition + " bucket: " + new String(bucket));
         if (null == partitionBuckets.get(partition)) start(partition);
         if (null == partitionBuckets.get(partition)) {
             log.info("partitionBuckets.get(" + partition + ") == null: " + 
@@ -212,8 +250,10 @@ public class MDB {
                 ") == null: dropBucket <" + (new String(bucket)) + ">: no bucket! early return (ok)");
             return;
         } else {
-            log.info("drop: " + partition + ": " + bucket);
-            bw.drop();
+            log.info("dropBucket: partition:" + partition + ": " + bucket);
+            synchronized(bw) {
+                bw.drop();
+            }
         }
     }
     
@@ -285,12 +325,11 @@ public class MDB {
         if (rc.isDirectory()) {
             for (File f : rc.listFiles()) {
                 if (f.toString().endsWith(".bucket")) {
-                    log.info("openBuckets: " + partition + ", " + pDir + " -> " + f.toString());
+                    //log.info("openBuckets: " + partition + ", " + pDir + " -> " + f.toString());
                     byte[] bucket = TextFile.get(f.toString()).getBytes("UTF-8");
                     getBucket(partition, bucket); // TODO don't initialize by side effect
                 }
             }
         }
     }
-    
 }
