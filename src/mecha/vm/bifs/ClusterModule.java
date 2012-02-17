@@ -394,7 +394,15 @@ public class ClusterModule extends MVMModule {
         */
         public void onCancelEvent(JSONObject msg) throws Exception {
             for(String proxyVar : proxyVars) {
-                Mecha.getMVM().nativeControlMessage(getContext(), proxyVar, msg);
+                try {
+                    Mecha.getMVM().nativeControlMessage(getContext(), proxyVar, msg);
+                
+                /*
+                 * Already destroyed, ignore.
+                */
+                } catch (java.lang.NullPointerException ex) {
+                    log.info("<cancel> proxyVar:" + proxyVar + " already dead.");
+                }
             }
         }
         

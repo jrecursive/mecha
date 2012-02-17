@@ -14,6 +14,8 @@ import org.apache.solr.common.params.ModifiableSolrParams;
 import org.apache.solr.common.SolrDocument;
 import org.apache.solr.client.solrj.response.FacetField;
 
+import org.apache.commons.math.stat.StatUtils;
+
 import mecha.Mecha;
 import mecha.json.*;
 import mecha.vm.*;
@@ -577,6 +579,18 @@ public class SolrModule extends MVMModule {
                 */
                 if (res.getFacetFields() != null) {
                     for (FacetField facetField : res.getFacetFields()) {
+                        if (getConfig().has("cardinality-only") &&
+                            getConfig().<String>get("cardinality-only").equals("true")) {
+                            JSONObject dataMsg = new JSONObject();
+                            dataMsg.put("value", 
+                                Mecha.getHost() + "-" + 
+                                getConfig().<String>get("partition") + "-" + 
+                                "cardinality");
+                            dataMsg.put("count", facetField.getValueCount());
+                            broadcastDataMessage(dataMsg);
+                            broadcastDone();
+                            return;
+                        }
                         if (facetField.getValues() == null) continue;
                         for (FacetField.Count facetFieldCount : facetField.getValues()) {
                             JSONObject msg = new JSONObject();
@@ -628,8 +642,6 @@ public class SolrModule extends MVMModule {
                     batchCount++;
                     if (count >= rowLimit) break;
                 }
-                //log.info("batchCount: " + batchCount + " start: " + start + " count: " + count + " numFound: " + 
-                //    res.getResults().getNumFound());
                 start += batchCount;
                 if (start >= rowLimit) break;
             }
@@ -640,6 +652,52 @@ public class SolrModule extends MVMModule {
             doneMsg.put("found", rawFound);
             broadcastDone(doneMsg);
         }
+    }
+    
+    /*
+     * Produce an average of the values of all keys
+     *  to 'estimate' the cardinality values to a useful 
+     *  degree.
+    */
+    public class CardinalityReducer extends MVMFunction {
+        final private Set<Integer> values;
+        final private JSONObject valueMap;
+        
+        public CardinalityReducer(String refId, MVMContext ctx, JSONObject config) 
+            throws Exception {
+            super(refId, ctx, config);
+            values = new HashSet<Integer>();
+            valueMap = new JSONObject();
+        }
+        
+        public void onDataMessage(JSONObject msg) throws Exception {
+            String term = msg.getString("value");
+            int count = msg.getInt("count");
+            valueMap.put(term, count);
+            
+            /*
+             * Here we ignore key because it's largely irrelevant.
+            */
+            values.add(count);
+        }
+        
+        public void onDoneEvent(JSONObject msg) throws Exception {
+            int pos = 0;
+            double[] dvals = new double[values.size()];
+            for(int value : values) {
+                dvals[pos] = (double) value;
+                pos++;
+            }
+            JSONObject result = new JSONObject();
+            result.put("by-host", valueMap);
+            result.put("average", StatUtils.mean(dvals));
+            result.put("max", StatUtils.max(dvals));
+            result.put("min", StatUtils.min(dvals));
+            
+            broadcastDataMessage(result);
+            broadcastDone(msg);
+        }
+
     }
     
     /*
