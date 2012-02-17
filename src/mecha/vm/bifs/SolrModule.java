@@ -689,7 +689,7 @@ public class SolrModule extends MVMModule {
                 pos++;
             }
             JSONObject result = new JSONObject();
-            result.put("by-host", valueMap);
+            result.put("by-partition", valueMap);
             result.put("average", StatUtils.mean(dvals));
             result.put("max", StatUtils.max(dvals));
             result.put("min", StatUtils.min(dvals));
