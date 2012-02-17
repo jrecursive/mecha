@@ -153,6 +153,65 @@ public class MDBModule extends MVMModule {
     }
     
     /*
+     * stream-partition-bucket
+    */
+    public class ComputeSchema extends MVMFunction {
+        final private WeakReference<Bucket> bucket;
+        final private String partition;
+        final private String bucketName;
+        final private int maxSamples;
+        
+        public ComputeSchema(String refId, MVMContext ctx, JSONObject config) throws Exception {
+            super(refId, ctx, config);
+            partition = config.getString("partition");
+            bucketName = config.getString("bucket");
+            bucket = new WeakReference<Bucket>(Mecha.getMDB().getBucket(partition, bucketName));
+            maxSamples = Integer.parseInt(config.getString("max-samples"));
+        }
+        
+        public void onStartEvent(JSONObject startMsg) throws Exception {
+            final AtomicInteger count = new AtomicInteger(0);
+            final Map<String, Integer> schemaHistogram = 
+                new HashMap<String, Integer>();
+            bucket.get().foreach(new MDB.ForEachFunction() {
+                public boolean each(byte[] bucket, byte[] key, byte[] value) {
+                    try {
+                        JSONObject msg = new JSONObject(new String(value));
+                        JSONObject obj = new JSONObject(msg.getJSONArray("values")
+                                                           .getJSONObject(0)
+                                                           .getString("data"));
+                        for(String f : JSONObject.getNames(obj)) {
+                            if (!schemaHistogram.containsKey(f)) {
+                                schemaHistogram.put(f, 1);
+                            } else {
+                                int c = schemaHistogram.get(f);
+                                schemaHistogram.put(f, c+1);
+                            }
+                        }
+                        count.getAndIncrement();
+                        if (maxSamples > 0 &&
+                            count.get() == maxSamples) return false;
+                    } catch (Exception ex) {
+                        ex.printStackTrace();
+                    }
+                    return true;
+                }
+            });
+            for(String k : schemaHistogram.keySet()) {
+                JSONObject msg = new JSONObject();
+                msg.put("value", k);
+                msg.put("count", schemaHistogram.get(k));
+                broadcastDataMessage(msg);                
+            }
+            
+            JSONObject doneMsg = new JSONObject();
+            doneMsg.put("count", count.intValue());
+            broadcastDone(doneMsg);
+        }
+    }
+
+    
+    /*
      * partition-bucket-iterator
     */
     public class PartitionBucketIterator extends MVMFunction {
