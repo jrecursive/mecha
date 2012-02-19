@@ -70,7 +70,7 @@ public class Monitoring {
                     for (WeakReference<Rates> deadRef : deadRefs) {
                         rateMonitorables.remove(deadRef);
                     }
-                    Thread.sleep(10000);
+                    Thread.sleep(1000);
                 } catch (Exception ex) {
                     ex.printStackTrace();
                 }

@@ -17,7 +17,10 @@ public abstract class MVMFunction {
     final private static Logger log = 
         Logger.getLogger(MVMFunction.class.getName());
     
-    final private Rates rates;
+    final static private Rates rates = new Rates();
+    static {
+        Mecha.getMonitoring().addMonitoredRates(rates);
+    }
     
     /*
      * ScriptEngine implements $preprocess and $postprocess
@@ -110,7 +113,6 @@ public abstract class MVMFunction {
         scriptEngine = null;
         preprocessFunctions = null;
         postprocessFunctions = null;
-        rates = null;
     }
     
     /*
@@ -122,8 +124,6 @@ public abstract class MVMFunction {
     public MVMFunction(String refId,
                        MVMContext context, 
                        JSONObject config) throws Exception {
-        rates = new Rates();
-        Mecha.getMonitoring().addMonitoredRates(rates);
         
         this.context = context;
         this.config = config;
