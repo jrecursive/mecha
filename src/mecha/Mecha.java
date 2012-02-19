@@ -13,6 +13,7 @@ import mecha.db.*;
 import mecha.jinterface.*;
 import mecha.vm.*;
 import mecha.vm.channels.*;
+import mecha.monitoring.*;
 
 public class Mecha {
     final private static Logger log = 
@@ -29,6 +30,7 @@ public class Mecha {
     final private RiakRPC riakRPC;
     final private Channels channels;
     final private EventLogManager eventLogManager;
+          private Monitoring monitoring;
     
     /*
      * startup & init
@@ -52,6 +54,9 @@ public class Mecha {
         throws Exception { }
         
     private Mecha() throws Exception {
+        log.info("* starting monitoring");
+        monitoring = new Monitoring();
+
         log.info("* starting channels");
         channels = new Channels();
 
@@ -65,7 +70,7 @@ public class Mecha {
         log.info("* starting solr cores");
         Logger.getLogger("org.apache.solr").setLevel(Level.WARNING);
         solrManager = new SolrManager();
-        
+                
         log.info("* starting mdb");
         mdb = new MDB();
         
@@ -83,6 +88,9 @@ public class Mecha {
         
         log.info("* starting riak connector");
         riakConnector = new RiakConnector(mdb);
+        
+        // TODO: fix init problem
+        
     }
     
     /*
@@ -104,6 +112,7 @@ public class Mecha {
     */
     public void start() throws Exception {
         startSolrCores();
+        monitoring.start();        
         mdb.startMDB();
         riakConnector.startConnector();
         server.start();
@@ -162,6 +171,7 @@ public class Mecha {
     private static void startSolrCores() throws Exception {
         System.setProperty("solr.data.dir", getConfig().getString("solr-data-dir"));
         System.setProperty("solr.tmp.data.dir", getConfig().getString("solr-temporary-data-dir"));
+        System.setProperty("solr.system.data.dir", getConfig().getString("solr-system-data-dir"));
         JSONArray cores = getConfig().getJSONArray("solr-cores");
         for(int i=0; i<cores.length(); i++) {
             String coreName = cores.getString(i);

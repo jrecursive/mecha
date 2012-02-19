@@ -26,5 +26,6 @@
   <cores adminPath="/admin/cores">
     <core name="index" instanceDir="index" />
     <core name="tmp" instanceDir="tmp" />
+    <core name="system" instanceDir="system" />
   </cores>
 </solr>

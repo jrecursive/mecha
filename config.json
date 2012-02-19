@@ -57,7 +57,8 @@
     "solr-home": "./solr",
     "solr-data-dir": "/mecha/index",
     "solr-temporary-data-dir": "/mecha/tmp",
-    "solr-cores": [ "index", "tmp" ],
+    "solr-system-data-dir": "/mecha/system",
+    "solr-cores": [ "index", "tmp", "system" ],
     
     ##
     ## client-port: socket client listen port
@@ -80,6 +81,13 @@
     ##
     ## ***************************************
     ## 
+    
+    ##
+    ## system log
+    ##
+    "log": {
+        "pruning-interval": "8HOUR"
+    },
     
     ##
     ## leveldb config

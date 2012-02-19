@@ -47,8 +47,9 @@ public class MDB {
                     if (docs.size() > 0) {
                         solrServer.add(docs);
                         log.info(docs.size() + " indexed");
+                    } else {
+                        Thread.sleep(100);
                     }
-                    Thread.sleep(100);
                 } catch (Exception ex) {
                     ex.printStackTrace();
                 }

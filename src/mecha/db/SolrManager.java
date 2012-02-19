@@ -11,6 +11,8 @@ public class SolrManager {
         Logger.getLogger(SolrManager.class.getName());
     
     final private static String INDEX_CORE = "index";
+    final private static String TMP_CORE = "tmp";
+    final private static String SYSTEM_CORE = "system";
     final private Map<String, SolrCore> cores;
     
     public SolrManager() {
@@ -44,6 +46,14 @@ public class SolrManager {
     
     public SolrServer getIndexServer() throws Exception {
         return getCore(INDEX_CORE).getServer();
+    }
+
+    public SolrServer getTmpServer() throws Exception {
+        return getCore(TMP_CORE).getServer();
+    }
+
+    public SolrServer getSystemServer() throws Exception {
+        return getCore(SYSTEM_CORE).getServer();
     }
     
     public void shutdown() throws Exception {
