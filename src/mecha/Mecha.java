@@ -30,7 +30,7 @@ public class Mecha {
     final private RiakRPC riakRPC;
     final private Channels channels;
     final private EventLogManager eventLogManager;
-          private Monitoring monitoring;
+    final private Monitoring monitoring;
     
     /*
      * startup & init
@@ -162,6 +162,10 @@ public class Mecha {
     
     public static EventLogManager getEventLogManager() {
         return get().eventLogManager;
+    }
+    
+    public static Monitoring getMonitoring() {
+        return get().monitoring;
     }
     
     /*

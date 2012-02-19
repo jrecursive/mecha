@@ -1,7 +1,9 @@
 package mecha.monitoring;
 
+import java.lang.ref.*;
 import java.util.*;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.*;
 import java.util.logging.*;
 
 import org.apache.solr.client.solrj.*;
@@ -14,10 +16,19 @@ import mecha.util.*;
 public class Monitoring {
     final private static Logger log = 
         Logger.getLogger(Monitoring.class.getName());
+        
+    /*
+     * This equates to the number of seconds of history to
+     *  keep for each metric (rolling).
+    */
+    final private static int DEFAULT_RATE_WINDOW_SIZE = 3600;
     
+    final private Set<WeakReference<Rates>> rateMonitorables;
     final private Map<String, Metric> metrics;
     final private SystemLog systemLog;
+    
     final private Thread reporterThread;
+    final private Thread monitorThread;
     
     private class MetricsReporter implements Runnable {
         public void run() {
@@ -32,12 +43,51 @@ public class Monitoring {
         }
     }
     
+    private class MonitorableRateLogger implements Runnable {
+        public void run() {
+            while(true) {
+                try {
+                    Set<WeakReference<Rates>> deadRefs = 
+                        new HashSet<WeakReference<Rates>>();
+                    for(WeakReference<Rates> ref : rateMonitorables) {
+                        if (ref.get() == null) {
+                            deadRefs.add(ref);
+                            continue;
+                        }
+                        Rates rates = ref.get();
+                        synchronized(rates) {
+                            ConcurrentHashMap<String, AtomicInteger> rateMap =
+                                rates.getRateMap();
+                            for(String name : rateMap.keySet()) {
+                                if (!metrics.containsKey(name)) {
+                                    createMetric(name, DEFAULT_RATE_WINDOW_SIZE);
+                                }
+                                metric(name, rateMap.get(name).doubleValue());
+                            }
+                            rates.clear();
+                        }
+                    }
+                    for (WeakReference<Rates> deadRef : deadRefs) {
+                        rateMonitorables.remove(deadRef);
+                    }
+                    Thread.sleep(10000);
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                }
+            }
+        }
+    }
+    
     public Monitoring() throws Exception {
         metrics = new ConcurrentHashMap<String, Metric>();
         systemLog = new SystemLog();
+        rateMonitorables = new HashSet<WeakReference<Rates>>();
         
         reporterThread = new Thread(new MetricsReporter());
         reporterThread.start();
+        
+        monitorThread = new Thread(new MonitorableRateLogger());
+        monitorThread.start();
     }
     
     public void start() throws Exception {
@@ -84,6 +134,10 @@ public class Monitoring {
     public Metric createMetric(String name, int windowSize) throws Exception {
         metrics.put(name, new Metric(name, windowSize));
         return metrics.get(name);
+    }
+    
+    public void addMonitoredRates(Rates rateMonitorable) {
+        rateMonitorables.add(new WeakReference<Rates>(rateMonitorable));
     }
     
     public SystemLog getLog() {

@@ -11,10 +11,13 @@ import mecha.Mecha;
 import mecha.json.*;
 import mecha.vm.channels.PubChannel;
 import mecha.vm.flows.*;
+import mecha.monitoring.*;
 
 public abstract class MVMFunction {
     final private static Logger log = 
         Logger.getLogger(MVMFunction.class.getName());
+    
+    final private Rates rates;
     
     /*
      * ScriptEngine implements $preprocess and $postprocess
@@ -107,6 +110,7 @@ public abstract class MVMFunction {
         scriptEngine = null;
         preprocessFunctions = null;
         postprocessFunctions = null;
+        rates = null;
     }
     
     /*
@@ -118,6 +122,9 @@ public abstract class MVMFunction {
     public MVMFunction(String refId,
                        MVMContext context, 
                        JSONObject config) throws Exception {
+        rates = new Rates();
+        Mecha.getMonitoring().addMonitoredRates(rates);
+        
         this.context = context;
         this.config = config;
         this.refId = refId;
@@ -408,6 +415,8 @@ public abstract class MVMFunction {
     }
     
     public void control(JSONObject msg) throws Exception {
+        rates.add("mvm.function.control-message");
+        
         /*
          * detect & intercept 'native' control messages:
          *  start
@@ -438,6 +447,7 @@ public abstract class MVMFunction {
     }
     
     public void data(JSONObject msg) throws Exception {
+        rates.add("mvm.function.data-message");
         if (msg.has("$") &&
             msg.getString("$").equals("done")) {
             done(msg);
@@ -456,6 +466,7 @@ public abstract class MVMFunction {
     }
     
     public void start(JSONObject msg) throws Exception {
+        rates.add("mvm.function.start-message");
         onStartEvent(msg);
     }
     
@@ -463,6 +474,7 @@ public abstract class MVMFunction {
     }
     
     public void cancel(JSONObject msg) throws Exception {
+        rates.add("mvm.function.cancel-message");
         onCancelEvent(msg);
     }
     
@@ -474,6 +486,7 @@ public abstract class MVMFunction {
     }
     
     public void done(JSONObject msg) throws Exception {
+        rates.add("mvm.function.done-message");
         onDoneEvent(msg);
     }
     
