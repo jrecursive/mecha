@@ -55,17 +55,15 @@ public class Monitoring {
                             continue;
                         }
                         Rates rates = ref.get();
-                        synchronized(rates) {
-                            ConcurrentHashMap<String, AtomicInteger> rateMap =
-                                rates.getRateMap();
-                            for(String name : rateMap.keySet()) {
-                                if (!metrics.containsKey(name)) {
-                                    createMetric(name, DEFAULT_RATE_WINDOW_SIZE);
-                                }
-                                metric(name, rateMap.get(name).doubleValue());
+                        ConcurrentHashMap<String, AtomicInteger> rateMap =
+                            rates.getRateMap();
+                        for(String name : rateMap.keySet()) {
+                            if (!metrics.containsKey(name)) {
+                                createMetric(name, DEFAULT_RATE_WINDOW_SIZE);
                             }
-                            rates.clear();
+                            metric(name, rateMap.get(name).doubleValue());
                         }
+                        rates.clear();
                     }
                     for (WeakReference<Rates> deadRef : deadRefs) {
                         rateMonitorables.remove(deadRef);
