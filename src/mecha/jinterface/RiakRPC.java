@@ -243,7 +243,7 @@ public class RiakRPC {
         OtpErlangTuple t = (OtpErlangTuple) result.elementAt(0);
         String host = ((OtpErlangString) t.elementAt(0)).stringValue();
         String port = "" + t.elementAt(1);
-        return "http://" + host + ":" + port + "/riak/";
+        return "http://" + host + ":" + port;
     }
     
     /* 

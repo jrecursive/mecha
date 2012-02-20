@@ -39,7 +39,7 @@ public class Metric {
         this.name = name;
         this.windowSize = windowSize;
         
-        stats = new SynchronizedDescriptiveStatistics();
+        stats = new DescriptiveStatistics();
         stats.setWindowSize(windowSize);
     }
     

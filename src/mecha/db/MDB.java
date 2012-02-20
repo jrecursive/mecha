@@ -9,14 +9,17 @@ import org.apache.solr.client.solrj.*;
 import org.apache.solr.common.*;
 import org.apache.solr.client.solrj.impl.*;
 import org.apache.solr.client.solrj.response.UpdateResponse;
-import mecha.json.*;
 
 import mecha.Mecha;
 import mecha.util.*;
+import mecha.json.*;
+import mecha.monitoring.*;
 
 public class MDB {
     final private static Logger log = 
         Logger.getLogger(MDB.class.getName());
+    
+    final static private Rates rates = new Rates();
         
     // predicates
     public interface ForEachFunction {
@@ -70,6 +73,8 @@ public class MDB {
         log.info("Starting all existing partitions...");
         startAllPartitions();
         
+        Mecha.getMonitoring().addMonitoredRates(rates);
+        
         log.info("started");
     }
     
@@ -116,6 +121,7 @@ public class MDB {
             partitionDirs.put(partition, dataDir);
             openBuckets(partition, dataDir);
             log.info("start: " + partition + " -> " + dataDir);
+            rates.add("mecha.db.mdb.start");
         } catch (Exception ex) {
             ex.printStackTrace();
         }
@@ -129,25 +135,30 @@ public class MDB {
         }
         partitionBuckets.remove(partition);
         System.out.println("stop: " + partition);
+        rates.add("mecha.db.mdb.stop");
     }
     
     public byte[] get(String partition, byte[] bucket, byte[] key) throws Exception {
+        rates.add("mecha.db.mdb.get");
         if (null == partitionBuckets.get(partition)) start(partition);
         return getBucket(partition, bucket).get(key);
     }
     
     public void put(String partition, byte[] bucket, byte[] key, byte[] value) throws Exception {
+        rates.add("mecha.db.mdb.put");
         if (null == partitionBuckets.get(partition)) start(partition);
         getBucket(partition, bucket).put(key, value);
     }
     
     public void delete(String partition, byte[] bucket, byte[] key) throws Exception {
+        rates.add("mecha.db.mdb.delete");
         if (null == partitionBuckets.get(partition)) start(partition);
         getBucket(partition, bucket).delete(key);
     }
     
     public void fold(String partition, 
                         MDB.ForEachFunction forEachFunction) throws Exception {
+        rates.add("mecha.db.mdb.fold");
         log.info("fold: " + partition);
         if (null == partitionBuckets.get(partition)) start(partition);
         Map<String, Bucket> pbWMap = partitionBuckets.get(partition);
@@ -162,6 +173,7 @@ public class MDB {
     
     public void foldBucketNames(String partition, 
                                 MDB.ForEachFunction fun) throws Exception {
+        rates.add("mecha.db.mdb.fold-bucket-names");
         if (null == partitionBuckets.get(partition)) start(partition);
         Map<String, Bucket> pbWMap = partitionBuckets.get(partition);
         for(String b: pbWMap.keySet()) {
@@ -172,6 +184,7 @@ public class MDB {
     public boolean foldBucket(String partition, 
                         byte[] bucket, 
                         MDB.ForEachFunction forEachFunction) throws Exception {
+        rates.add("mecha.db.mdb.fold-bucket");
         if (null == partitionBuckets.get(partition)) start(partition);
         String b = new String(bucket);
         log.info("foldBucket: " + partition + ": " + b);
@@ -180,6 +193,7 @@ public class MDB {
     }
     
     public synchronized boolean isEmpty(String partition) throws Exception {
+        rates.add("mecha.db.mdb.is-empty");
         log.info("isEmpty: " + partition);
         if (null == partitionBuckets.get(partition)) start(partition);
         if (null == partitionBuckets.get(partition)) {
@@ -201,6 +215,7 @@ public class MDB {
     }
     
     public synchronized void drop(String partition) throws Exception {
+        rates.add("mecha.db.mdb.drop");
         log.info("drop: " + partition);
         if (null == partitionBuckets.get(partition)) start(partition);
         if (null == partitionBuckets.get(partition)) {
@@ -217,6 +232,7 @@ public class MDB {
     // TODO: consolidate drop / dropBucket overlap
     
     public synchronized int globalDropBucket(String bucket) throws Exception {
+        rates.add("mecha.db.mdb.global-drop-bucket");
         log.info("globalDropBucket: bucket: " + bucket + ": starting...");
         int count = 0;
         synchronized(partitionBuckets) {
@@ -238,6 +254,7 @@ public class MDB {
     }
     
     public synchronized void dropBucket(String partition, byte[] bucket) throws Exception {
+        rates.add("mecha.db.mdb.drop-bucket");
         log.info("dropBucket: partition: " + partition + " bucket: " + new String(bucket));
         if (null == partitionBuckets.get(partition)) start(partition);
         if (null == partitionBuckets.get(partition)) {
@@ -261,6 +278,7 @@ public class MDB {
     // TODO: diffuse & join threading
     
     public List<byte[][]> listKeys(String partition) throws Exception {
+        rates.add("mecha.db.mdb.list-keys");
         log.info("listKeys: " + partition);
         if (null == partitionBuckets.get(partition)) start(partition);
         final List<byte[][]> keys = new ArrayList<byte[][]>();
@@ -278,6 +296,7 @@ public class MDB {
     }
     
     public List<byte[]> listKeys(String partition, byte[] bucket) throws Exception {
+        rates.add("mecha.db.mdb.list-keys");
         log.info("listKeys: " + partition + ": " + (new String(bucket)));
         if (null == partitionBuckets.get(partition)) start(partition);
         final List<byte[]> keys = new ArrayList<byte[]>();

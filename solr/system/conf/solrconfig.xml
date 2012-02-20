@@ -41,8 +41,8 @@
   <jmx />
   <updateHandler class="solr.DirectUpdateHandler2">
        <autoCommit> 
-         <maxDocs>100000</maxDocs>
-         <maxTime>60000</maxTime> 
+         <maxDocs>10</maxDocs>
+         <maxTime>10000</maxTime> 
        </autoCommit>
     <!-- Update Related Event Listeners
          

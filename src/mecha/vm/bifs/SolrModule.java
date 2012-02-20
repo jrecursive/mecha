@@ -8,6 +8,7 @@ import java.io.*;
 import java.net.*;
 import java.util.logging.*;
 import java.text.Collator;
+import java.text.SimpleDateFormat;
 
 import org.apache.solr.client.solrj.response.QueryResponse;
 import org.apache.solr.common.params.ModifiableSolrParams;
@@ -24,7 +25,10 @@ import mecha.util.*;
 public class SolrModule extends MVMModule {
     final private static Logger log = 
         Logger.getLogger(SolrModule.class.getName());
-    
+        
+    private static String STANDARD_DATE_FORMAT = 
+        "yyyy-MM-dd'T'HH:mm:ss";
+            
     public SolrModule() throws Exception {
         super();
     }
@@ -330,6 +334,9 @@ public class SolrModule extends MVMModule {
              * Dedicated bucket iterator thread.
             */
             final Runnable runnableIterator = new Runnable() {
+                final private SimpleDateFormat dateFormat = 
+                    new java.text.SimpleDateFormat(STANDARD_DATE_FORMAT);
+
                 public void run() {
                     try {
                         JSONObject selectParams = getConfig().getJSONObject("params");
@@ -415,7 +422,14 @@ public class SolrModule extends MVMModule {
                                             } else {
                                                 msg = new JSONObject();
                                                 for(String fieldName : doc.getFieldNames()) {
-                                                    msg.put(fieldName, doc.get(fieldName));
+                                                    if (fieldName.equals("last_modified") ||
+                                                        fieldName.endsWith("_dt")) {
+                                                        String date = 
+                                                            dateFormat.format((Date)doc.get(fieldName));
+                                                        msg.put(fieldName, date);
+                                                    } else {
+                                                        msg.put(fieldName, doc.get(fieldName));
+                                                    }
                                                 }
                                             }
                                             msg.put("key", "" + doc.get("key"));
@@ -522,6 +536,9 @@ public class SolrModule extends MVMModule {
     */
     public class Select extends MVMFunction {
         final private boolean materialize;
+        final private String core;
+        final private SimpleDateFormat dateFormat = 
+            new java.text.SimpleDateFormat(STANDARD_DATE_FORMAT);
         
         public Select(String refId, MVMContext ctx, JSONObject config) throws Exception {
             super(refId, ctx, config);
@@ -530,6 +547,12 @@ public class SolrModule extends MVMModule {
                 materialize = true;
             } else {
                 materialize = false;
+            }
+            
+            if (config.has("core")) {
+                core = config.<String>get("core");
+            } else {
+                core = "index";
             }
         }
         
@@ -579,7 +602,7 @@ public class SolrModule extends MVMModule {
                 
                 int batchCount = 0;
                 QueryResponse res = 
-                    Mecha.getSolrManager().getIndexServer().query(solrParams);
+                    Mecha.getSolrManager().getSolrServer(core).query(solrParams);
                 
                 /*
                  * Facet results.
@@ -641,7 +664,14 @@ public class SolrModule extends MVMModule {
                     } else {
                         msg = new JSONObject();
                         for(String fieldName : doc.getFieldNames()) {
-                            msg.put(fieldName, doc.get(fieldName));
+                            if (fieldName.equals("last_modified") ||
+                                fieldName.endsWith("_dt")) {
+                                String date = 
+                                    dateFormat.format((Date)doc.get(fieldName));
+                                msg.put(fieldName, date);
+                            } else {
+                                msg.put(fieldName, doc.get(fieldName));
+                            }
                         }
                     }
                     broadcastDataMessage(msg);

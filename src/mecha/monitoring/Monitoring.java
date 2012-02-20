@@ -26,6 +26,7 @@ public class Monitoring {
     final private Set<WeakReference<Rates>> rateMonitorables;
     final private Map<String, Metric> metrics;
     final private SystemLog systemLog;
+    final private RiakMonitor riakMonitor;
     
     final private Thread reporterThread;
     final private Thread monitorThread;
@@ -34,8 +35,9 @@ public class Monitoring {
         public void run() {
             while(true) {
                 try {
+                    tameSolrLogging();
                     dumpMetrics();
-                    Thread.sleep(60000);
+                    Thread.sleep(10000);
                 } catch (Exception ex) {
                     ex.printStackTrace();
                 }
@@ -86,10 +88,13 @@ public class Monitoring {
         
         monitorThread = new Thread(new MonitorableRateLogger());
         monitorThread.start();
+        
+        riakMonitor = new RiakMonitor();
     }
     
     public void start() throws Exception {
         systemLog.start();
+        riakMonitor.start();
     }
     
     /*
@@ -97,6 +102,12 @@ public class Monitoring {
      *  that value in the system log.
     */
     public void metric(String name, double val) throws Exception {
+        /*
+         * TODO: configurable window sizes by metric name.
+        */
+        if (!metrics.containsKey(name)) {
+            createMetric(name, DEFAULT_RATE_WINDOW_SIZE);
+        }
         metrics.get(name).addValue(val);
         JSONObject doc = new JSONObject();
         doc.put("value_d", val);
@@ -147,6 +158,16 @@ public class Monitoring {
             log.info("METRIC: " + name);
             log.info(metrics.get(name).getStats().toString());
             log.info("");
+        }
+    }
+    
+    private void tameSolrLogging() throws Exception {
+        Enumeration<String> loggers = LogManager.getLogManager().getLoggerNames();
+        while(loggers.hasMoreElements()) {
+            String loggerName = loggers.nextElement();
+            if (loggerName.indexOf("solr") != -1) {
+                Logger.getLogger(loggerName).setLevel(Level.WARNING);
+            }
         }
     }
 }

@@ -373,7 +373,7 @@ public abstract class MVMFunction {
         obj = postprocessDataMessage(obj);
         dataChannel.send(obj);
     }
-        
+    
     /*
      * Send a control message to a specific channel.
      *
@@ -415,7 +415,7 @@ public abstract class MVMFunction {
     }
     
     public void control(JSONObject msg) throws Exception {
-        rates.add("mvm.function.control-message");
+        rates.add("mecha.vm.mvmfunction.global.control-message");
         
         /*
          * detect & intercept 'native' control messages:
@@ -447,7 +447,7 @@ public abstract class MVMFunction {
     }
     
     public void data(JSONObject msg) throws Exception {
-        rates.add("mvm.function.data-message");
+        rates.add("mecha.vm.mvmfunction.global.data-message");
         if (msg.has("$") &&
             msg.getString("$").equals("done")) {
             done(msg);
@@ -466,7 +466,7 @@ public abstract class MVMFunction {
     }
     
     public void start(JSONObject msg) throws Exception {
-        rates.add("mvm.function.start-message");
+        rates.add("mecha.vm.mvmfunction.global.start-message");
         onStartEvent(msg);
     }
     
@@ -474,7 +474,7 @@ public abstract class MVMFunction {
     }
     
     public void cancel(JSONObject msg) throws Exception {
-        rates.add("mvm.function.cancel-message");
+        rates.add("mecha.vm.mvmfunction.global.cancel-message");
         onCancelEvent(msg);
     }
     
@@ -486,7 +486,7 @@ public abstract class MVMFunction {
     }
     
     public void done(JSONObject msg) throws Exception {
-        rates.add("mvm.function.done-message");
+        rates.add("mecha.vm.mvmfunction.global.done-message");
         onDoneEvent(msg);
     }
     

@@ -68,8 +68,6 @@ public class Mecha {
         eventLogManager = new EventLogManager();
     
         log.info("* starting solr cores");
-        Logger.getLogger("org.apache.solr").setLevel(Level.WARNING);
-        Logger.getLogger("org.apache.solr.search").setLevel(Level.WARNING);
         solrManager = new SolrManager();
                 
         log.info("* starting mdb");
@@ -113,7 +111,7 @@ public class Mecha {
     */
     public void start() throws Exception {
         startSolrCores();
-        monitoring.start();        
+        monitoring.start();
         mdb.startMDB();
         riakConnector.startConnector();
         server.start();
@@ -292,7 +290,14 @@ public class Mecha {
     public static String getHost() throws Exception {
         return Mecha.getConfig().getJSONObject("riak-config").getString("pb-ip");
     }
-
+    
+    public static String getLocalRiakURL() throws Exception {
+        return Mecha.getConfig().getJSONObject("riak-config").getString("local-url");
+    }
+    
+    public static JSONObject getRiakConfig() throws Exception {
+        return Mecha.getConfig().getJSONObject("riak-config");
+    }
 
     /*
      * Shutdown hook.

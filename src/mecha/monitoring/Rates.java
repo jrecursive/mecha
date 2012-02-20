@@ -21,7 +21,11 @@ public class Rates {
     }
     
     public void clear() {
-        rateMap.clear();
+        synchronized(rateMap) {
+            for(String k : rateMap.keySet()) {
+                rateMap.get(k).set(0);
+            }
+        }
     }
     
     protected ConcurrentHashMap<String, AtomicInteger> getRateMap() {
