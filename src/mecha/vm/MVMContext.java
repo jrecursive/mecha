@@ -370,8 +370,8 @@ public class MVMContext {
         clearVertexDelegates();
         clearVars();
         clearBlocks();
-        clearFunRefs();
         clearFlow();
+        clearFunRefs();
     }
     
     private ExecutorService newExecutorService() {

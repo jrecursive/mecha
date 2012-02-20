@@ -195,11 +195,6 @@ public class Client implements ChannelConsumer {
     */
     
     public void onMessage(String channel, String message) throws Exception {
-        if (autoReset &&
-            message.indexOf("\"$\":\"done\"") != -1) {
-            log.info("auto reset <" + this + ">");
-            ctx.reset();
-        }
         JSONObject messageObj = new JSONObject();
         messageObj.put("c", channel);
         messageObj.put("o", message);
@@ -207,12 +202,6 @@ public class Client implements ChannelConsumer {
     }
     
     public void onMessage(String channel, JSONObject message) throws Exception {
-        if (autoReset &&
-            message.has("$") &&
-            message.<String>get("$").equals("done")) {
-            log.info("auto reset <" + this + ">");
-            ctx.reset();
-        }
         JSONObject messageObj = new JSONObject();
         messageObj.put("c", channel);
         messageObj.put("o", message);

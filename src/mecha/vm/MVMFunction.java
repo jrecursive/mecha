@@ -442,13 +442,7 @@ public abstract class MVMFunction {
             log.info("pong");
         
         } else {
-            try {
-                onControlMessage(msg);
-            } catch (Exception ex) {
-                ex.printStackTrace();
-                Mecha.getMonitoring().error("mecha.vm.mvm-function", ex);
-                getContext().reset();
-            }
+            onControlMessage(msg);
         }
     }
     
@@ -461,14 +455,8 @@ public abstract class MVMFunction {
             msg.getString("$").equals("done")) {
             done(msg);
         } else {
-            try {
-                msg = preprocessDataMessage(msg);
-                onDataMessage(msg);
-            } catch (Exception ex) {
-                ex.printStackTrace();
-                Mecha.getMonitoring().error("mecha.vm.mvm-function", ex);
-                getContext().reset();
-            }
+            msg = preprocessDataMessage(msg);
+            onDataMessage(msg);
         }
     }
     
@@ -482,13 +470,7 @@ public abstract class MVMFunction {
     
     public void start(JSONObject msg) throws Exception {
         rates.add("mecha.vm.mvm-function.global.start-message");
-        try {
-            onStartEvent(msg);
-        } catch (Exception ex) {
-            ex.printStackTrace();
-            Mecha.getMonitoring().error("mecha.vm.mvm-function", ex);
-            getContext().reset();
-        }
+        onStartEvent(msg);
     }
     
     public void onCancelEvent(JSONObject msg) throws Exception {
@@ -496,13 +478,7 @@ public abstract class MVMFunction {
     
     public void cancel(JSONObject msg) throws Exception {
         rates.add("mecha.vm.mvm-function.global.cancel-message");
-        try {
-            onCancelEvent(msg);
-        } catch (Exception ex) {
-            ex.printStackTrace();
-            Mecha.getMonitoring().error("mecha.vm.mvm-function", ex);
-            getContext().reset();
-        }
+        onCancelEvent(msg);
     }
     
     public void onDoneEvent(JSONObject msg) throws Exception {
@@ -514,17 +490,13 @@ public abstract class MVMFunction {
     
     public void done(JSONObject msg) throws Exception {
         rates.add("mecha.vm.mvm-function.global.done-message");
-        try {
-            if (isDone) {
-                throw new Exception("MVMFunction already called done!");
-            }
-            isDone = true;
-            onDoneEvent(msg);
-        } catch (Exception ex) {
-            ex.printStackTrace();
-            Mecha.getMonitoring().error("mecha.vm.mvm-function", ex);
-            getContext().reset();
+        /*
+        if (isDone) {
+            throw new Exception("MVMFunction already called done!");
         }
+        */
+        isDone = true;
+        onDoneEvent(msg);
     }
     
     /*
