@@ -32,11 +32,13 @@ public class RiakMonitor {
                             getRiakRuntimeStats();
                             Thread.sleep(10000);
                         } catch (Exception ex) {
+                            Mecha.getMonitoring().error("mecha.monitoring.riak-monitor.inner", ex);
                             ex.printStackTrace();
                             Thread.sleep(5000);
                         }
                     }
                 } catch (Exception ex) {
+                    Mecha.getMonitoring().error("mecha.monitoring.riak-monitor.outer", ex);
                     ex.printStackTrace();
                 }
             }

@@ -90,6 +90,7 @@ public class Server {
             
             rates.add("mecha.server.connections");
         } catch (Exception ex) {
+            Mecha.getMonitoring().error("mecha.server", ex);
             ex.printStackTrace();
         }
     }
@@ -112,6 +113,7 @@ public class Server {
             try {
                 cl.getContext().reset();
             } catch (Exception ex) {
+                Mecha.getMonitoring().error("mecha.server", ex);
                 ex.printStackTrace();
             }
         }
@@ -297,7 +299,7 @@ public class Server {
             
         } catch (Exception ex) {
             rates.add("mecha.server.exceptions");
-            Mecha.getMonitoring().error("mecha.server.server", ex);
+            Mecha.getMonitoring().error("mecha.server", ex);
             ex.printStackTrace();
         }
     }

@@ -86,7 +86,7 @@
     ## system log
     ##
     "log": {
-        "pruning-interval": "8HOUR"
+        "pruning-interval": "2HOUR"
     },
     
     ##

@@ -39,6 +39,7 @@ public abstract class MVMModule {
         try {
             return (MVMFunction) funClass.getConstructor(argTypes).newInstance(args);
         } catch (java.lang.reflect.InvocationTargetException ex) {
+            Mecha.getMonitoring().error("mecha.vm.mvm", ex);
             log.info("** error creating new instance of mvm function '" + funName + "'");
             throw ex;
         }

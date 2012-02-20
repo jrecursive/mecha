@@ -142,6 +142,7 @@ public class StreamModule extends MVMModule {
                             return collator.compare(value2, value1);
                         }
                     } catch (Exception ex) {
+                        Mecha.getMonitoring().error("mecha.vm.bifs.stream-module", ex);
                         ex.printStackTrace();
                     }
                     return 0;

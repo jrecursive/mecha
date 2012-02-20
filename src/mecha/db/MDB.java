@@ -59,6 +59,7 @@ public class MDB {
                         Thread.sleep(1000);
                     }
                 } catch (Exception ex) {
+                    Mecha.getMonitoring().error("mecha.db.mdb", ex);
                     ex.printStackTrace();
                 }
             }
@@ -127,6 +128,7 @@ public class MDB {
             openBuckets(partition, dataDir);
             log.info("start: " + partition + " -> " + dataDir);
         } catch (Exception ex) {
+            Mecha.getMonitoring().error("mecha.db.mdb", ex);
             ex.printStackTrace();
         }
     }

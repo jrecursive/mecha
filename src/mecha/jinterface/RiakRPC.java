@@ -41,6 +41,7 @@ public class RiakRPC {
                     new OtpRPC(otpMgr.getNode(), rpcNode);
                 return otpRPC;
             } catch (java.io.IOException ex) {
+                Mecha.getMonitoring().error("mecha.riak-connector", ex);
                 log.info("Cannot contact riak, retrying...");
                 Thread.sleep(1000);
             }
@@ -62,6 +63,7 @@ public class RiakRPC {
                         otpRPC.rpc(module, fun, args);
                     return obj;
                 } catch (java.io.IOException ex) {
+                    Mecha.getMonitoring().error("mecha.riak-connector", ex);
                     log.info("Riak link broken, restarting...");
                     otpRPC = getOtpRPC();
                 }

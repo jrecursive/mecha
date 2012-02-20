@@ -141,6 +141,7 @@ public class SolrModule extends MVMModule {
                             return collator.compare(value2, value1);
                         }
                     } catch (Exception ex) {
+                        Mecha.getMonitoring().error("mecha.vm.bifs.solr-module", ex);
                         ex.printStackTrace();
                     }
                     return 0;
@@ -447,13 +448,17 @@ public class SolrModule extends MVMModule {
                                         batchCount++;
                                         if (count >= rowLimit) break;
                                     } catch (Exception ex) {
+                                        Mecha.getMonitoring().error("mecha.vm.bifs.solr-module", ex);
                                         ex.printStackTrace();
                                         try {
                                             earlyExit.set(true);
                                             doneMsg.put("iterator-exception",
                                                 Mecha.exceptionToStringArray(ex));
                                             break;
-                                        } catch (Exception _ex) { _ex.printStackTrace(); break; }
+                                        } catch (Exception _ex) {
+                                            Mecha.getMonitoring().error("mecha.vm.bifs.solr-module", _ex);
+                                            _ex.printStackTrace(); break;
+                                        }
                                     }
                                 }
                                 start += batchCount;
@@ -469,11 +474,15 @@ public class SolrModule extends MVMModule {
                             doneMsg.put("found", rawFound);
 
                         } catch (Exception ex) {
+                            Mecha.getMonitoring().error("mecha.vm.bifs.solr-module", ex);
                             log.info("iterator thread exception!");
                             ex.printStackTrace();
                             try {
                                 doneMsg.put("exception", Mecha.exceptionToStringArray(ex));
-                            } catch (Exception _ex) { _ex.printStackTrace(); }
+                            } catch (Exception _ex) {
+                                Mecha.getMonitoring().error("mecha.vm.bifs.solr-module", _ex);
+                                _ex.printStackTrace();
+                            }
                         }
                         doneMsg.put("stopped", earlyExit.get());
                         doneMsg.put("count", count);
@@ -481,6 +490,7 @@ public class SolrModule extends MVMModule {
                         log.info("<done> solr iterator " + doneMsg.toString());
                         broadcastDone(doneMsg);
                     } catch (Exception ex1) {
+                        Mecha.getMonitoring().error("mecha.vm.bifs.solr-module", ex1);
                         ex1.printStackTrace();
                     }
                 }

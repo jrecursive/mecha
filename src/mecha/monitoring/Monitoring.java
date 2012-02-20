@@ -128,6 +128,7 @@ public class Monitoring {
             JSONObject logMsg = new JSONObject();
             logMsg.put("short_message_t", shortMessage);
             logMsg.put("trace_id_s", traceId);
+            logMsg.put("is_error_b", true);
             systemLog.log(name, message, logMsg);
             
             int seq = 0;

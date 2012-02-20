@@ -151,6 +151,7 @@ public class MacroServlet extends HttpServlet {
             result.put("result", dataResult);
             response.getWriter().println(result.toString(2));
         } catch (Exception ex) {
+            Mecha.getMonitoring().error("mecha.http.servlets.macro-servlet", ex);
             ex.printStackTrace();
         }
     }

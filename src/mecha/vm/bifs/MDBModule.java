@@ -141,6 +141,7 @@ public class MDBModule extends MVMModule {
                         broadcastDataMessage(msg);
                         count.getAndIncrement();
                     } catch (Exception ex) {
+                        Mecha.getMonitoring().error("mecha.vm.bifs.mdb-module", ex);
                         ex.printStackTrace();
                     }
                     return true;
@@ -192,6 +193,7 @@ public class MDBModule extends MVMModule {
                         if (maxSamples > 0 &&
                             count.get() == maxSamples) return false;
                     } catch (Exception ex) {
+                        Mecha.getMonitoring().error("mecha.vm.bifs.mdb-module", ex);
                         ex.printStackTrace();
                     }
                     return true;
@@ -276,28 +278,37 @@ public class MDBModule extends MVMModule {
                                             stateLock.unlock();
                                         }
                                     } catch (Exception ex) {
+                                        Mecha.getMonitoring().error("mecha.vm.bifs.mdb-module", ex);
                                         ex.printStackTrace();
                                         try {
                                             earlyExit.set(true);
                                             doneMsg.put("iterator-exception",
                                                 Mecha.exceptionToStringArray(ex));
-                                        } catch (Exception _ex) { _ex.printStackTrace(); }
+                                        } catch (Exception _ex) {
+                                            Mecha.getMonitoring().error("mecha.vm.bifs.mdb-module", _ex);
+                                            _ex.printStackTrace();
+                                        }
                                         return false;
                                     }
                                     return true;
                                 }
                             });
                         } catch (Exception ex) {
+                            Mecha.getMonitoring().error("mecha.vm.bifs.mdb-module", ex);
                             log.info("iterator thread exception!");
                             ex.printStackTrace();
                             try {
                                 doneMsg.put("exception", Mecha.exceptionToStringArray(ex));
-                            } catch (Exception _ex) { _ex.printStackTrace(); }
+                            } catch (Exception _ex) {
+                                Mecha.getMonitoring().error("mecha.vm.bifs.mdb-module", _ex);
+                                _ex.printStackTrace();
+                            }
                         }
                         doneMsg.put("stopped", earlyExit.get());
                         doneMsg.put("count", count.intValue());
                         broadcastDone(doneMsg);
                     } catch (Exception ex1) {
+                        Mecha.getMonitoring().error("mecha.vm.bifs.mdb-module", ex1);
                         ex1.printStackTrace();
                     }
                 }

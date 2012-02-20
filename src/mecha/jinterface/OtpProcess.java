@@ -8,6 +8,8 @@ import org.jetlang.core.Callback;
 import org.jetlang.channels.*;
 import org.jetlang.fibers.Fiber;
 
+import mecha.Mecha;
+
 public abstract class OtpProcess implements Callback<OtpMsg> {
     private String name = null;
     
@@ -29,11 +31,13 @@ public abstract class OtpProcess implements Callback<OtpMsg> {
                         OtpMsg msg = mbox.receiveMsg(); // poll
                         cast(msg);
                     } catch (Exception innerException) {
+                        Mecha.getMonitoring().error("mecha.jinterface", innerException);
                         innerException.printStackTrace();
                         // TODO: listener, notification
                     }
                 }
             } catch (Exception outerException) {
+                Mecha.getMonitoring().error("mecha.jinterface", outerException);
                 outerException.printStackTrace();
                 // TODO: listener, notification
             }

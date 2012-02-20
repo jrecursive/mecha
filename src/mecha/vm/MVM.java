@@ -138,6 +138,7 @@ public class MVM {
                     log.info("waiting for bootstrap disconnection...");
                     while(!bootstrapped.get()) { Thread.sleep(5); }
                 } catch (Exception ex) {
+                    Mecha.getMonitoring().error("mecha.vm.mvm", ex);
                     ex.printStackTrace();
                 }
             }
@@ -314,6 +315,7 @@ public class MVM {
          *  generally useful & return.
         */
         } catch (Exception ex) {
+            Mecha.getMonitoring().error("mecha.vm.mvm", ex);
             ex.printStackTrace();
             final Writer result = new StringWriter();
             final PrintWriter printWriter = new PrintWriter(result);
@@ -330,6 +332,7 @@ public class MVM {
              *  obscure possibilities.
             */
             } catch (Exception ex1) {
+                Mecha.getMonitoring().error("mecha.vm.mvm", ex);
                 ex1.printStackTrace();
                 return "ERROR :" + ex1.toString() + " ON :" + cmd;
             }
@@ -438,6 +441,7 @@ public class MVM {
         try {
             Mecha.getChannels().getChannel(controlChannelName).send(msg);
         } catch (Exception ex) {
+            Mecha.getMonitoring().error("mecha.vm.mvm", ex);
             log.info("Exception on control message to channel '" + channel + "' '" + 
                 resolvedChannel + "'  '" + controlChannelName + "': " + msg.toString());
             nativeDumpVars(ctx);

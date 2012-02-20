@@ -85,12 +85,16 @@ public class RiakConnector extends OtpProcess {
                     }
                     callResult = (OtpErlangObject) method.invoke(th, (Object[])args);
                 } catch (IllegalArgumentException illegalArgumentException) {
+                    Mecha.getMonitoring().error("mecha.riak-connector", illegalArgumentException);
                     illegalArgumentException.printStackTrace();
                 } catch (InvocationTargetException invocationTargetException) {
+                    Mecha.getMonitoring().error("mecha.riak-connector", invocationTargetException);
                     invocationTargetException.printStackTrace();
                 } catch (NoSuchMethodException noSuchMethodException) {
+                    Mecha.getMonitoring().error("mecha.riak-connector", noSuchMethodException);
                     callResult = handle(msg);
                 } catch (Exception ex) {
+                    Mecha.getMonitoring().error("mecha.riak-connector", ex);
                     ex.printStackTrace();
                 }
                 
@@ -102,9 +106,12 @@ public class RiakConnector extends OtpProcess {
                     getMbox().send(replyToPid, r);
                 }
             } catch (Exception ex) {
+                Mecha.getMonitoring().error("mecha.riak-connector", ex);
                 try {
                     System.out.println("msg = " + msg.getMsg());
-                } catch (Exception ex2) { }
+                } catch (Exception ex2) {
+                    Mecha.getMonitoring().error("mecha.riak-connector", ex2);
+                }
                 ex.printStackTrace();
             }
         }
@@ -113,7 +120,10 @@ public class RiakConnector extends OtpProcess {
     public OtpErlangObject handle(OtpMsg msg) {
         try {
             log.info(msg.getSenderPid() + ": " + msg.getMsg());
-        } catch (Exception ex) { ex.printStackTrace(); }
+        } catch (Exception ex) {
+            Mecha.getMonitoring().error("mecha.riak-connector", ex);
+            ex.printStackTrace();
+        }
         return null;
     }
     
@@ -125,6 +135,7 @@ public class RiakConnector extends OtpProcess {
         try {
             return new OtpErlangAtom("ok");
         } catch (Exception ex) {
+            Mecha.getMonitoring().error("mecha.riak-connector", ex);
             ex.printStackTrace();
             return new OtpErlangAtom("error");
         }
@@ -140,6 +151,7 @@ public class RiakConnector extends OtpProcess {
             mdb.start(partition.toString());
             return new OtpErlangAtom("ok");
         } catch (Exception ex) {
+            Mecha.getMonitoring().error("mecha.riak-connector", ex);
             ex.printStackTrace();
             return new OtpErlangAtom("error");
         }
@@ -150,6 +162,7 @@ public class RiakConnector extends OtpProcess {
             mdb.stop(partition.toString());
             return new OtpErlangAtom("ok");
         } catch (Exception ex) {
+            Mecha.getMonitoring().error("mecha.riak-connector", ex);
             ex.printStackTrace();
             return new OtpErlangAtom("error");
         }
@@ -168,6 +181,7 @@ public class RiakConnector extends OtpProcess {
                 return new OtpErlangTuple(retval);
             }
         } catch (Exception ex) {
+            Mecha.getMonitoring().error("mecha.riak-connector", ex);
             ex.printStackTrace();
             return new OtpErlangAtom("error");
         }
@@ -181,6 +195,7 @@ public class RiakConnector extends OtpProcess {
             mdb.put(partition.toString(), bucket, key, value);
             return new OtpErlangAtom("ok");
         } catch (Exception ex) {
+            Mecha.getMonitoring().error("mecha.riak-connector", ex);
             ex.printStackTrace();
             return new OtpErlangAtom("error");
         }
@@ -193,6 +208,7 @@ public class RiakConnector extends OtpProcess {
             mdb.delete(partition.toString(), bucket, key);
             return new OtpErlangAtom("ok");
         } catch (Exception ex) {
+            Mecha.getMonitoring().error("mecha.riak-connector", ex);
             ex.printStackTrace();
             return new OtpErlangAtom("error");
         }
@@ -224,6 +240,7 @@ public class RiakConnector extends OtpProcess {
             }
             getMbox().send(streamToPid, new OtpErlangAtom("done"));
         } catch (Exception ex) {
+            Mecha.getMonitoring().error("mecha.riak-connector", ex);
             ex.printStackTrace();
         }
         return null;
@@ -244,6 +261,7 @@ public class RiakConnector extends OtpProcess {
             });
             getMbox().send(streamToPid, new OtpErlangAtom("done"));
         } catch (Exception ex) {
+            Mecha.getMonitoring().error("mecha.riak-connector", ex);
             ex.printStackTrace();
         }
         return null;
@@ -338,20 +356,23 @@ public class RiakConnector extends OtpProcess {
                                     }
                                 }
                             } catch (Exception ex) {
+                                Mecha.getMonitoring().error("mecha.riak-connector", ex);
                                 ex.printStackTrace();
                             }
                             return true;
                         }
                     });
                 }
-            } catch (Exception gug) {
-                gug.printStackTrace();
+            } catch (Exception ex1) {
+                Mecha.getMonitoring().error("mecha.riak-connector", ex1);
+                ex1.printStackTrace();
                 
             } finally {
                 foldProcMgr.shutdown();
                 getMbox().send(streamToPid, new OtpErlangAtom("done"));
             }
         } catch (Exception ex) {
+            Mecha.getMonitoring().error("mecha.riak-connector", ex);
             ex.printStackTrace();
         }
         return null;
@@ -400,6 +421,7 @@ public class RiakConnector extends OtpProcess {
             }
             getMbox().send(streamToPid, new OtpErlangAtom("done"));
         } catch (Exception ex) {
+            Mecha.getMonitoring().error("mecha.riak-connector", ex);
             ex.printStackTrace();
         }
         return null;
@@ -410,6 +432,7 @@ public class RiakConnector extends OtpProcess {
             if(mdb.isEmpty(partition.toString())) return new OtpErlangBoolean(true);
             return new OtpErlangBoolean(false);
         } catch (Exception ex) {
+            Mecha.getMonitoring().error("mecha.riak-connector", ex);
             ex.printStackTrace();
             return new OtpErlangAtom("error");
         }
@@ -420,6 +443,7 @@ public class RiakConnector extends OtpProcess {
             mdb.drop(partition.toString());
             return new OtpErlangAtom("ok");
         } catch (Exception ex) {
+            Mecha.getMonitoring().error("mecha.riak-connector", ex);
             ex.printStackTrace();
             return new OtpErlangAtom("error");
         }
@@ -460,6 +484,7 @@ public class RiakConnector extends OtpProcess {
             OtpErlangObject[] otpKeys = keys.toArray(new OtpErlangTuple[0]);
             return new OtpErlangList(otpKeys);
         } catch (Exception ex) {
+            Mecha.getMonitoring().error("mecha.riak-connector", ex);
             ex.printStackTrace();
             return new OtpErlangAtom("error");
         }
@@ -497,6 +522,7 @@ public class RiakConnector extends OtpProcess {
             OtpErlangObject[] otpKeys = keys.toArray(new OtpErlangTuple[0]);
             return new OtpErlangList(otpKeys);
         } catch (Exception ex) {
+            Mecha.getMonitoring().error("mecha.riak-connector", ex);
             ex.printStackTrace();
             return new OtpErlangAtom("error");
         }

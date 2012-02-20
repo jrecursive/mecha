@@ -81,6 +81,7 @@ public class Bucket {
             rates.add("mecha.db.bucket.global.get");
             return db.get(new ReadOptions(), key);
         } catch (DBException notFound) {
+            // do not log this message.
             return null;
         }
     }
@@ -168,6 +169,7 @@ public class Bucket {
             queueForIndexing(doc);
         
         } catch (Exception ex) {
+            Mecha.getMonitoring().error("mecha.db.mdb", ex);
             ex.printStackTrace();
             log.info("Bucket: put: " + new String(key) + ": <value = " + new String(value) + ">");
             throw ex;
@@ -191,6 +193,7 @@ public class Bucket {
                 */
             }
         } catch (Exception ex) {
+            Mecha.getMonitoring().error("mecha.db.mdb", ex);
             /*
              * Any other error should be rethrown.  Any exception here
              *  indicates an error during either server.deleteByQuery (in
@@ -269,6 +272,7 @@ public class Bucket {
                 "partition:" + partition + 
                 " AND bucket:" + bucketStr);
         } catch (Exception ex) {
+            Mecha.getMonitoring().error("mecha.db.mdb", ex);
             ex.printStackTrace();
         }
     }

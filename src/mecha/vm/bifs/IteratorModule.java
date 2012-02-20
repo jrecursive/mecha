@@ -74,6 +74,7 @@ public class IteratorModule extends MVMModule {
                         } catch (InterruptedException iex) {
                             return;
                         } catch (Exception ex) {
+                            Mecha.getMonitoring().error("mecha.vm.bifs.iterator-module", ex);
                             ex.printStackTrace();
                             log.info("<controlThread> exiting control thread.");
                             return;

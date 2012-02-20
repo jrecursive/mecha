@@ -96,6 +96,7 @@ public class ClusterModule extends MVMModule {
                         
                     // unknown non-json message?
                     } catch (Exception ex) {
+                        Mecha.getMonitoring().error("mecha.vm.bifs.cluster-module", ex);
                         ex.printStackTrace();
                         log.info("WarpDelegate: <" + host + "/info> " + message);
                     }
@@ -110,6 +111,7 @@ public class ClusterModule extends MVMModule {
                 try {
                     textClient.close();
                 } catch (Exception ex) {
+                    Mecha.getMonitoring().error("mecha.vm.bifs.cluster-module", ex);
                     ex.printStackTrace();
                 }
             }
@@ -118,6 +120,7 @@ public class ClusterModule extends MVMModule {
                 try {
                     textClient.close();
                 } catch (Exception ex) {
+                    Mecha.getMonitoring().error("mecha.vm.bifs.cluster-module", ex);
                     ex.printStackTrace();
                 }
             }
@@ -401,6 +404,7 @@ public class ClusterModule extends MVMModule {
                  * Already destroyed, ignore.
                 */
                 } catch (java.lang.NullPointerException ex) {
+                    // do not log this message.
                     log.info("<cancel> proxyVar:" + proxyVar + " already dead.");
                 }
             }
@@ -494,6 +498,7 @@ public class ClusterModule extends MVMModule {
                             return collator.compare(value2, value1);
                         }
                     } catch (Exception ex) {
+                        Mecha.getMonitoring().error("mecha.vm.bifs.cluster-module", ex);
                         ex.printStackTrace();
                     }
                     return 0;

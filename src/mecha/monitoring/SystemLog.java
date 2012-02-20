@@ -73,8 +73,11 @@ public class SystemLog {
                              .getString("pruning-interval");
                     log.info("Pruning system log on interval " + 
                         pruningInterval);
-                    solrServer.deleteByQuery("last_modified:[* TO NOW-" +
+                    solrServer.deleteByQuery("bucket:metric AND last_modified:[* TO NOW-" +
                                              pruningInterval + "]");
+                    solrServer.deleteByQuery("bucket:log AND last_modified:[* TO NOW-24HOUR]");
+                    solrServer.deleteByQuery("bucket:error AND last_modified:[* TO NOW-24HOUR]");
+                    solrServer.commit(false, false);
                     Thread.sleep(60000);
                 } catch (Exception ex) {
                     ex.printStackTrace();

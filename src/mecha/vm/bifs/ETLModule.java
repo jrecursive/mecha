@@ -81,6 +81,7 @@ public class ETLModule extends MVMModule {
                        .getJSONObject(position)
                        .getString("data")));
             } catch (Exception ex) {
+                Mecha.getMonitoring().error("mecha.vm.bifs.etl-module", ex);
                 ex.printStackTrace();
                 log.info(msg.toString(2));
             }
