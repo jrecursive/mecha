@@ -350,7 +350,7 @@ public abstract class MVMFunction {
         }
     }
 
-    public void broadcastDone() throws Exception {
+    public void broadcastDone() {
         broadcastDone(new JSONObject());
     }
     
@@ -358,10 +358,15 @@ public abstract class MVMFunction {
         broadcastDoneUpstream(new JSONObject());
     }
     
-    public void broadcastDone(JSONObject msg) throws Exception {
-        msg.put("$", "done");
-        msg.put("$type", "done");
-        broadcastDataMessage(msg);
+    public void broadcastDone(JSONObject msg) {
+        try {
+            msg.put("$", "done");
+            msg.put("$type", "done");
+            broadcastDataMessage(msg);
+        } catch (Exception ex) {
+            Mecha.getMonitoring().error("mecha.mvm-function", ex);
+            ex.printStackTrace();
+        }
     }
     
     public void broadcastDoneUpstream(JSONObject msg) throws Exception {

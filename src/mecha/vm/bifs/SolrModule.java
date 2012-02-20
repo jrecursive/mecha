@@ -558,6 +558,7 @@ public class SolrModule extends MVMModule {
         final private String core;
         final private SimpleDateFormat dateFormat = 
             new java.text.SimpleDateFormat(STANDARD_DATE_FORMAT);
+        final private Thread iteratorThread;
         
         public Select(String refId, MVMContext ctx, JSONObject config) throws Exception {
             super(refId, ctx, config);
@@ -573,147 +574,168 @@ public class SolrModule extends MVMModule {
             } else {
                 core = "index";
             }
+
+            iteratorThread = new Thread(new Runnable() {
+                public void run() {
+                    try {
+                        JSONObject selectParams = getConfig().getJSONObject("params");
+                        long t_st = System.currentTimeMillis();
+                        long start = 0;
+                        long batchSize = 100;
+                        long count = 0;
+                        long rowLimit = -1;
+                        long rawFound = 0;
+                        
+                        /*
+                         * Rewrite scored queries into filter queries.
+                        */
+                        if (!selectParams.has("q") &&
+                            !selectParams.has("fq")) {
+                            selectParams.put("q", "*:*");
+                        }
+                        if (selectParams.has("q") &&
+                            !selectParams.has("fq")) {
+                            selectParams.put("fq", selectParams.get("q"));
+                            selectParams.put("q", "*:*");
+                        }
+                        
+                        if (selectParams.has("start")) {
+                            start = Long.parseLong("" + selectParams.get("start"));
+                            selectParams.remove("start");
+                        }
+                        
+                        if (selectParams.has("rows") && !selectParams.has("facet")) {
+                            rowLimit = Long.parseLong("" + selectParams.get("rows"));
+                            selectParams.remove("rows");
+                        }
+                        
+                        if (selectParams.has("facet")) {
+                            batchSize = 0;
+                        }
+
+                        while(true) {
+                            ModifiableSolrParams solrParams = new ModifiableSolrParams();
+                            for(String k : JSONObject.getNames(selectParams)) {
+                                solrParams.set(k, "" + selectParams.get(k));
+                            }
+                            solrParams.set("start", "" + start);
+                            solrParams.set("rows", "" + batchSize);
+                            
+                            int batchCount = 0;
+                            long solr_t_st = System.currentTimeMillis();
+                            QueryResponse res = 
+                                Mecha.getSolrManager().getSolrServer(core).query(solrParams);
+                            Mecha.getMonitoring().metric("mecha.vm.bifs.solr-module." + core + ".select.query.ms",
+                                                         System.currentTimeMillis() - solr_t_st);
+                            
+                            /*
+                             * Facet results.
+                            */
+                            if (res.getFacetFields() != null) {
+                                for (FacetField facetField : res.getFacetFields()) {
+                                    if (getConfig().has("cardinality-only") &&
+                                        getConfig().<String>get("cardinality-only").equals("true")) {
+                                        JSONObject dataMsg = new JSONObject();
+                                        dataMsg.put("value", 
+                                            Mecha.getHost() + "-" + 
+                                            getConfig().<String>get("partition") + "-" + 
+                                            "cardinality");
+                                        dataMsg.put("count", facetField.getValueCount());
+                                        broadcastDataMessage(dataMsg);
+                                        broadcastDone();
+                                        return;
+                                    }
+                                    if (facetField.getValues() == null) continue;
+                                    for (FacetField.Count facetFieldCount : facetField.getValues()) {
+                                        JSONObject msg = new JSONObject();
+                                        msg.put("field", facetField.getName());
+                                        msg.put("value", facetFieldCount.getName());
+                                        msg.put("count", facetFieldCount.getCount());
+                                        broadcastDataMessage(msg);
+                                    }
+                                }
+                                break;
+                            }
+                            
+                            /*
+                             * Document results.
+                            */  
+                            rawFound = res.getResults().getNumFound();
+            
+                            /*
+                             * "count-only" 'short-circuit'.
+                            */
+                            if (getConfig().has("count-only") &&
+                                getConfig().getString("count-only").equals("true")) {
+                                JSONObject countMsg = new JSONObject();
+                                countMsg.put("value", "count");
+                                countMsg.put("count", rawFound);
+                                broadcastDataMessage(countMsg);
+                                broadcastDone();
+                                return;
+                            }
+                            
+                            if (start == rawFound) break;
+                            if (res.getResults().getNumFound() == 0) break;
+                            if (rowLimit == -1) {
+                                rowLimit = res.getResults().getNumFound();
+                            }
+                            for(SolrDocument doc : res.getResults()) {
+                                JSONObject msg;
+                                if (materialize) {
+                                    msg = materializePBK("" + doc.get("partition"),
+                                                         "" + doc.get("bucket"),
+                                                         "" + doc.get("key"));
+                                } else {
+                                    msg = new JSONObject();
+                                    for(String fieldName : doc.getFieldNames()) {
+                                        if (fieldName.equals("last_modified") ||
+                                            fieldName.endsWith("_dt")) {
+                                            String date = 
+                                                dateFormat.format((Date)doc.get(fieldName));
+                                            msg.put(fieldName, date);
+                                        } else {
+                                            msg.put(fieldName, doc.get(fieldName));
+                                        }
+                                    }
+                                }
+                                broadcastDataMessage(msg);
+                                count++; 
+                                batchCount++;
+                                if (count >= rowLimit) break;
+                            }
+                            start += batchCount;
+                            if (start >= rowLimit) break;
+                        }
+                        long t_elapsed = System.currentTimeMillis() - t_st;
+                        JSONObject doneMsg = new JSONObject();
+                        doneMsg.put("elapsed", t_elapsed);
+                        doneMsg.put("count", count);
+                        doneMsg.put("found", rawFound);
+                        broadcastDone(doneMsg);
+                    
+                    } catch (java.lang.InterruptedException iex) {
+                        return;
+                    
+                    } catch (Exception ex) {
+                        ex.printStackTrace();
+                        Mecha.getMonitoring().error("mecha.vm.bifs.solr-module.select", ex);
+                        broadcastDone();
+                        return;
+                    }
+                }
+            });
         }
         
         public void onStartEvent(JSONObject startEventMsg) throws Exception {
-            JSONObject selectParams = getConfig().getJSONObject("params");
-            long t_st = System.currentTimeMillis();
-            long start = 0;
-            long batchSize = 100;
-            long count = 0;
-            long rowLimit = -1;
-            long rawFound = 0;
-            
-            /*
-             * Rewrite scored queries into filter queries.
-            */
-            if (!selectParams.has("q") &&
-                !selectParams.has("fq")) {
-                selectParams.put("q", "*:*");
-            }
-            if (selectParams.has("q") &&
-                !selectParams.has("fq")) {
-                selectParams.put("fq", selectParams.get("q"));
-                selectParams.put("q", "*:*");
-            }
-            
-            if (selectParams.has("start")) {
-                start = Long.parseLong("" + selectParams.get("start"));
-                selectParams.remove("start");
-            }
-            
-            if (selectParams.has("rows") && !selectParams.has("facet")) {
-                rowLimit = Long.parseLong("" + selectParams.get("rows"));
-                selectParams.remove("rows");
-            }
-            
-            if (selectParams.has("facet")) {
-                batchSize = 0;
-            }
-            
-            while(true) {
-                ModifiableSolrParams solrParams = new ModifiableSolrParams();
-                for(String k : JSONObject.getNames(selectParams)) {
-                    solrParams.set(k, "" + selectParams.get(k));
-                }
-                solrParams.set("start", "" + start);
-                solrParams.set("rows", "" + batchSize);
-                
-                int batchCount = 0;
-                long solr_t_st = System.currentTimeMillis();
-                QueryResponse res = 
-                    Mecha.getSolrManager().getSolrServer(core).query(solrParams);
-                Mecha.getMonitoring().metric("mecha.vm.bifs.solr-module." + core + ".select.query.ms",
-                                             System.currentTimeMillis() - solr_t_st);
-                
-                /*
-                 * Facet results.
-                */
-                if (res.getFacetFields() != null) {
-                    for (FacetField facetField : res.getFacetFields()) {
-                        if (getConfig().has("cardinality-only") &&
-                            getConfig().<String>get("cardinality-only").equals("true")) {
-                            JSONObject dataMsg = new JSONObject();
-                            dataMsg.put("value", 
-                                Mecha.getHost() + "-" + 
-                                getConfig().<String>get("partition") + "-" + 
-                                "cardinality");
-                            dataMsg.put("count", facetField.getValueCount());
-                            broadcastDataMessage(dataMsg);
-                            broadcastDone();
-                            return;
-                        }
-                        if (facetField.getValues() == null) continue;
-                        for (FacetField.Count facetFieldCount : facetField.getValues()) {
-                            JSONObject msg = new JSONObject();
-                            msg.put("field", facetField.getName());
-                            msg.put("value", facetFieldCount.getName());
-                            msg.put("count", facetFieldCount.getCount());
-                            broadcastDataMessage(msg);
-                        }
-                    }
-                    break;
-                }
-                
-                /*
-                 * Document results.
-                */  
-                rawFound = res.getResults().getNumFound();
-
-                /*
-                 * "count-only" 'short-circuit'.
-                */
-                if (getConfig().has("count-only") &&
-                    getConfig().getString("count-only").equals("true")) {
-                    JSONObject countMsg = new JSONObject();
-                    countMsg.put("value", "count");
-                    countMsg.put("count", rawFound);
-                    broadcastDataMessage(countMsg);
-                    broadcastDone();
-                    return;
-                }
-                
-                if (start == rawFound) break;
-                if (res.getResults().getNumFound() == 0) break;
-                if (rowLimit == -1) {
-                    rowLimit = res.getResults().getNumFound();
-                }
-                for(SolrDocument doc : res.getResults()) {
-                    JSONObject msg;
-                    if (materialize) {
-                        msg = materializePBK("" + doc.get("partition"),
-                                             "" + doc.get("bucket"),
-                                             "" + doc.get("key"));
-                    } else {
-                        msg = new JSONObject();
-                        for(String fieldName : doc.getFieldNames()) {
-                            if (fieldName.equals("last_modified") ||
-                                fieldName.endsWith("_dt")) {
-                                String date = 
-                                    dateFormat.format((Date)doc.get(fieldName));
-                                msg.put(fieldName, date);
-                            } else {
-                                msg.put(fieldName, doc.get(fieldName));
-                            }
-                        }
-                    }
-                    broadcastDataMessage(msg);
-                    count++; 
-                    batchCount++;
-                    if (count >= rowLimit) break;
-                }
-                start += batchCount;
-                if (start >= rowLimit) break;
-            }
-            long t_elapsed = System.currentTimeMillis() - t_st;
-            JSONObject doneMsg = new JSONObject();
-            doneMsg.put("elapsed", t_elapsed);
-            doneMsg.put("count", count);
-            doneMsg.put("found", rawFound);
-            broadcastDone(doneMsg);
+            iteratorThread.start();
+        }
+        
+        public void onCancel(JSONObject msg) throws Exception {
+            iteratorThread.interrupt();
         }
     }
-    
+        
     /*
      * Produce an average of the values of all keys
      *  to 'estimate' the cardinality values to a useful 
