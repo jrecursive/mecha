@@ -42,7 +42,7 @@
   <updateHandler class="solr.DirectUpdateHandler2">
        <autoCommit> 
          <maxDocs>10000</maxDocs>
-         <maxTime>60000</maxTime> 
+         <maxTime>10000</maxTime> 
        </autoCommit>
     <!-- Update Related Event Listeners
          

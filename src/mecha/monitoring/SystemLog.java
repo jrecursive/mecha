@@ -48,10 +48,9 @@ public class SystemLog {
                     logDocQueue.drainTo(docs);
                     if (docs.size() > 0) {
                         solrServer.add(docs);
-                        solrServer.commit(false, false);
-                    } else {
-                        Thread.sleep(1000);
+                        //solrServer.commit(false, false);
                     }
+                    Thread.sleep(1000);
                 } catch (Exception ex) {
                     ex.printStackTrace();
                 }

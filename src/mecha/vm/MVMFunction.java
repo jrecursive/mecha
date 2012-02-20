@@ -539,8 +539,13 @@ public abstract class MVMFunction {
             releasableChannels.add(channel.getName());
         }
         for (String channelName : releasableChannels) {
-            Mecha.getChannels().destroyChannel(channelName);
-            Mecha.getChannels().destroyChannel(channelName + "-" + CONTROL_CHANNEL);
+            try {
+                Mecha.getChannels().destroyChannel(channelName);
+                Mecha.getChannels().destroyChannel(channelName + 
+                    "-" + CONTROL_CHANNEL);
+            } catch (Exception ex) {
+                // gulp.
+            }
         }
         incomingChannels.clear();
         outgoingChannels.clear();

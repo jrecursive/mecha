@@ -113,6 +113,11 @@ public class Server {
                     pchan.removeMember(cl);
                     if (pchan.getMembers().size() == 0) {
                         Mecha.getChannels().destroyChannel(pchan.getName());
+                        try {
+                            Mecha.getChannels().destroyChannel(pchan.getName() + "-c");
+                        } catch (Exception ex) {
+                            // try to destroy them; -c is the one likely to fail.
+                        }
                     }
                 }
             }

@@ -40,6 +40,11 @@ public class Channels {
                         }
                         for(String channelName : deadChannels) {
                             destroyChannel(channelName);
+                            try {
+                                destroyChannel(channelName + "-c");
+                            } catch (Exception ex) {
+                                // try to destroy them; -c is the one likely to fail.
+                            }
                         }
                         Thread.sleep(60000);
                     } catch (Exception ex) {
