@@ -31,6 +31,7 @@ public class Client implements ChannelConsumer {
     */
     final private ConcurrentHashMap<String, String> state;
     private boolean authorized = false;
+    private boolean autoReset = true;
     
     /*
      * Blocks.
@@ -181,11 +182,24 @@ public class Client implements ChannelConsumer {
         return connection.get();
     }
     
+    public void toggleAutoReset() {
+        if (autoReset) {
+            autoReset = false;
+        } else {
+            autoReset = true;
+        }
+    }
+    
     /*
      * implementation of ChannelConsumer
     */
     
     public void onMessage(String channel, String message) throws Exception {
+        if (autoReset &&
+            message.indexOf("\"$\":\"done\"") != -1) {
+            log.info("auto reset <" + this + ">");
+            ctx.reset();
+        }
         JSONObject messageObj = new JSONObject();
         messageObj.put("c", channel);
         messageObj.put("o", message);
@@ -193,6 +207,12 @@ public class Client implements ChannelConsumer {
     }
     
     public void onMessage(String channel, JSONObject message) throws Exception {
+        if (autoReset &&
+            message.has("$") &&
+            message.<String>get("$").equals("done")) {
+            log.info("auto reset <" + this + ">");
+            ctx.reset();
+        }
         JSONObject messageObj = new JSONObject();
         messageObj.put("c", channel);
         messageObj.put("o", message);
@@ -209,7 +229,7 @@ public class Client implements ChannelConsumer {
     
     public void send(String message) throws Exception {
         rates.add("mecha.server.client.global.messages");
-        connection.get().getChannel().write(message + "\n"); // .awaitUninterruptibly();
+        connection.get().getChannel().write(message + "\n");
     }
     
     public void send(byte[] message) throws Exception {

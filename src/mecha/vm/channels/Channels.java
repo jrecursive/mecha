@@ -33,9 +33,6 @@ public class Channels {
                             if (channel.getMembers().size() == 0) {
                                 log.info("Destroying channel " + channel.getName());
                                 deadChannels.add(channel.getName());
-                            } else {
-                                log.info("<" + channel.getName() + "> " + 
-                                    channel.getMembers().size() + " members");
                             }
                         }
                         for(String channelName : deadChannels) {
@@ -75,6 +72,10 @@ public class Channels {
     
     public PubChannel getChannel(String channel) {
         return channelMap.get(channel);
+    }
+    
+    public boolean channelExists(String channel) {
+        return channelMap.containsKey(channel);
     }
     
     public Set<String> getChannelNames() {

@@ -291,17 +291,19 @@ public class MVMContext {
     private void cancelAllFunctions(String reason) throws Exception {
         for(String refId : funRefs.keySet()) {
             WeakReference<MVMFunction> funRef = funRefs.get(refId);
-            MVMFunction fun = funRef.get();
-            if (fun != null) {
-                if (!reason.equals("reset")) {
-                    log.info("cancel: " + refId + ": reason: " + reason);
+            if (funRef != null) {
+                MVMFunction fun = funRef.get();
+                if (fun != null) {
+                    if (!reason.equals("reset")) {
+                        log.info("cancel: " + refId + ": reason: " + reason);
+                    }
+                    JSONObject cancelMsg = new JSONObject();
+                    cancelMsg.put("$", "cancel");
+                    cancelMsg.put("reason", reason);
+                    fun.cancel(cancelMsg);
+                } else {
+                    log.info("cancel: " + refId + ": void reference (already dead)");
                 }
-                JSONObject cancelMsg = new JSONObject();
-                cancelMsg.put("$", "cancel");
-                cancelMsg.put("reason", reason);
-                fun.cancel(cancelMsg);
-            } else {
-                log.info("cancel: " + refId + ": void reference (already dead)");
             }
         }
     }

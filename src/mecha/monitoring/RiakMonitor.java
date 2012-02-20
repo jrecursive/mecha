@@ -30,7 +30,7 @@ public class RiakMonitor {
                     while(true) {
                         try {
                             getRiakRuntimeStats();
-                            Thread.sleep(10000);
+                            Thread.sleep(1000);
                         } catch (Exception ex) {
                             Mecha.getMonitoring().error("mecha.monitoring.riak-monitor.inner", ex);
                             ex.printStackTrace();

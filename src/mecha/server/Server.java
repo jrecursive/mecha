@@ -110,6 +110,7 @@ public class Server {
                 PubChannel pchan = 
                     Mecha.getChannels().getChannel(chan);
                 if (pchan != null) {
+                    log.info("removing subscription to " + chan + " for <" + cl + ">");
                     pchan.removeMember(cl);
                     if (pchan.getMembers().size() == 0) {
                         Mecha.getChannels().destroyChannel(pchan.getName());
@@ -241,6 +242,15 @@ public class Server {
                     new JSONObject(request.substring(cmd.length() + channel.length() + 2).trim());
                 //log.info("mvm: $data: " + channel + ": " + cl + "/" + cl.getContext() + ": " + ast.toString());
                 Mecha.getMVM().nativeDataMessage(cl.getContext(), channel, ast);
+
+            /*
+             * The only legitimate use for this is to debug
+             *  query plans.  When a "done" message is received
+             *  (and sent over the wire (see Client)) a reset is
+             *  automatically issued to clean up.
+            */
+            } else if (cmd.equals("$toggle-auto-reset")) {
+                cl.toggleAutoReset();
 
             /*
              * Client-scoped block definition "start" command.

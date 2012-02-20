@@ -3,6 +3,7 @@ package mecha.vm.channels;
 import java.util.*;
 import java.util.logging.*;
 
+import mecha.Mecha;
 import mecha.json.*;
 
 /*
@@ -26,10 +27,14 @@ public class PubChannel {
     
     public void removeMember(ChannelConsumer cc) {
         members.remove(cc);
+        if (members.size() == 0) {
+            Mecha.getChannels().destroyChannel(name);
+        }
     }
     
     public void removeAllMembers() {
         members.clear();
+        Mecha.getChannels().destroyChannel(name);
     }
     
     public Set<ChannelConsumer> getMembers() {

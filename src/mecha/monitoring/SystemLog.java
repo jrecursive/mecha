@@ -48,7 +48,43 @@ public class SystemLog {
                     logDocQueue.drainTo(docs);
                     if (docs.size() > 0) {
                         solrServer.add(docs);
-                        //solrServer.commit(false, false);
+                        
+                        /*
+                         * Process documents for log, error, & metric channel taps.
+                        */
+                        for (SolrInputDocument doc : docs) {
+                            try {
+                                String channel;
+                                String bucket = "" + doc.getFieldValue("bucket");
+                                
+                                /*
+                                 * $metric.<name>
+                                */
+                                if (bucket.equals("metric")) {
+                                    channel = "$" + 
+                                        bucket + "." +
+                                        doc.getFieldValue("name");
+                                        
+                                /*
+                                 * $log, $error
+                                */
+                                } else {
+                                    channel = "$" + bucket;
+                                }
+                                
+                                if (Mecha.getChannels().channelExists(channel)) {
+                                    JSONObject obj = new JSONObject();
+                                    for(String f : doc.getFieldNames()) {
+                                        obj.put(f, "" + doc.getFieldValue(f));
+                                    }
+                                    Mecha.getChannels()
+                                         .getChannel(channel)
+                                         .send(obj);
+                                }
+                            } catch (Exception ex) {
+                                ex.printStackTrace();
+                            }
+                        }
                     }
                     Thread.sleep(1000);
                 } catch (Exception ex) {
