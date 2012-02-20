@@ -69,6 +69,7 @@ public class Mecha {
     
         log.info("* starting solr cores");
         Logger.getLogger("org.apache.solr").setLevel(Level.WARNING);
+        Logger.getLogger("org.apache.solr.search").setLevel(Level.WARNING);
         solrManager = new SolrManager();
                 
         log.info("* starting mdb");

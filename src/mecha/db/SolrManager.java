@@ -10,9 +10,9 @@ public class SolrManager {
     final private static Logger log = 
         Logger.getLogger(SolrManager.class.getName());
     
-    final private static String INDEX_CORE = "index";
-    final private static String TMP_CORE = "tmp";
-    final private static String SYSTEM_CORE = "system";
+    final public static String INDEX_CORE = "index";
+    final public static String TMP_CORE = "tmp";
+    final public static String SYSTEM_CORE = "system";
     final private Map<String, SolrCore> cores;
     
     public SolrManager() {

@@ -298,6 +298,7 @@ public class SolrModule extends MVMModule {
         final private Thread iteratorThread;
         final private String iterationLabel;
         final private boolean materialize;
+        final private String core;
     
         public SelectIterator(String refId, MVMContext ctx, JSONObject config) throws Exception {
             super(refId, ctx, config);
@@ -317,6 +318,12 @@ public class SolrModule extends MVMModule {
                 materialize = true;
             } else {
                 materialize = false;
+            }
+            
+            if (config.has("core")) {
+                core = config.<String>get("core");
+            } else {
+                core = "index";
             }
             
             /*
@@ -371,7 +378,7 @@ public class SolrModule extends MVMModule {
                                 
                                 int batchCount = 0;
                                 QueryResponse res = 
-                                    Mecha.getSolrManager().getIndexServer().query(solrParams);
+                                    Mecha.getSolrManager().getSolrServer(core).query(solrParams);
                                 
                                 rawFound = res.getResults().getNumFound();
                                 if (start == rawFound) break;

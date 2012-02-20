@@ -14,7 +14,7 @@ public class RiakRPC {
     final private static Logger log = 
         Logger.getLogger(RiakRPC.class.getName());
 
-    final private OtpRPC otpRPC;
+    private OtpRPC otpRPC;
     final private ReentrantLock rpcLock = 
         new ReentrantLock();
 
@@ -32,13 +32,19 @@ public class RiakRPC {
                 UUID.randomUUID()) + 
             "@127.0.0.1";
         
-        final OtpProcessManager otpMgr = 
-            new OtpProcessManager(temporaryOtpNodename, 
-                                  Mecha.getConfig().getString("riak-cookie"));
-        final OtpRPC otpRPC = 
-            new OtpRPC(otpMgr.getNode(), rpcNode);
-        
-        return otpRPC;
+        while(true) {
+            try {
+                OtpProcessManager otpMgr = 
+                    new OtpProcessManager(temporaryOtpNodename, 
+                                          Mecha.getConfig().getString("riak-cookie"));
+                OtpRPC otpRPC = 
+                    new OtpRPC(otpMgr.getNode(), rpcNode);
+                return otpRPC;
+            } catch (java.io.IOException ex) {
+                log.info("Cannot contact riak, retrying...");
+                Thread.sleep(1000);
+            }
+        }
     }
     
     /*
@@ -47,11 +53,19 @@ public class RiakRPC {
     public OtpErlangObject rpc(String module,
                                String fun,
                                OtpErlangObject[] args) throws Exception {
+        OtpErlangObject obj = null;
         rpcLock.lock();
         try {
-            OtpErlangObject obj = (OtpErlangObject)
-                otpRPC.rpc(module, fun, args);
-            return obj;
+            while(true) {
+                try {
+                    obj = (OtpErlangObject)
+                        otpRPC.rpc(module, fun, args);
+                    return obj;
+                } catch (java.io.IOException ex) {
+                    log.info("Riak link broken, restarting...");
+                    otpRPC = getOtpRPC();
+                }
+            }
         } finally {
             rpcLock.unlock();
         }

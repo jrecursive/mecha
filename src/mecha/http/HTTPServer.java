@@ -32,7 +32,7 @@ public class HTTPServer {
         
         // Serve admin content.
         ServletHolder holder = 
-            context.addServlet(org.eclipse.jetty.servlet.DefaultServlet.class, "/www/*");
+            context.addServlet(org.eclipse.jetty.servlet.DefaultServlet.class, "/admin/*");
         holder.setInitParameter("resourceBase", wwwRoot);
         holder.setInitParameter("pathInfoOnly", "true");
         
