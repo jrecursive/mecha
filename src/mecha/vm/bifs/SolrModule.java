@@ -29,9 +29,6 @@ public class SolrModule extends MVMModule {
         
     private static String STANDARD_DATE_FORMAT = 
         "yyyy-MM-dd'T'HH:mm:ss";
-        
-    final private SimpleDateFormat dateFormat = 
-        new java.text.SimpleDateFormat(STANDARD_DATE_FORMAT);
             
     public SolrModule() throws Exception {
         super();
@@ -338,6 +335,8 @@ public class SolrModule extends MVMModule {
              * Dedicated bucket iterator thread.
             */
             final Runnable runnableIterator = new Runnable() {
+                final private SimpleDateFormat dateFormat = 
+                    new java.text.SimpleDateFormat(STANDARD_DATE_FORMAT);
 
                 public void run() {
                     try {
@@ -430,10 +429,8 @@ public class SolrModule extends MVMModule {
                                                 for(String fieldName : doc.getFieldNames()) {
                                                     if (fieldName.equals("last_modified") ||
                                                         fieldName.endsWith("_dt")) {
-                                                        String date;
-                                                        synchronized(dateFormat) {
-                                                            date = dateFormat.format((Date)doc.get(fieldName));
-                                                        }
+                                                        String date = 
+                                                            dateFormat.format((Date)doc.get(fieldName));
                                                         msg.put(fieldName, date);
                                                     } else {
                                                         msg.put(fieldName, doc.get(fieldName));
@@ -545,6 +542,8 @@ public class SolrModule extends MVMModule {
     public class Select extends MVMFunction {
         final private boolean materialize;
         final private String core;
+        final private SimpleDateFormat dateFormat = 
+            new java.text.SimpleDateFormat(STANDARD_DATE_FORMAT);
         
         public Select(String refId, MVMContext ctx, JSONObject config) throws Exception {
             super(refId, ctx, config);
@@ -660,6 +659,7 @@ public class SolrModule extends MVMModule {
                     return;
                 }
                 
+                if (start == rawFound) break;
                 if (res.getResults().getNumFound() == 0) break;
                 if (rowLimit == -1) {
                     rowLimit = res.getResults().getNumFound();
@@ -675,10 +675,8 @@ public class SolrModule extends MVMModule {
                         for(String fieldName : doc.getFieldNames()) {
                             if (fieldName.equals("last_modified") ||
                                 fieldName.endsWith("_dt")) {
-                                String date;
-                                synchronized(dateFormat) {
-                                    date = dateFormat.format((Date)doc.get(fieldName));
-                                }
+                                String date = 
+                                    dateFormat.format((Date)doc.get(fieldName));
                                 msg.put(fieldName, date);
                             } else {
                                 msg.put(fieldName, doc.get(fieldName));
