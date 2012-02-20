@@ -51,23 +51,30 @@ public class ChannelModule extends MVMModule {
     public class Unsubscribe extends MVMFunction {
         public Unsubscribe(String refId, MVMContext ctx, JSONObject config) throws Exception {
             super(refId, ctx, config);
-            String channel = config.getString("channel");
+        }
+        
+        public void start(JSONObject msg) throws Exception {
+            String channel = getConfig().getString("channel");
             PubChannel pubChannel = 
                 Mecha.getChannels().getOrCreateChannel(channel);
             if (pubChannel == null) {
                 return;
             } else {
-                pubChannel.removeMember(ctx.getClient());
-                ctx.getClient().removeSubscription(channel);
+                pubChannel.removeMember(getContext().getClient());
+                getContext().getClient().removeSubscription(channel);
             }
+            broadcastDone();
         }
     }
 
     public class Publish extends MVMFunction {
         public Publish(String refId, MVMContext ctx, JSONObject config) throws Exception {
             super(refId, ctx, config);
-            String channel = config.getString("channel");
-            JSONObject data = config.getJSONObject("data");
+        }
+        
+        public void start(JSONObject msg) throws Exception {
+            String channel = getConfig().getString("channel");
+            JSONObject data = getConfig().getJSONObject("data");
             PubChannel pubChannel = 
                 Mecha.getChannels().getChannel(channel);
             if (pubChannel == null) {
@@ -75,6 +82,7 @@ public class ChannelModule extends MVMModule {
             } else {
                 pubChannel.send(data);
             }
+            broadcastDone();
         }
     }
 }
