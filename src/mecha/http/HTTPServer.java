@@ -37,6 +37,7 @@ public class HTTPServer {
         holder.setInitParameter("pathInfoOnly", "true");
         
         context.addServlet(new ServletHolder(new MacroServlet()),"/mecha/*");
+        context.addServlet(new ServletHolder(new ProcServlet()),"/proc/*");
     }
     
     public void start() throws Exception {
