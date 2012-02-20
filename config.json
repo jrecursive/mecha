@@ -83,10 +83,17 @@
     ## 
     
     ##
-    ## system log
+    ## system metrics, log messages, & errors
+    ##
+    ## metric-pruning-interval covers any numeric
+    ##  metrics kept by mecha or riak.
+    ##
+    ## log-pruning-interval covers both log messages
+    ##  and any related indexed exception traces.
     ##
     "log": {
-        "pruning-interval": "2HOUR"
+        "metric-pruning-interval": "2HOUR",
+        "log-pruning-interval": "24HOUR"
     },
     
     ##

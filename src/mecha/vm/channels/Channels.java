@@ -4,12 +4,16 @@ import java.util.*;
 import java.util.concurrent.*;
 import java.util.logging.*;
 
+import mecha.Mecha;
 import mecha.json.*;
+import mecha.monitoring.*;
 
 public class Channels {
     final private static Logger log = 
         Logger.getLogger(Channels.class.getName());
-
+    
+    final private Rates rates;
+    
     /*
      * map: names -> channels
     */
@@ -17,11 +21,17 @@ public class Channels {
 
     public Channels() throws Exception {
         channelMap = new ConcurrentHashMap<String, PubChannel>();
+        rates = new Rates();
+    }
+    
+    public void start() throws Exception {
+        Mecha.getMonitoring().addMonitoredRates(rates);
     }
     
     public PubChannel getOrCreateChannel(String channel) throws Exception {
         PubChannel pubChannel = channelMap.get(channel);
         if (pubChannel == null) {
+            rates.add("mecha.vm.channels.create");
             pubChannel = new PubChannel(channel);
             channelMap.put(channel, pubChannel);
         }
@@ -42,6 +52,11 @@ public class Channels {
     
     public Set<Map.Entry<String, PubChannel>> getChannelSet() {
         return channelMap.entrySet();
+    }
+    
+    public void destroyChannel(String channel) {
+        rates.add("mecha.vm.channels.destroy");
+        channelMap.remove(channel);
     }
     
     /**

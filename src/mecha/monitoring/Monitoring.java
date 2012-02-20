@@ -138,9 +138,11 @@ public class Monitoring {
                 msg.put("filename_s", el.getFileName());
                 msg.put("method_s", el.getMethodName());
                 msg.put("native_b", el.isNativeMethod());
+                msg.put("line_number_i", el.getLineNumber());
                 msg.put("trace_id_s", traceId);
                 msg.put("seq_i", seq);
                 systemLog.error(name, msg);
+                seq++;
             }
         } catch (Exception ex) {
             /*

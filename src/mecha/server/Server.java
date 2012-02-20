@@ -106,9 +106,10 @@ public class Server {
                     Mecha.getChannels().getChannel(chan);
                 if (pchan != null) {
                     pchan.removeMember(cl);
+                    if (pchan.getMembers().size() == 0) {
+                        Mecha.getChannels().destroyChannel(pchan.getName());
+                    }
                 }
-                //log.info("removed subscription to " + chan + 
-                //    " for " + cl + " <" + connection + ">");
             }
             try {
                 cl.getContext().reset();

@@ -112,6 +112,7 @@ public class Mecha {
     public void start() throws Exception {
         startSolrCores();
         monitoring.start();
+        channels.start();
         mdb.startMDB();
         riakConnector.startConnector();
         server.start();

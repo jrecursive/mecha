@@ -67,16 +67,25 @@ public class SystemLog {
         public void run() {
             while(true) {
                 try {
-                    String pruningInterval = 
+                    String metricPruningInterval = 
                         Mecha.getConfig()
                              .getJSONObject("log")
-                             .getString("pruning-interval");
-                    log.info("Pruning system log on interval " + 
-                        pruningInterval);
+                             .getString("metric-pruning-interval");
+
+                    String logPruningInterval = 
+                        Mecha.getConfig()
+                             .getJSONObject("log")
+                             .getString("log-pruning-interval");
+
+                    log.info("Pruning metrics on interval " + 
+                        metricPruningInterval + ", log on interval " + 
+                        logPruningInterval);
                     solrServer.deleteByQuery("bucket:metric AND last_modified:[* TO NOW-" +
-                                             pruningInterval + "]");
-                    solrServer.deleteByQuery("bucket:log AND last_modified:[* TO NOW-24HOUR]");
-                    solrServer.deleteByQuery("bucket:error AND last_modified:[* TO NOW-24HOUR]");
+                                             metricPruningInterval + "]");
+                    solrServer.deleteByQuery("bucket:log AND last_modified:[* TO NOW-" +
+                                             logPruningInterval + "]");
+                    solrServer.deleteByQuery("bucket:error AND last_modified:[* TO NOW-" +
+                                             logPruningInterval + "]");
                     solrServer.commit(false, false);
                     Thread.sleep(60000);
                 } catch (Exception ex) {
