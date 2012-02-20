@@ -36,17 +36,17 @@ public class ClientModule extends MVMModule {
             super(refId, ctx, config);
         }
         
+        public void onStartEvent(JSONObject msg) throws Exception {
+            broadcastControlMessage(msg);
+        }
+        
         public void onControlMessage(JSONObject msg) throws Exception {
             broadcastControlMessage(msg);
         }
 
         public void onDataMessage(JSONObject msg) throws Exception {
             broadcastDataMessage(msg);
-        }
-        
-        public void onStartEvent(JSONObject msg) throws Exception {
-            broadcastControlMessage(msg);
-        }
+        }        
         
         public void onCancelEvent(JSONObject msg) throws Exception {
             broadcastControlMessage(msg);
@@ -68,8 +68,11 @@ public class ClientModule extends MVMModule {
     public class StartAllSources extends MVMFunction {
         public StartAllSources(String refId, MVMContext ctx, JSONObject config) throws Exception {
             super(refId, ctx, config);
+        }
+        
+        public void onStartEvent(JSONObject _msg) throws Exception {
             Set<String> sourceRefIds = new HashSet<String>();
-            Flow flow = ctx.getFlow();
+            Flow flow = getContext().getFlow();
             for(Vertex v : flow.getVertices()) {
                 if (flow.getIncomingEdgesOf(v).size() == 0 &&
                     !v.getRefId().equals(getRefId())) {
@@ -77,17 +80,17 @@ public class ClientModule extends MVMModule {
                 }
             }
             JSONObject msg;
-            if (config.has("message")) {
-                if (config.get("message") instanceof String) {
+            if (getConfig().has("message")) {
+                if (getConfig().get("message") instanceof String) {
                     msg = new JSONObject();
-                    msg.put("$", config.getString("message"));
+                    msg.put("$", getConfig().getString("message"));
                 
                 } else {
-                    msg = config.getJSONObject("message");
+                    msg = getConfig().getJSONObject("message");
                 }
             } else {
                 msg = new JSONObject();
-                msg.put("$", config.getString("start"));
+                msg.put("$", getConfig().getString("start"));
             }
             for(String vertexRefId : sourceRefIds) {
                 String controlChannelName = 
@@ -97,6 +100,7 @@ public class ClientModule extends MVMModule {
                     Mecha.getChannels().getChannel(controlChannelName).send(msg);
                 }
             }
+            broadcastDone();
         }
     }
     
