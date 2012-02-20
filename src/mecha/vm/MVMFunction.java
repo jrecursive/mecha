@@ -542,6 +542,8 @@ public abstract class MVMFunction {
             Mecha.getChannels().destroyChannel(channelName);
             Mecha.getChannels().destroyChannel(channelName + "-" + CONTROL_CHANNEL);
         }
+        incomingChannels.clear();
+        outgoingChannels.clear();
     }
 
     
