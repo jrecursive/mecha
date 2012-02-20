@@ -165,6 +165,9 @@
    <!-- always default -->   
    <field name="last_modified" type="tdate" indexed="true" stored="true" default="NOW" multiValued="false"/>
    
+   <!-- default text message field (text log entries) -->
+   <field name="message" type="text" indexed="true" stored="true" termVectors="true" termPositions="false" termOffsets="false" required="false"/>
+   
    <!-- all 'basic' types are always stored for the system solr core -->
    <dynamicField name="*_s"  type="string"  indexed="true"  stored="true"/>
    <dynamicField name="*_s_mv"  type="string"  indexed="true"  stored="true" multiValued="true"/>

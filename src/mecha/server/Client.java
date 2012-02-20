@@ -12,6 +12,7 @@ import mecha.util.*;
 import mecha.vm.*;
 import mecha.vm.channels.*;
 import mecha.json.*;
+import mecha.monitoring.*;
 
 /*
  * client record
@@ -19,7 +20,12 @@ import mecha.json.*;
 public class Client implements ChannelConsumer {
     final private static Logger log = 
         Logger.getLogger(Client.class.getName());
-
+    
+    final static private Rates rates = new Rates();
+    static {
+        Mecha.getMonitoring().addMonitoredRates(rates);
+    }
+    
     /*
      * for Server
     */
@@ -202,6 +208,7 @@ public class Client implements ChannelConsumer {
     }
     
     public void send(String message) throws Exception {
+        rates.add("mecha.server.client.global.messages");
         connection.get().getChannel().write(message + "\n"); // .awaitUninterruptibly();
     }
     

@@ -58,7 +58,7 @@ public class MVMContext {
     */
     private Flow flow;
     private String refId;
-
+    
     public MVMContext(Client client) throws Exception {
         clientRef = new WeakReference<Client>(client);
         vars = new ConcurrentHashMap<String, Object>();
@@ -67,7 +67,7 @@ public class MVMContext {
         refId = Mecha.guid(MVMContext.class);
         blocks = new ConcurrentHashMap<String, List<String>>();
         
-        functionExecutor = getExecutorService();
+        functionExecutor = newExecutorService();
         fiberFactory = new PoolFiberFactory(functionExecutor);
         memoryChannelMap = new ConcurrentHashMap<String, Channel<JSONObject>>();
         fibers = new HashSet<Fiber>();
@@ -341,7 +341,7 @@ public class MVMContext {
         clearChannels();
         shutdownFunctionExecutor();
 
-        functionExecutor = getExecutorService();
+        functionExecutor = newExecutorService();
         fiberFactory = new PoolFiberFactory(functionExecutor);
         memoryChannelMap = new ConcurrentHashMap<String, Channel<JSONObject>>();
         fibers = new HashSet<Fiber>();
@@ -360,9 +360,36 @@ public class MVMContext {
         clearFlow();
     }
     
-    private ExecutorService getExecutorService() {
+    private ExecutorService newExecutorService() {
         //return Executors.newFixedThreadPool(8);
         return Executors.newCachedThreadPool();
+    }
+    
+    /*
+     * mecha.monitoring.MechaMonitor helpers.
+    */
+    public int getNumVars() {
+        return vars.keySet().size();
+    }
+    
+    public int getNumFuns() {
+        return funRefs.keySet().size();
+    }
+    
+    public int getNumBlocks() {
+        return blocks.keySet().size();
+    }
+    
+    public int getNumFibers() {
+        return fibers.size();
+    }
+    
+    public int getNumMemoryChannels() {
+        return memoryChannelMap.keySet().size();
+    }
+    
+    public ExecutorService getFunctionExecutor() {
+        return functionExecutor;
     }
     
 }

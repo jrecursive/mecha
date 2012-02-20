@@ -21,6 +21,7 @@ import mecha.Mecha;
 import mecha.json.*;
 import mecha.vm.*;
 import mecha.util.*;
+import mecha.monitoring.*;
 
 public class SolrModule extends MVMModule {
     final private static Logger log = 
@@ -28,6 +29,9 @@ public class SolrModule extends MVMModule {
         
     private static String STANDARD_DATE_FORMAT = 
         "yyyy-MM-dd'T'HH:mm:ss";
+        
+    final private SimpleDateFormat dateFormat = 
+        new java.text.SimpleDateFormat(STANDARD_DATE_FORMAT);
             
     public SolrModule() throws Exception {
         super();
@@ -334,8 +338,6 @@ public class SolrModule extends MVMModule {
              * Dedicated bucket iterator thread.
             */
             final Runnable runnableIterator = new Runnable() {
-                final private SimpleDateFormat dateFormat = 
-                    new java.text.SimpleDateFormat(STANDARD_DATE_FORMAT);
 
                 public void run() {
                     try {
@@ -384,8 +386,12 @@ public class SolrModule extends MVMModule {
                                 solrParams.set("rows", "" + batchSize);
                                 
                                 int batchCount = 0;
+                                long solr_t_st = System.currentTimeMillis();
                                 QueryResponse res = 
                                     Mecha.getSolrManager().getSolrServer(core).query(solrParams);
+                                Mecha.getMonitoring().metric("mecha.vm.bifs.solr-module." + core + ".select-iterator.query.ms",
+                                                             System.currentTimeMillis() - solr_t_st);
+
                                 
                                 rawFound = res.getResults().getNumFound();
                                 if (start == rawFound) break;
@@ -424,8 +430,10 @@ public class SolrModule extends MVMModule {
                                                 for(String fieldName : doc.getFieldNames()) {
                                                     if (fieldName.equals("last_modified") ||
                                                         fieldName.endsWith("_dt")) {
-                                                        String date = 
-                                                            dateFormat.format((Date)doc.get(fieldName));
+                                                        String date;
+                                                        synchronized(dateFormat) {
+                                                            date = dateFormat.format((Date)doc.get(fieldName));
+                                                        }
                                                         msg.put(fieldName, date);
                                                     } else {
                                                         msg.put(fieldName, doc.get(fieldName));
@@ -537,8 +545,6 @@ public class SolrModule extends MVMModule {
     public class Select extends MVMFunction {
         final private boolean materialize;
         final private String core;
-        final private SimpleDateFormat dateFormat = 
-            new java.text.SimpleDateFormat(STANDARD_DATE_FORMAT);
         
         public Select(String refId, MVMContext ctx, JSONObject config) throws Exception {
             super(refId, ctx, config);
@@ -601,8 +607,11 @@ public class SolrModule extends MVMModule {
                 solrParams.set("rows", "" + batchSize);
                 
                 int batchCount = 0;
+                long solr_t_st = System.currentTimeMillis();
                 QueryResponse res = 
                     Mecha.getSolrManager().getSolrServer(core).query(solrParams);
+                Mecha.getMonitoring().metric("mecha.vm.bifs.solr-module." + core + ".select.query.ms",
+                                             System.currentTimeMillis() - solr_t_st);
                 
                 /*
                  * Facet results.
@@ -666,8 +675,10 @@ public class SolrModule extends MVMModule {
                         for(String fieldName : doc.getFieldNames()) {
                             if (fieldName.equals("last_modified") ||
                                 fieldName.endsWith("_dt")) {
-                                String date = 
-                                    dateFormat.format((Date)doc.get(fieldName));
+                                String date;
+                                synchronized(dateFormat) {
+                                    date = dateFormat.format((Date)doc.get(fieldName));
+                                }
                                 msg.put(fieldName, date);
                             } else {
                                 msg.put(fieldName, doc.get(fieldName));

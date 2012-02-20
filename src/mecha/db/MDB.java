@@ -50,8 +50,13 @@ public class MDB {
                     if (docs.size() > 0) {
                         solrServer.add(docs);
                         log.info(docs.size() + " indexed");
+                        Mecha.getMonitoring()
+                             .metric("mecha.db.mdb.documents-indexed", 
+                                     docs.size());
                     } else {
-                        Thread.sleep(100);
+                        Mecha.getMonitoring()
+                             .metric("mecha.db.mdb.documents-indexed", 0);
+                        Thread.sleep(1000);
                     }
                 } catch (Exception ex) {
                     ex.printStackTrace();

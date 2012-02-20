@@ -30,7 +30,7 @@ public class RiakMonitor {
                     while(true) {
                         try {
                             getRiakRuntimeStats();
-                            Thread.sleep(1000);
+                            Thread.sleep(10000);
                         } catch (Exception ex) {
                             ex.printStackTrace();
                             Thread.sleep(5000);

@@ -6,15 +6,16 @@ import java.util.concurrent.*;
 import java.util.concurrent.atomic.*;
 import java.io.*;
 
-import mecha.Mecha;
-import mecha.vm.*;
-import mecha.client.*;
-import mecha.json.*;
-
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+
+import mecha.Mecha;
+import mecha.vm.*;
+import mecha.client.*;
+import mecha.json.*;
+import mecha.monitoring.*;
 
 @SuppressWarnings("serial")
 public class MacroServlet extends HttpServlet {
@@ -53,14 +54,16 @@ public class MacroServlet extends HttpServlet {
             }
             
             String[] parts = request.getPathInfo().substring(1).split("/");            
+            String macroName;
             if (parts.length == 1) {
-                params.put("$", "#" + parts[0]);
+                macroName = parts[0];
             } else if (parts.length == 2) {
-                params.put("$", "#" + parts[0] + "." + parts[1]);
+                macroName = parts[0] + "." + parts[1];
             } else {
                 writeError(response, "Invalid request");
                 return;
             }
+            params.put("$", "#" + macroName);
             
             final String host = 
                 Mecha.getConfig()
@@ -136,6 +139,11 @@ public class MacroServlet extends HttpServlet {
             long t_st = System.currentTimeMillis();
             done.acquire();
             long t_elapsed = System.currentTimeMillis() - t_st;
+            
+            Mecha.getMonitoring()
+                 .metric("mecha.http.macro." + macroName, 
+                         (double) t_elapsed);
+            
             response.setContentType("text/plain");
             response.setStatus(HttpServletResponse.SC_OK);
             JSONObject result = new JSONObject();

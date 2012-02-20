@@ -85,31 +85,40 @@ public class SystemLog {
     /*
      * Add an entry to the system log index.
     */
-    public void log(String name, JSONObject msg) {
-        log("log", name, msg);
+    public void error(String name, JSONObject data) {
+        log("error", name, null, data);
     }
     
-    public void logMetric(String name, JSONObject msg) {
-        log("metric", name, msg);
+    public void log(String name, String message, JSONObject data) {
+        log("log", name, message, data);
     }
     
-    public void log(String type, String name, JSONObject msg) {
+    public void logMetric(String name, JSONObject data) {
+        log("metric", name, null, data);
+    }
+    
+    public void log(String type, String name, String message, JSONObject data) {
         try {
             String id = HashUtils.sha1(Mecha.guid());
             SolrInputDocument doc = new SolrInputDocument();
             doc.addField("id", id);
             doc.addField("bucket", type);
             doc.addField("name", name);
-            for(String f: JSONObject.getNames(msg)) {
-                if (f.endsWith("_s_mv")) {   // array of exact strings
-                    JSONArray mv = msg.getJSONArray(f);
-                    List<String> vals = new ArrayList<String>();
-                    for(int j=0; j<mv.length(); j++) {
-                        vals.add(mv.getString(j));
+            if (message != null) {
+                doc.addField("message", message);
+            }
+            if (data != null) {
+                for(String f: JSONObject.getNames(data)) {
+                    if (f.endsWith("_s_mv")) {   // array of exact strings
+                        JSONArray mv = data.getJSONArray(f);
+                        List<String> vals = new ArrayList<String>();
+                        for(int j=0; j<mv.length(); j++) {
+                            vals.add(mv.getString(j));
+                        }
+                        doc.addField(f, vals);
+                    } else {
+                        doc.addField(f, data.get(f));
                     }
-                    doc.addField(f, vals);
-                } else {
-                    doc.addField(f, msg.get(f));
                 }
             }
             logDocQueue.put(doc);

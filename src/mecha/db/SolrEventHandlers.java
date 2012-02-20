@@ -16,15 +16,14 @@ public class SolrEventHandlers implements SolrEventListener {
     
     public void newSearcher(SolrIndexSearcher newSearcher,
                             SolrIndexSearcher currentSearcher) {
-        log.info("newSearcher(" + newSearcher + ", " + currentSearcher + ")");
-        /*
-         * TODO: statistics
-        */
+        Mecha.getMonitoring().log("mecha.db.solr-event-handlers.new-searcher", 
+                                  "newSearcher(" + newSearcher + ", " + currentSearcher + ")", log);
     }
     
     public void postCommit() {
         try {
-            log.info("postCommit()");
+            Mecha.getMonitoring().log("mecha.db.solr-event-handlers.post-commit", 
+                                      "solr post commit hook", log);
             Mecha.getEventLogManager().recycle();
         } catch (Exception ex) {
             ex.printStackTrace();

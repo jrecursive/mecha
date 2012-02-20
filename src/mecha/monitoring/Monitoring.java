@@ -27,16 +27,16 @@ public class Monitoring {
     final private Map<String, Metric> metrics;
     final private SystemLog systemLog;
     final private RiakMonitor riakMonitor;
+    final private MechaMonitor mechaMonitor;
     
-    final private Thread reporterThread;
+    final private Thread wranglerThread;
     final private Thread monitorThread;
     
-    private class MetricsReporter implements Runnable {
+    private class SolrLogWrangler implements Runnable {
         public void run() {
             while(true) {
                 try {
                     tameSolrLogging();
-                    dumpMetrics();
                     Thread.sleep(10000);
                 } catch (Exception ex) {
                     ex.printStackTrace();
@@ -83,18 +83,20 @@ public class Monitoring {
         systemLog = new SystemLog();
         rateMonitorables = new HashSet<WeakReference<Rates>>();
         
-        reporterThread = new Thread(new MetricsReporter());
-        reporterThread.start();
+        wranglerThread = new Thread(new SolrLogWrangler());
+        wranglerThread.start();
         
         monitorThread = new Thread(new MonitorableRateLogger());
         monitorThread.start();
         
         riakMonitor = new RiakMonitor();
+        mechaMonitor = new MechaMonitor();
     }
     
     public void start() throws Exception {
         systemLog.start();
         riakMonitor.start();
+        mechaMonitor.start();
     }
     
     /*
@@ -117,8 +119,48 @@ public class Monitoring {
     /*
      * Index a log entry.
     */
-    public void log(String name, JSONObject msg) throws Exception {
-        systemLog.log(name, msg);
+    public void error(String name, Throwable t) {
+        try {
+            String message = t.getMessage();
+            String shortMessage = t.toString();
+            String traceId = Mecha.guid(t.getClass().getName());
+            
+            JSONObject logMsg = new JSONObject();
+            logMsg.put("short_message_t", shortMessage);
+            logMsg.put("trace_id_s", traceId);
+            systemLog.log(name, message, logMsg);
+            
+            int seq = 0;
+            for(StackTraceElement el : t.getStackTrace()) {
+                JSONObject msg = new JSONObject();
+                msg.put("class_s", el.getClassName());
+                msg.put("filename_s", el.getFileName());
+                msg.put("method_s", el.getMethodName());
+                msg.put("native_b", el.isNativeMethod());
+                msg.put("trace_id_s", traceId);
+                msg.put("seq_i", seq);
+                systemLog.error(name, msg);
+            }
+        } catch (Exception ex) {
+            /*
+             * I truly hope this catch block does not become
+             *  the source of profound unhappiness.
+            */ 
+            ex.printStackTrace();
+        }
+    }
+    
+    public void log(String name, String message, Logger logger) {
+        logger.info(name + ": " + message);
+        logData(name, message, null);
+    }
+    
+    public void log(String name, String message) {
+        logData(name, message, null);
+    }
+    
+    public void logData(String name, String message, JSONObject data) {
+        systemLog.log(name, message, data);
     }
     
     /*

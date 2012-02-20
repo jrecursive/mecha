@@ -30,6 +30,7 @@ import mecha.server.*;
 import mecha.vm.parser.*;
 import mecha.vm.flows.*;
 import mecha.json.*;
+import mecha.monitoring.*;
 
 public class MVM {
     final private static Logger log = 

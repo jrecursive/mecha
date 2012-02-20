@@ -18,13 +18,16 @@ import mecha.vm.parser.*;
 import mecha.vm.channels.*;
 import mecha.db.MDB;
 import mecha.json.*;
+import mecha.monitoring.*;
+import mecha.json.*;
 
 import org.jboss.netty.channel.ChannelHandlerContext;
-import mecha.json.*;
 
 public class Server {
     final private static Logger log = 
         Logger.getLogger(Server.class.getName());
+    
+    final private Rates rates;
     
     final private static String OK_RESPONSE = ":OK ";
     final private Thread netServerThread;
@@ -48,9 +51,11 @@ public class Server {
         int port = Mecha.getConfig().getInt("client-port");
         netServerThread = new Thread(new MechaServer(port));
         serverActive = new AtomicBoolean(false);
+        rates = new Rates();
     }
     
     public void start() throws Exception {
+        Mecha.getMonitoring().addMonitoredRates(rates);
         netServerThread.start();
         serverActive.set(true);
         log.info("started");
@@ -82,6 +87,8 @@ public class Server {
             
             clientMap.put(connection, cl);
             clientIdMap.put(cl.getId(), cl);
+            
+            rates.add("mecha.server.connections");
         } catch (Exception ex) {
             ex.printStackTrace();
         }
@@ -109,10 +116,12 @@ public class Server {
             }
         }
         clientMap.remove(connection);
+        rates.add("mecha.server.disconnections");
     }
     
     public void onMessage(ChannelHandlerContext connection, String request) {
         try {
+            rates.add("mecha.server.messages-inbound");
             /*
              * If we're just starting up or shutting down, disconnect clients
              *  no matter what.
@@ -181,6 +190,7 @@ public class Server {
             // used by "warp" (and other rpc mechanisms) to execute
             //  a pre-generated AST
             if (cmd.equals("$execute")) {
+                rates.add("mecha.server.warped-execute");
                 String astStr = request.substring(cmd.length()+1);
                 JSONObject ast = new JSONObject(astStr);
                 //log.info("mvm: $execute: " + cl + "/" + cl.getContext() + ": " + ast.toString());
@@ -190,6 +200,7 @@ public class Server {
              * WarpDelegate "shortcut" to assign a vertex via JSON AST.
             */
             } else if (cmd.equals("$assign")) {
+                rates.add("mecha.server.warped-assign");
                 String varName = parts[1];
                 JSONObject ast = 
                     new JSONObject(request.substring(cmd.length() + varName.length() + 2).trim());
@@ -200,6 +211,7 @@ public class Server {
              * WarpDelegate "shortcut" to send a JSON control channel message.
             */
             } else if (cmd.equals("$control")) {
+                rates.add("mecha.server.warped-control");
                 String channel = parts[1];
                 JSONObject ast = 
                     new JSONObject(request.substring(cmd.length() + channel.length() + 2).trim());
@@ -210,6 +222,7 @@ public class Server {
              * WarpDelegate "shortcut" to send a JSON data channel message.
             */
             } else if (cmd.equals("$data")) {
+                rates.add("mecha.server.warped-data");
                 String channel = parts[1];
                 JSONObject ast = 
                     new JSONObject(request.substring(cmd.length() + channel.length() + 2).trim());
@@ -283,11 +296,14 @@ public class Server {
             }
             
         } catch (Exception ex) {
+            rates.add("mecha.server.exceptions");
+            Mecha.getMonitoring().error("mecha.server.server", ex);
             ex.printStackTrace();
         }
     }
     
     private void send(ChannelHandlerContext connection, String message) throws Exception {
+        rates.add("mecha.server.messages-outbound");
         connection.getChannel().write(message + "\n");
     }
     
@@ -301,6 +317,20 @@ public class Server {
     
     public Client getClient(String clientId) {
         return clientIdMap.get(clientId);
+    }
+    
+    /*
+     * Used by mecha.monitoring.MechaMonitor
+    */
+    public int getActiveConnectionCount() {
+        return connectionCount;
+    }
+    
+    /*
+     * Used by mecha.monitoring.MechaMonitor
+    */
+    public Collection<Client> getClients() {
+        return clientIdMap.values();
     }
 }
 

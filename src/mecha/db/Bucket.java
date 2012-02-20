@@ -9,22 +9,28 @@ import org.fusesource.leveldbjni.*;
 import static org.fusesource.leveldbjni.DB.*;
 import org.apache.solr.client.solrj.*;
 import org.apache.solr.common.*;
-import mecha.json.*;
 
 import mecha.Mecha;
 import mecha.util.*;
+import mecha.json.*;
+import mecha.monitoring.*;
 
 public class Bucket {
     final private static Logger log = 
         Logger.getLogger(Bucket.class.getName());
+        
+    final static private Rates rates = new Rates();
+    static {
+        Mecha.getMonitoring().addMonitoredRates(rates);
+    }
     
-    private byte[] bucket;
-    private String bucketStr;
-    private String partition;
-    private String dataDir;
+    final private byte[] bucket;
+    final private String bucketStr;
+    final private String partition;
+    final private String dataDir;
     
     // leveldb
-    DB db;
+    final private DB db;
     
     // solr
     final private SolrServer server;
@@ -52,7 +58,9 @@ public class Bucket {
             .cache(new Cache(Mecha.getConfig().getJSONObject("leveldb").getInt("cache-per-bucket")))
             .compression(CompressionType.kSnappyCompression);
         log.info("Bucket: " + partition + ": " + bucketStr + ": " + dataDir);
-        db = DB.open(options, new File(dataDir));
+        synchronized(Bucket.class) {
+            db = DB.open(options, new File(dataDir));
+        }
     }
     
     private WriteOptions getWriteOptions() {
@@ -70,6 +78,7 @@ public class Bucket {
     
     public byte[] get(byte[] key) throws Exception {
         try {
+            rates.add("mecha.db.bucket.global.get");
             return db.get(new ReadOptions(), key);
         } catch (DBException notFound) {
             return null;
@@ -78,6 +87,7 @@ public class Bucket {
     
     public void put(byte[] key, byte[] value) throws Exception {
         try {
+            rates.add("mecha.db.bucket.global.put");
             JSONObject obj = new JSONObject(new String(value));
             JSONArray values = obj.getJSONArray("values");
             
@@ -167,6 +177,7 @@ public class Bucket {
     public void delete(byte[] key) throws Exception {
         log.info(partition + ": delete: " + (new String(key)));
         try {
+            rates.add("mecha.db.bucket.global.delete");
             server.deleteByQuery("id:" + makeid(key));
             try {
                 db.delete(getWriteOptions(), key);
@@ -199,6 +210,7 @@ public class Bucket {
         ReadOptions ro = null;
         Iterator iterator = null;
         try {
+            rates.add("mecha.db.bucket.global.foreach");
             boolean itrsw = true;
             ro = new ReadOptions().snapshot(db.getSnapshot());
             iterator = db.iterator(ro);
@@ -225,6 +237,7 @@ public class Bucket {
         Iterator iterator = null; 
         long ct = 0;
         try {
+            rates.add("mecha.db.bucket.global.count");
             ro = new ReadOptions().snapshot(db.getSnapshot());
             iterator = db.iterator(ro);
             for(iterator.seekToFirst(); iterator.isValid(); iterator.next())
@@ -242,10 +255,12 @@ public class Bucket {
     }
     
     public boolean isEmpty() throws Exception {
+        rates.add("mecha.db.bucket.global.is-empty");
         return count() == 0;
     }
     
     public synchronized void drop() throws Exception {
+        rates.add("mecha.db.bucket.global.drop");
         db.delete();
         File rc = new File(dataDir);
         deleteFile(rc);
