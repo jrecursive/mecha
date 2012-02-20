@@ -126,7 +126,6 @@ public class MDB {
             partitionDirs.put(partition, dataDir);
             openBuckets(partition, dataDir);
             log.info("start: " + partition + " -> " + dataDir);
-            rates.add("mecha.db.mdb.start");
         } catch (Exception ex) {
             ex.printStackTrace();
         }

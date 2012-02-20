@@ -50,7 +50,7 @@ public class SystemLog {
                         solrServer.add(docs);
                         solrServer.commit(false, false);
                     } else {
-                        Thread.sleep(10000);
+                        Thread.sleep(1000);
                     }
                 } catch (Exception ex) {
                     ex.printStackTrace();
