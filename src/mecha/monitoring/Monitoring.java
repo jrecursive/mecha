@@ -32,6 +32,8 @@ public class Monitoring {
     final private Thread wranglerThread;
     final private Thread monitorThread;
     
+    final private Rates rates;
+    
     private class SolrLogWrangler implements Runnable {
         public void run() {
             while(true) {
@@ -79,6 +81,7 @@ public class Monitoring {
     }
     
     public Monitoring() throws Exception {
+        rates = new Rates();
         metrics = new ConcurrentHashMap<String, Metric>();
         systemLog = new SystemLog();
         rateMonitorables = new HashSet<WeakReference<Rates>>();
@@ -97,6 +100,7 @@ public class Monitoring {
         systemLog.start();
         riakMonitor.start();
         mechaMonitor.start();
+        addMonitoredRates(rates);
     }
     
     /*
@@ -144,6 +148,8 @@ public class Monitoring {
                 systemLog.error(name, msg);
                 seq++;
             }
+            
+            rates.add("mecha.global.exceptions");
         } catch (Exception ex) {
             /*
              * I truly hope this catch block does not become

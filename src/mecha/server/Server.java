@@ -309,7 +309,6 @@ public class Server {
             }
             
         } catch (Exception ex) {
-            rates.add("mecha.server.exceptions");
             Mecha.getMonitoring().error("mecha.server", ex);
             ex.printStackTrace();
         }
