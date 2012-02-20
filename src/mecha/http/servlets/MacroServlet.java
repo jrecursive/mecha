@@ -134,22 +134,27 @@ public class MacroServlet extends HttpServlet {
             };
             
             MechaClient mechaClient = new MechaClient(host, port, password, mechaClientHandler);
-            ready.acquire();
-            mechaClient.exec("$execute " + params.toString());
-            long t_st = System.currentTimeMillis();
-            done.acquire();
-            long t_elapsed = System.currentTimeMillis() - t_st;
-            
-            Mecha.getMonitoring()
-                 .metric("mecha.http.macro." + macroName, 
-                         (double) t_elapsed);
-            
-            response.setContentType("text/plain");
-            response.setStatus(HttpServletResponse.SC_OK);
-            JSONObject result = new JSONObject();
-            result.put("elapsed", t_elapsed);
-            result.put("result", dataResult);
-            response.getWriter().println(result.toString(2));
+            try {
+                ready.acquire();
+                mechaClient.exec("$execute " + params.toString());
+                long t_st = System.currentTimeMillis();
+                done.acquire();
+                long t_elapsed = System.currentTimeMillis() - t_st;
+                
+                Mecha.getMonitoring()
+                     .metric("mecha.http.macro." + macroName, 
+                             (double) t_elapsed);
+                
+                response.setContentType("text/plain");
+                response.setStatus(HttpServletResponse.SC_OK);
+                JSONObject result = new JSONObject();
+                result.put("elapsed", t_elapsed);
+                result.put("result", dataResult);
+                response.getWriter().println(result.toString(2));
+            } finally {
+                mechaClient.exec("reset");
+                mechaClient.exec("$bye");
+            }
         } catch (Exception ex) {
             Mecha.getMonitoring().error("mecha.http.servlets.macro-servlet", ex);
             ex.printStackTrace();

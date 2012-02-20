@@ -101,7 +101,7 @@ public class MechaMonitor {
         /*
          * Channels
         */
-        m.metric("mecha.vm.channels.active-channels",
+        m.metric("mecha.vm.channels.active",
                  Mecha.getChannels().getChannelNames().size());
                  
         

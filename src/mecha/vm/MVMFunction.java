@@ -100,6 +100,8 @@ public abstract class MVMFunction {
     final private String dataChannelName;
     final private String controlChannelName;
     
+    private boolean isDone;
+    
     protected MVMFunction() {
         this.context = null;
         this.config = null;
@@ -113,6 +115,7 @@ public abstract class MVMFunction {
         scriptEngine = null;
         preprocessFunctions = null;
         postprocessFunctions = null;
+        isDone = true;
     }
     
     /*
@@ -128,6 +131,8 @@ public abstract class MVMFunction {
         this.context = context;
         this.config = config;
         this.refId = refId;
+        
+        isDone = false;
         
         incomingChannels = new HashSet<PubChannel>();
         outgoingChannels = new HashSet<PubChannel>();
@@ -417,7 +422,7 @@ public abstract class MVMFunction {
     }
     
     public void control(JSONObject msg) throws Exception {
-        rates.add("mecha.vm.mvmfunction.global.control-message");
+        rates.add("mecha.vm.mvm-function.global.control-message");
         
         /*
          * detect & intercept 'native' control messages:
@@ -451,7 +456,7 @@ public abstract class MVMFunction {
     }
     
     public void data(JSONObject msg) throws Exception {
-        rates.add("mecha.vm.mvmfunction.global.data-message");
+        rates.add("mecha.vm.mvm-function.global.data-message");
         if (msg.has("$") &&
             msg.getString("$").equals("done")) {
             done(msg);
@@ -476,7 +481,7 @@ public abstract class MVMFunction {
     }
     
     public void start(JSONObject msg) throws Exception {
-        rates.add("mecha.vm.mvmfunction.global.start-message");
+        rates.add("mecha.vm.mvm-function.global.start-message");
         try {
             onStartEvent(msg);
         } catch (Exception ex) {
@@ -490,7 +495,7 @@ public abstract class MVMFunction {
     }
     
     public void cancel(JSONObject msg) throws Exception {
-        rates.add("mecha.vm.mvmfunction.global.cancel-message");
+        rates.add("mecha.vm.mvm-function.global.cancel-message");
         try {
             onCancelEvent(msg);
         } catch (Exception ex) {
@@ -508,8 +513,12 @@ public abstract class MVMFunction {
     }
     
     public void done(JSONObject msg) throws Exception {
-        rates.add("mecha.vm.mvmfunction.global.done-message");
+        rates.add("mecha.vm.mvm-function.global.done-message");
         try {
+            if (isDone) {
+                throw new Exception("MVMFunction already called done!");
+            }
+            isDone = true;
             onDoneEvent(msg);
         } catch (Exception ex) {
             ex.printStackTrace();
@@ -517,6 +526,24 @@ public abstract class MVMFunction {
             getContext().reset();
         }
     }
+    
+    /*
+     * Channel cleanup.
+    */
+    protected void releaseChannels() throws Exception {
+        Set<String> releasableChannels = new HashSet<String>();
+        for (PubChannel channel : incomingChannels) {
+            releasableChannels.add(channel.getName());
+        }
+        for (PubChannel channel : outgoingChannels) {
+            releasableChannels.add(channel.getName());
+        }
+        for (String channelName : releasableChannels) {
+            Mecha.getChannels().destroyChannel(channelName);
+            Mecha.getChannels().destroyChannel(channelName + "-" + CONTROL_CHANNEL);
+        }
+    }
+
     
     /*
      * Place & route helpers

@@ -204,6 +204,7 @@ public class ClusterModule extends MVMModule {
             // FROM remote
             if (msg.has("$delegate-channel")) {
                 broadcastControlMessage(msg);
+                warpDelegate.close();
                 
             // TO remote
             } else {
@@ -231,6 +232,8 @@ public class ClusterModule extends MVMModule {
                 // FROM remote
                 log.info("<warp> Remote doneEvent <" + host + "> " + msg.toString());
                 broadcastDone(msg);
+                warpDelegate.close();
+                
             } else {
                 // TO remote
                 log.info("<warp> Forwarding doneEvent <" + host + "> " + msg.toString());

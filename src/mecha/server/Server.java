@@ -99,6 +99,11 @@ public class Server {
         connectionCount--;
         Client cl = clientMap.get(connection);
         if (cl == null) return;
+        try {
+            cl.getContext().reset();
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
         clientIdMap.remove(cl.getId());
         if (null != cl) {
             for (String chan: cl.getSubscriptions()) {

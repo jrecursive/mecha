@@ -108,6 +108,18 @@ public class MVMContext {
     }
     
     public void clearFunRefs() {
+        for (String refId : funRefs.keySet()) {
+            WeakReference<MVMFunction> funRef = funRefs.get(refId);
+            MVMFunction fun = funRef.get();
+            if (fun != null) {
+                try {
+                    fun.releaseChannels();
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                    Mecha.getMonitoring().error("mecha.mvm-context", ex);
+                }
+            }
+        }
         funRefs.clear();
     }
     
