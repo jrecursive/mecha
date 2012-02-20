@@ -447,6 +447,9 @@ public class SolrModule extends MVMModule {
                                         }
                                         batchCount++;
                                         if (count >= rowLimit) break;
+                                    } catch (java.lang.InterruptedException iex) {
+                                        return;
+
                                     } catch (Exception ex) {
                                         Mecha.getMonitoring().error("mecha.vm.bifs.solr-module", ex);
                                         ex.printStackTrace();
@@ -472,7 +475,8 @@ public class SolrModule extends MVMModule {
                             
                             doneMsg.put("elapsed", t_elapsed);
                             doneMsg.put("found", rawFound);
-
+                        } catch (java.lang.InterruptedException iex) {
+                            return;
                         } catch (Exception ex) {
                             Mecha.getMonitoring().error("mecha.vm.bifs.solr-module", ex);
                             log.info("iterator thread exception!");
