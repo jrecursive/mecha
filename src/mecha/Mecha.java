@@ -20,6 +20,8 @@ public class Mecha {
         Logger.getLogger(Mecha.class.getName());
 
     final public static JSONObject config;
+    final public static long startTime = 
+        System.currentTimeMillis();
     
     final private MVM mvm;
     final private MDB mdb;

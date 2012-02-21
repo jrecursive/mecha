@@ -287,7 +287,7 @@ public class MVM {
                 if (verb.equals("register")) {
                     nativeRegister(ctx, ast);
                 } else if (verb.equals("dump-vars")) {
-                    nativeDumpVars(ctx);
+                    ctx.send(nativeDumpVars(ctx));
                 } else if (verb.equals("reset")) {
                     nativeReset(ctx);
                 
@@ -513,7 +513,7 @@ public class MVM {
             context.put("_is_macro", "true");
             context.put("root", var);
             context.put("sink", sinkDelegateVar);
-            context.put("guid", Mecha.guid(Velocity.class));
+            context.put("guid", HashUtils.sha1(Mecha.guid(Velocity.class)));
             
             StringWriter w = new StringWriter();
             Velocity.evaluate(context, w, "#" + verb, blockStr);
@@ -703,9 +703,7 @@ public class MVM {
     /*
      * Dump context vars.
     */
-    private void nativeDumpVars(MVMContext ctx) throws Exception {
-        //log.info("nativeVars");
-        
+    public JSONObject nativeDumpVars(MVMContext ctx) throws Exception {
         /*
          * Function assignments.
         */
@@ -763,9 +761,7 @@ public class MVM {
         result.put("global-blocks", glBlocks);
         result.put("flow", flow);
         
-        log.info(result.toString(2));
-        ctx.send(result);
-        
+        return result;
     }
     
     /*

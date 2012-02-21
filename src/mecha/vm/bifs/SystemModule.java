@@ -24,6 +24,121 @@ public class SystemModule extends MVMModule {
     public void moduleUnload() throws Exception {
     }
     
+    public class Repeater extends MVMFunction {
+        final private boolean splitData;
+        final private boolean splitControl;
+        final private boolean splitStart;
+        final private boolean splitDone;
+        final private List<String> destinations;
+        
+        public Repeater(String refId, MVMContext ctx, JSONObject config) throws Exception {
+            super(refId, ctx, config);
+            if (config.has("data") &&
+                config.<String>get("data").equals("true")) {
+                splitData = true;
+            } else {
+                splitData = false;
+            }
+            if (config.has("control") &&
+                config.<String>get("control").equals("true")) {
+                splitControl = true;
+            } else {
+                splitControl = false;
+            }
+            if (config.has("start") &&
+                config.<String>get("start").equals("true")) {
+                splitStart = true;
+            } else {
+                splitStart = false;
+            }
+            if (config.has("done") &&
+                config.<String>get("control").equals("true")) {
+                splitDone = true;
+            } else {
+                splitDone = false;
+            }
+            destinations = config.<List>get("to");
+        }
+        
+        public void onControlMessage(JSONObject msg) throws Exception {
+            log.info("Control message: " + msg.toString(2));
+            if (splitControl) repeatControlMessage(msg);
+        }
+
+        public void onDataMessage(JSONObject msg) throws Exception {
+            log.info("Data message: " + msg.toString(2));
+            if (splitData) repeatDataMessage(msg);
+        }
+        
+        public void onStartEvent(JSONObject msg) throws Exception {
+            log.info("onStartEvent: " + msg.toString(2));
+            if (splitStart) repeatControlMessage(msg);
+        }
+        
+        public void onDoneEvent(JSONObject msg) throws Exception {
+            log.info("onDoneEvent: " + msg.toString(2));
+            if (splitDone) repeatControlMessage(msg);
+        }
+        
+        private void repeatControlMessage(JSONObject msg) throws Exception {
+            for(String dest : destinations) {
+                Mecha.getMVM().nativeControlMessage(getContext(), dest, msg);
+            }
+        }
+        
+        private void repeatDataMessage(JSONObject msg) throws Exception {
+            for(String dest : destinations) {
+                Mecha.getMVM().nativeDataMessage(getContext(), dest, msg);
+            }
+        }
+    }
+    
+    public class Splitter extends MVMFunction {
+        final private boolean splitData;
+        final private boolean splitControl;
+        
+        public Splitter(String refId, MVMContext ctx, JSONObject config) throws Exception {
+            super(refId, ctx, config);
+            if (config.has("data") &&
+                config.<String>get("data").equals("true")) {
+                splitData = true;
+            } else {
+                splitData = false;
+            }
+            if (config.has("control") &&
+                config.<String>get("control").equals("true")) {
+                splitControl = true;
+            } else {
+                splitControl = false;
+            }            
+        }
+        
+        public void onControlMessage(JSONObject msg) throws Exception {
+            log.info("Control message: " + msg.toString(2));
+            if (splitControl) broadcastControlMessage(msg);
+        }
+
+        public void onDataMessage(JSONObject msg) throws Exception {
+            log.info("Data message: " + msg.toString(2));
+            if (splitData) broadcastDataMessage(msg);
+        }
+        
+        public void onStartEvent(JSONObject msg) throws Exception {
+            log.info("onStartEvent: " + msg.toString(2));
+            if (splitControl) broadcastControlMessage(msg);
+        }
+        
+        public void onCancelEvent(JSONObject msg) throws Exception {
+            log.info("onCancelEvent: " + msg.toString(2));
+            if (splitControl) broadcastControlMessage(msg);
+        }
+        
+        public void onDoneEvent(JSONObject msg) throws Exception {
+            log.info("onDoneEvent: " + msg.toString(2));
+            if (splitControl) broadcastControlMessage(msg);
+        }
+    }
+    
     public class Invoke extends MVMFunction {
         final private List<String> scriptBlock;
         final private String scriptBlockName;

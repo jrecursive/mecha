@@ -42,16 +42,8 @@ public class MacroServlet extends HttpServlet {
             System.out.println("request.getQueryString = " + request.getQueryString());
             System.out.println("request.getParameterMap = " + request.getParameterMap());
             
-            final JSONObject params = new JSONObject();
-            Map<String, String[]> requestParamMap = request.getParameterMap();
-            for(String k : requestParamMap.keySet()) {
-                String[] values = requestParamMap.get(k);
-                if (values.length == 1) {
-                    params.put(k, values[0]);
-                } else {
-                    params.put(k, values);
-                }
-            }
+            final JSONObject params = 
+                parseParameterMap(request.getParameterMap());
             
             String[] parts = request.getPathInfo().substring(1).split("/");            
             String macroName;
@@ -77,8 +69,19 @@ public class MacroServlet extends HttpServlet {
             final JSONArray dataResult = new JSONArray();
             final Semaphore ready = new Semaphore(1,true);
             final Semaphore done = new Semaphore(1,true);
+            
+            
+            final boolean oneShotResult;
+            if (params.has("_describe") &&
+                params.<String>get("_describe").equals("true")) {
+                oneShotResult = true;
+            } else {
+                oneShotResult = false;
+            }
+            
             ready.acquire();
             done.acquire();
+            
             final MechaClientHandler mechaClientHandler = new MechaClientHandler() {
                 public void onSystemMessage(JSONObject msg) throws Exception {
                     log.info("<system> " + msg.toString(2));
@@ -112,6 +115,10 @@ public class MacroServlet extends HttpServlet {
                         msg1.put(k, msg.get(k));
                     }
                     dataResult.put(msg1);
+                    if (oneShotResult) {
+                        done.release();
+                        getTextClient().send("$bye");
+                    }
                 }
     
                 public void onDoneEvent(String channel, JSONObject msg) throws Exception {
@@ -136,7 +143,14 @@ public class MacroServlet extends HttpServlet {
             MechaClient mechaClient = new MechaClient(host, port, password, mechaClientHandler);
             try {
                 ready.acquire();
-                mechaClient.exec("$execute " + params.toString());
+                if (params.has("_describe") &&
+                    params.<String>get("_describe").equals("true")) {
+                    mechaClient.exec("$assign _ast " + params.toString());
+                    mechaClient.exec("dump-vars");
+                } else {
+                    mechaClient.exec("$execute " + params.toString());
+                }
+                
                 long t_st = System.currentTimeMillis();
                 done.acquire();
                 long t_elapsed = System.currentTimeMillis() - t_st;
@@ -166,5 +180,40 @@ public class MacroServlet extends HttpServlet {
         response.setStatus(HttpServletResponse.SC_OK);
         response.getWriter().println("<h1>" + errorMsg + "</h1>");
     }
+    
+    private JSONObject parseParameterMap(Map<String, String[]> requestParamMap) throws Exception {
+        JSONObject obj = new JSONObject();
+        for(String k : requestParamMap.keySet()) {
+            String[] keyParts = k.split("\\.");
+            if (keyParts.length == 1) {
+                String[] values = requestParamMap.get(k);
+                if (values.length == 1) {
+                    obj.put(k, values[0]);
+                } else {
+                    obj.put(k, values);
+                }
+            } else {
+                JSONObject dest = obj;
+                String lastPart = keyParts[keyParts.length-1];
+                for(int i=0; i<keyParts.length-1; i++) {
+                    String keyPart = keyParts[i];
+                    if (!dest.has(keyPart)) {
+                        dest.put(keyPart, new JSONObject());
+                        dest = dest.getJSONObject(keyPart);
+                    } else {
+                        dest = dest.getJSONObject(keyPart);
+                    }
+                }
+                String[] values = requestParamMap.get(k);
+                if (values.length == 1) {
+                    dest.put(lastPart, values[0]);
+                } else {
+                    dest.put(lastPart, values);
+                }
+            }
+        }
+        return obj;
+    }
+
 }
 

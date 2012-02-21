@@ -38,7 +38,7 @@ public class Monitoring {
         public void run() {
             while(true) {
                 try {
-                    //tameSolrLogging();
+                    tameSolrLogging();
                     Thread.sleep(10000);
                 } catch (Exception ex) {
                     ex.printStackTrace();

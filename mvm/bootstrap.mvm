@@ -13,6 +13,7 @@ register namespace:$ module-class:mecha.vm.bifs.ClusterModule verbs:(with-covera
 register namespace:$ module-class:mecha.vm.bifs.StreamModule verbs:(vector-sequencer:VectorSequencer eat:Eat limit:Limit)
 register namespace:$ module-class:mecha.vm.bifs.RelationalModule verbs:(sort-merge-equijoin:SortMergeEquiJoin)
 register namespace:$ module-class:mecha.vm.bifs.IteratorModule verbs:(buffered-iterator:BufferedIterator)
+register namespace:$ module-class:mecha.vm.bifs.SystemModule verbs:(splitter:Splitter repeater:Repeater)
 
 /////////////
 // globals //
@@ -191,6 +192,26 @@ ${connecting_vertex} -> ${guid}-limit
 
 ${connecting_vertex} -> ${sink}
 #end select
+
+
+//
+// join
+// 
+#define-global join
+${root} = (repeater start:true to:(${guid}-left ${guid}-right ${guid}-join))
+${guid}-left = (#${args.left.type} #foreach($entry in ${args.left.params.entrySet()}) ${entry.getKey()}:"${entry.getValue()}" #end sort-field:${args.left.join-field} sort-dir:asc)
+${guid}-right = (#${args.right.type} #foreach($entry in ${args.right.params.entrySet()}) ${entry.getKey()}:"${entry.getValue()}" #end sort-field:${args.right.join-field} sort-dir:asc)
+${guid}-left-iter = (buffered-iterator)
+${guid}-right-iter = (buffered-iterator)
+${guid}-join = (sort-merge-equijoin left:(input:${guid}-left-iter field:${args.left.join-field}) right:(input:${guid}-right-iter field:${args.right.join-field}))
+${guid}-projection = (project fields:(#foreach($val in ${args.project}) $val #end))
+${guid}-left -> ${guid}-left-iter
+${guid}-right -> ${guid}-right-iter
+${guid}-left-iter -> ${guid}-join
+${guid}-right-iter -> ${guid}-join
+${guid}-join -> ${guid}-projection
+${guid}-projection -> ${sink}
+#end join
 
 //
 // cluster-wide commit

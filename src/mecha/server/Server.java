@@ -209,7 +209,7 @@ public class Server {
                 JSONObject ast = new JSONObject(astStr);
                 //log.info("mvm: $execute: " + cl + "/" + cl.getContext() + ": " + ast.toString());
                 response = Mecha.getMVM().execute(cl.getContext(), ast);
-            
+                        
             /*
              * WarpDelegate "shortcut" to assign a vertex via JSON AST.
             */
