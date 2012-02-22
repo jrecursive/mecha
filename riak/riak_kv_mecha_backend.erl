@@ -102,8 +102,6 @@ start(Partition, Config) ->
     put(mecha_node, config_value(mecha_node, Config, 'mecha_ji@127.0.0.1')),
     put(p, Partition),
     
-    wait_for_mecha_node(get(mecha_node)),
-    
     io:format("~p: start(~p) -> ~p~n", [?MODULE, Partition, get(mecha_node)]),
     case call_mecha(kv_store, start, [Partition, self()]) of
         ok -> {ok, #state { mecha_node=get(mecha_node), 
@@ -235,6 +233,7 @@ callback(_State, _Ref, _Msg) ->
 wait_for_mecha_node(MechaNode) ->
     case net_adm:ping(MechaNode) of
         pong -> 
+            io:format("mecha node responding ok!~n"),
             ok;
         pang -> 
             io:format("wait_for_mecha_node: ~p down, retrying...~n",
@@ -250,13 +249,20 @@ cast_mecha(Subsystem, Cmd, Args) ->
 
 call_mecha(Subsystem, Cmd, Args) ->
     Ref = cast_mecha(Subsystem, Cmd, Args),
-    receive {Ref, Result} -> Result end.
+    receive 
+        {Ref, Result} -> Result
+    after 60000 ->
+        io:format("call_mecha: error:~n to:~p Subsystem:~p Cmd:~p Args:~p",
+                  [get(mecha_node), Subsystem, Cmd, Args]),
+        io:format("re-establishing link and retrying request...~n"),
+        wait_for_mecha_node(get(mecha_node)),
+        call_mecha(Subsystem, Cmd, Args)
+    end.
 
 %%
 %% stream_processor is spawned for fold, etc. when the
 %%  java side streams results back for processing.  Not
-%%  ideal but good enough for these purposes.  The overall
-%%  amount of "actual riak_kv data" is very low.
+%%  ideal but good enough for 0.1.
 %%
 
 stream_processor(Config, fold_buckets, Fun0, Acc) ->
