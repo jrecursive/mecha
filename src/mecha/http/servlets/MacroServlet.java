@@ -31,22 +31,11 @@ public class MacroServlet extends HttpServlet {
         throws ServletException, IOException {
         try {
             response.setCharacterEncoding("UTF-8");
-            
-            log.info(">> " + request);
-            log.info(">> " + request.getPathInfo());
-            log.info(">> " + request.getQueryString());
-            log.info(">> " + request.getServletPath());
-            log.info(">> " + request.getParameterMap());
-            
-            System.out.println("request.getPathInfo = " + request.getPathInfo());
-            System.out.println("request.getQueryString = " + request.getQueryString());
-            System.out.println("request.getParameterMap = " + request.getParameterMap());
-            
             final JSONObject params = 
                 parseParameterMap(request.getParameterMap());
-            
             String[] parts = request.getPathInfo().substring(1).split("/");            
             String macroName;
+
             if (parts.length == 1) {
                 macroName = parts[0];
             } else if (parts.length == 2) {
@@ -82,23 +71,25 @@ public class MacroServlet extends HttpServlet {
             ready.acquire();
             done.acquire();
             
+            final List remoteExceptions = new ArrayList();
+            final List<Exception> localExceptions = new ArrayList<Exception>();
             final MechaClientHandler mechaClientHandler = new MechaClientHandler() {
                 public void onSystemMessage(JSONObject msg) throws Exception {
                     log.info("<system> " + msg.toString(2));
                 }
                 
                 public void onOpen() throws Exception {
-                    //log.info("<connected>");
                     ready.release();
                 }
     
                 public void onClose() throws Exception {
-                    //log.info("<disconnected>");
                     done.release();
                 }
     
                 public void onError(Exception ex) {
-                    //log.info("<error> " + ex.toString());
+                    Mecha.getMonitoring()
+                         .error("mecha.http.servlets.macro-servlet.remote-exceptions", ex);
+                    localExceptions.add(ex);
                     done.release();
                     ex.printStackTrace();
                 }
@@ -108,7 +99,6 @@ public class MacroServlet extends HttpServlet {
                 }
     
                 public void onDataMessage(String channel, JSONObject msg) throws Exception {
-                    //log.info("<data: " + channel + "> " + msg.toString(2));
                     JSONObject msg1 = new JSONObject();
                     for(String k : JSONObject.getNames(msg)) {
                         if (k.startsWith("$")) continue;
@@ -131,12 +121,22 @@ public class MacroServlet extends HttpServlet {
                     log.info("<control: " + channel + "> " + msg.toString(2));
                 }
                 
-                public void onOk(String msg) throws Exception {
-                    //log.info("<ok> " + msg);
-                }
+                public void onOk(String msg) throws Exception { }
                 
                 public void onInfo(String msg) throws Exception {
-                    log.info("<info> " + msg);
+                    if (msg.equals("OK")) return;
+                    log.info("onInfo: " + msg);
+                    JSONObject exceptionData = new JSONObject();
+                    try {
+                        exceptionData = new JSONObject(msg);
+                        remoteExceptions.add(exceptionData);
+                        done.release();
+                    } catch (Exception ex) {
+                        exceptionData = new JSONObject();
+                        exceptionData.put("error", msg);
+                        remoteExceptions.add(exceptionData);
+                        done.release();
+                    }
                 }
             };
             
@@ -154,31 +154,49 @@ public class MacroServlet extends HttpServlet {
                 long t_st = System.currentTimeMillis();
                 done.acquire();
                 long t_elapsed = System.currentTimeMillis() - t_st;
-                
                 Mecha.getMonitoring()
                      .metric("mecha.http.macro." + macroName, 
                              (double) t_elapsed);
+                if (remoteExceptions.size() > 0) {
+                    JSONArray exceptions = new JSONArray(remoteExceptions);
+                    JSONObject logData = new JSONObject();
+                    logData.put("params_obj_s", params);
+                    logData.put("exceptions_arr_s", exceptions);
+                    Mecha.getMonitoring()
+                         .logData("mecha.http.servlets.macro-servlet.remote-exception", 
+                                  "macro servlet: remote exceptions", 
+                                  logData);
+                    writeError(response, logData.toString(2));
+                    return;
+                }
+                if (localExceptions.size() > 0) {
+                    for(Exception ex: localExceptions) {
+                        throw ex;
+                    }
+                }
                 
-                response.setContentType("text/plain");
-                response.setStatus(HttpServletResponse.SC_OK);
                 JSONObject result = new JSONObject();
                 result.put("elapsed", t_elapsed);
                 result.put("result", dataResult);
+                response.setContentType("text/plain");
+                response.setStatus(HttpServletResponse.SC_OK);
                 response.getWriter().println(result.toString(2));
             } finally {
                 mechaClient.exec("reset");
                 mechaClient.exec("$bye");
             }
         } catch (Exception ex) {
-            Mecha.getMonitoring().error("mecha.http.servlets.macro-servlet", ex);
+            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            response.getWriter().println(ex.toString());
             ex.printStackTrace();
+            Mecha.getMonitoring().error("mecha.http.servlets.macro-servlet", ex);
         }
     }
     
     private void writeError(HttpServletResponse response, String errorMsg) throws Exception {
-        response.setContentType("text/html");
-        response.setStatus(HttpServletResponse.SC_OK);
-        response.getWriter().println("<h1>" + errorMsg + "</h1>");
+        response.setContentType("text/plain");
+        response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+        response.getWriter().println(errorMsg);
     }
     
     private JSONObject parseParameterMap(Map<String, String[]> requestParamMap) throws Exception {
