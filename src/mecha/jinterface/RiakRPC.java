@@ -17,8 +17,10 @@ public class RiakRPC {
     private OtpRPC otpRPC;
     final private ReentrantLock rpcLock = 
         new ReentrantLock();
+    private OtpProcessManager otpMgr;
 
     public RiakRPC() throws Exception {
+        otpMgr = null;
         otpRPC = getOtpRPC();
     }
     
@@ -34,7 +36,11 @@ public class RiakRPC {
         
         while(true) {
             try {
-                OtpProcessManager otpMgr = 
+                if (otpMgr != null) {
+                    log.info("killing existing otp process manager...");
+                    otpMgr.shutdown();
+                }
+                otpMgr = 
                     new OtpProcessManager(temporaryOtpNodename, 
                                           Mecha.getConfig().getString("riak-cookie"));
                 OtpRPC otpRPC = 
@@ -77,6 +83,7 @@ public class RiakRPC {
                     }
                     Mecha.getMonitoring().error("mecha.riak-connector", ex);
                     log.info("Riak link broken, restarting...");
+                    Mecha.riakDown();
                     otpRPC = getOtpRPC();
                     log.info("Riak link restored.");
                 }

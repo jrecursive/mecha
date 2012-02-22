@@ -22,6 +22,7 @@ public class SolrEventHandlers implements SolrEventListener {
     
     public void postCommit() {
         try {
+            Mecha.getMDB().commit();
             Mecha.getMonitoring().log("mecha.db.solr-event-handlers.post-commit", 
                                       "solr post commit hook", log);
             Mecha.getEventLogManager().recycle();

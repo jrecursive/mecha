@@ -119,6 +119,8 @@ public class MDB {
     }
     
     public void shutdown() throws Exception {
+        log.info("forcing MDB commit for shutdown...");
+        commit();
         for(String partition : getActivePartitions()) {
             System.out.println("stopping partition " + partition);
             stop(partition);
