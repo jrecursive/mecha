@@ -252,7 +252,7 @@ call_mecha(Subsystem, Cmd, Args) ->
     receive 
         {Ref, Result} -> Result
     after 60000 ->
-        io:format("call_mecha: error:~n to:~p Subsystem:~p Cmd:~p Args:~p",
+        io:format("call_mecha: error:~n to:~p Subsystem:~p Cmd:~p Args:~p~n",
                   [get(mecha_node), Subsystem, Cmd, Args]),
         io:format("re-establishing link and retrying request...~n"),
         wait_for_mecha_node(get(mecha_node)),
