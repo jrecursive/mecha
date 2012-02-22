@@ -307,7 +307,7 @@ stream_processor(Config, fold_objects, Fun0, Acc) ->
 config_value(Key, Config, Default) ->
     case proplists:get_value(Key, Config) of
         undefined ->
-            app_helper:get_env(bitcask, Key, Default);
+            app_helper:get_env(riak_kv, Key, Default);
         Value ->
             Value
     end.

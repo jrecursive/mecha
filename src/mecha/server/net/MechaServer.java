@@ -7,9 +7,11 @@ import org.jboss.netty.bootstrap.ServerBootstrap;
 import org.jboss.netty.channel.socket.nio.NioServerSocketChannelFactory;
 
 public class MechaServer implements Runnable {
+    private final String addr;
     private final int port;
 
-    public MechaServer(int port) {
+    public MechaServer(String addr, int port) {
+        this.addr = addr;
         this.port = port;
     }
 
@@ -24,6 +26,6 @@ public class MechaServer implements Runnable {
         bootstrap.setOption("writeBufferLowWaterMark", 32 * 1024);
         bootstrap.setOption("writeBufferHighWaterMark", 64 * 1024);
         bootstrap.setPipelineFactory(new MechaServerPipelineFactory());
-        bootstrap.bind(new InetSocketAddress(port));
+        bootstrap.bind(new InetSocketAddress(addr, port));
     }
 }

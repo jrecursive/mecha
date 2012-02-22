@@ -47,7 +47,7 @@ public class ClusterModule extends MVMModule {
             public WarpDelegate(String host, Warp fun) throws Exception {
                 this.host = host;
                 final String password = Mecha.getConfig().getString("password");
-                final int port = Mecha.getConfig().getInt("client-port");
+                final int port = Mecha.getConfig().getInt("server-port");
                 ready = new Semaphore(1,true);
                 ready.acquire();
                 localFunRefId = fun.getDataChannelName();

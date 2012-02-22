@@ -95,10 +95,9 @@ public class MVM {
             TextFile.getLines("./mvm/bootstrap.mvm");
         final String host = 
             Mecha.getConfig()
-                 .getJSONObject("riak-config")
-                 .getString("pb-ip");
+                 .<String>get("server-addr");
         final String password = Mecha.getConfig().getString("password");
-        final int port = Mecha.getConfig().getInt("client-port");
+        final int port = Mecha.getConfig().getInt("server-port");
         final AtomicBoolean ready =
             new AtomicBoolean(false);
         final AtomicBoolean bootstrapped =

@@ -48,8 +48,9 @@ public class Server {
         clientMap = new ConcurrentHashMap<ChannelHandlerContext, Client>();
         clientIdMap = new ConcurrentHashMap<String, Client>();
         
-        int port = Mecha.getConfig().getInt("client-port");
-        netServerThread = new Thread(new MechaServer(port));
+        String addr = Mecha.getConfig().<String>get("server-addr");
+        int port = Mecha.getConfig().getInt("server-port");
+        netServerThread = new Thread(new MechaServer(addr, port));
         serverActive = new AtomicBoolean(false);
         rates = new Rates();
     }

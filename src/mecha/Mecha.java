@@ -275,8 +275,7 @@ public class Mecha {
     */
     public static String guid(String guidType) throws Exception {
         String nodeId = Mecha.getConfig()
-                             .getJSONObject("riak-config")
-                             .getString("pb-ip");
+                             .getString("server-addr");
         return nodeId + GUID_SEP + UUID.randomUUID() + GUID_SEP + guidType;
     }
     
@@ -306,7 +305,7 @@ public class Mecha {
     }
     
     public static String getHost() throws Exception {
-        return Mecha.getConfig().getJSONObject("riak-config").getString("pb-ip");
+        return Mecha.getConfig().getString("server-addr");
     }
     
     public static String getLocalRiakURL() throws Exception {

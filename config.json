@@ -61,14 +61,17 @@
     "solr-cores": [ "index", "tmp", "system" ],
     
     ##
-    ## client-port: socket client listen port
+    ## server-addr: interface to bind server to
+    ## server-port: socket client listen port
     ##
-    "client-port": 10102,
+    "server-addr": "127.0.0.1",
+    "server-port": 10102,
     
     ##
     ## http-port: http client listen port
     ## www-root: directory /* files are served from
     ##
+    "http-addr": "75.125.240.202",
     "http-port": 10103,
     "www-root": "./www",
     

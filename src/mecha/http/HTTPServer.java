@@ -1,5 +1,6 @@
 package mecha.http;
 
+import java.net.*;
 import java.util.logging.*;
 import javax.servlet.http.HttpServlet;
 
@@ -16,6 +17,7 @@ public class HTTPServer {
         Logger.getLogger(HTTPServer.class.getName());
 
     final private int port;
+    final private String addr;
     final private String wwwRoot;
     
     final private Server server;
@@ -23,9 +25,10 @@ public class HTTPServer {
 
     public HTTPServer() throws Exception {
         port = Mecha.getConfig().getInt("http-port");
+        addr = Mecha.getConfig().getString("http-addr");
         wwwRoot = Mecha.getConfig().getString("www-root");
         
-        server = new Server(port);
+        server = new Server(new InetSocketAddress(addr, port));
         context = new ServletContextHandler(ServletContextHandler.NO_SECURITY);
         context.setContextPath("/");
         server.setHandler(context);
