@@ -229,13 +229,11 @@ public class ClusterModule extends MVMModule {
         public void onDoneEvent(JSONObject msg) throws Exception {
             if (msg.has("$delegate-channel")) {
                 // FROM remote
-                log.info("<warp> Remote doneEvent <" + host + "> " + msg.toString());
                 broadcastDone(msg);
                 warpDelegate.close();
                 
             } else {
                 // TO remote
-                log.info("<warp> Forwarding doneEvent <" + host + "> " + msg.toString());
                 warpDelegate.send("$data " + remoteVar + " " + msg.toString());
             }
         }
@@ -705,7 +703,6 @@ public class ClusterModule extends MVMModule {
         */
         public void onCancelEvent(JSONObject msg) throws Exception {
             for(String proxyVar : proxyVars) {
-                log.info(proxyVar + ": " + msg.toString());
                 Mecha.getMVM().nativeControlMessage(getContext(), proxyVar, msg);
             }
         }

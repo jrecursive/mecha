@@ -53,12 +53,9 @@ public class MacroServlet extends HttpServlet {
             final String password = Mecha.getConfig().getString("password");
             final int port = Mecha.getConfig().getInt("client-port");
             
-            log.info("params: " + params.toString(2));
-            
             final JSONArray dataResult = new JSONArray();
             final Semaphore ready = new Semaphore(1,true);
             final Semaphore done = new Semaphore(1,true);
-            
             
             final boolean oneShotResult;
             if (params.has("_describe") &&
@@ -112,7 +109,6 @@ public class MacroServlet extends HttpServlet {
                 }
     
                 public void onDoneEvent(String channel, JSONObject msg) throws Exception {
-                    log.info("<done: " + channel + "> " + msg.toString(2));
                     done.release();
                     getTextClient().send("$bye");
                 }
@@ -145,6 +141,7 @@ public class MacroServlet extends HttpServlet {
                 ready.acquire();
                 if (params.has("_describe") &&
                     params.<String>get("_describe").equals("true")) {
+                    dataResult.put(params);
                     mechaClient.exec("$assign _ast " + params.toString());
                     mechaClient.exec("dump-vars");
                 } else {
