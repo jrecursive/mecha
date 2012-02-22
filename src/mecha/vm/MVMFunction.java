@@ -29,6 +29,8 @@ public abstract class MVMFunction {
     final private ScriptEngine scriptEngine;
     final private List<String> preprocessFunctions;
     final private List<String> postprocessFunctions;
+    final private Map<String, JSONObject> preprocessConfig;
+    final private Map<String, JSONObject> postprocessConfig;
         
     /*
      * Field in universal MVMFunction message template that
@@ -114,7 +116,9 @@ public abstract class MVMFunction {
         controlChannelCallback = null;
         scriptEngine = null;
         preprocessFunctions = null;
+        preprocessConfig = null;
         postprocessFunctions = null;
+        postprocessConfig = null;
         isDone = true;
     }
     
@@ -127,15 +131,12 @@ public abstract class MVMFunction {
     public MVMFunction(String refId,
                        MVMContext context, 
                        JSONObject config) throws Exception {
-        
+        incomingChannels = new HashSet<PubChannel>();
+        outgoingChannels = new HashSet<PubChannel>();
         this.context = context;
         this.config = config;
         this.refId = refId;
-        
         isDone = false;
-        
-        incomingChannels = new HashSet<PubChannel>();
-        outgoingChannels = new HashSet<PubChannel>();
         
         dataChannelName = refId;
         dataChannelCallback = new Callback<JSONObject>() {
@@ -165,81 +166,123 @@ public abstract class MVMFunction {
          * Scripted pre- and post-processors
         */
         preprocessFunctions = new ArrayList<String>();
+        preprocessConfig = new HashMap<String, JSONObject>();
+        
         postprocessFunctions = new ArrayList<String>();
+        postprocessConfig = new HashMap<String, JSONObject>();
+        
         if (config.has("$preprocess") ||
             config.has("$postprocess")) {
             scriptEngine = new ScriptEngine("js");
-            scriptEngine.bind("$log", log);
+            scriptEngine.bind("$log", 
+                              Logger.getLogger(
+                                config.<String>get("$") + "-" + 
+                                "data-processor"));
+            scriptEngine.bind("$mecha", Mecha.get());
+            scriptEngine.bind("$enclosing_function", getConfig());
+            
             if (config.has("$preprocess")) {
-                if (config.get("$preprocess") instanceof ArrayList) {
-                    JSONArray preprocessorNames = config.getJSONArray("$preprocess");
-                    for(int i=0; i<preprocessorNames.length(); i++) {
-                        preprocessFunctions.add(preprocessorNames.getString(i));
-                    }
-                } else if (config.get("$preprocess") instanceof String) {
-                    preprocessFunctions.add(config.getString("$preprocess"));
-                }
+                interpretPrePostConfig(preprocessFunctions, 
+                                       preprocessConfig, 
+                                       config,
+                                       "$preprocess");
             }
             if (config.has("$postprocess")) {
-                if (config.get("$postprocess") instanceof ArrayList) {
-                    JSONArray postprocessorNames = config.getJSONArray("$postprocess");
-                    for(int i=0; i<postprocessorNames.length(); i++) {
-                        postprocessFunctions.add(postprocessorNames.getString(i));
-                    }
-                } else if (config.get("$postprocess") instanceof String) {
-                    postprocessFunctions.add(config.getString("$postprocess"));
-                }
+                interpretPrePostConfig(postprocessFunctions, 
+                                       postprocessConfig, 
+                                       config,
+                                       "$postprocess");
             }
-            
-            if (preprocessFunctions.size() > 0) {
-                StringBuffer invocationStr = new StringBuffer();
-                for(String processorName : preprocessFunctions) {
-                    StringBuffer codeBlock = new StringBuffer();
-                    for(String line : context.getBlock(processorName)) {
-                        codeBlock.append(line);
-                        codeBlock.append("\n");
-                    }
-                    log.info("eval/preprocessor/" + processorName);
-                    scriptEngine.eval(codeBlock.toString());
-                    invocationStr.append(processorName);
-                    invocationStr.append("(");
-                }
-                invocationStr.append("obj");
-                for(int i=0; i<preprocessFunctions.size(); i++) {
-                    invocationStr.append(")");
-                }
-                invocationStr.append(";");
-                scriptEngine.eval("var $preprocess = function(obj) { return " + invocationStr.toString() + " };\n");
-                log.info("$preprocess registered");
-            }
-            
-            if (postprocessFunctions.size() > 0) {
-                StringBuffer invocationStr = new StringBuffer();
-                for(String processorName : postprocessFunctions) {
-                    StringBuffer codeBlock = new StringBuffer();
-                    for(String line : context.getBlock(processorName)) {
-                        codeBlock.append(line);
-                        codeBlock.append("\n");
-                    }
-                    log.info("eval/postprocessor/" + processorName);
-                    scriptEngine.eval(codeBlock.toString());
-                    invocationStr.append(processorName);
-                    invocationStr.append("(");
-                }
-                invocationStr.append("obj");
-                for(int i=0; i<postprocessFunctions.size(); i++) {
-                    invocationStr.append(")");
-                }
-                invocationStr.append(";");
-                scriptEngine.eval("var $postprocess = function(obj) { return " + invocationStr.toString() + " };\n");
-                log.info("$postprocess registered");
-            }
-            
         } else {
             scriptEngine = null;
         }
-        
+
         onCreate(refId, context, config);
+    }
+    
+    private void interpretPrePostConfig(List<String> processorFunctionList, 
+                                        Map<String, JSONObject> processorFunctionConfig,
+                                        JSONObject config, 
+                                        String field) throws Exception {
+        // list of preprocessors without arguments, e.g,. (a b c d)
+        if (config.get(field) instanceof ArrayList) {
+            JSONArray processorNames = config.getJSONArray(field);
+            for(int i=0; i<processorNames.length(); i++) {
+                processorFunctionConfig.put(processorNames.getString(i), new JSONObject());
+                processorFunctionList.add(processorNames.getString(i));
+            }
+        
+        // a single preprocessor without arguments, e.g., (a)
+        } else if (config.get(field) instanceof String) {
+            processorFunctionConfig.put(config.getString(field), new JSONObject());
+            processorFunctionList.add(config.getString(field));
+        
+        // one or more processors with a potential mix of no arguments &
+        //  specified arguments.
+        } else if (config.get(field) instanceof Map) {
+            JSONObject processorConfig = config.getJSONObject(field);
+            for(String f : JSONObject.getNames(processorConfig)) {
+                if (f.equals("$")) {
+                    if (processorConfig.get("$") instanceof String) {
+                        processorFunctionConfig.put(processorConfig.<String>get("$"), 
+                                                    new JSONObject());
+                        processorFunctionList.add(processorConfig.<String>get("$"));
+                    
+                    // can only be a list otherwise
+                    } else {
+                        for(String processorName : processorConfig.<List<String>>get("$")) {
+                            processorFunctionConfig.put(processorName, new JSONObject());
+                            processorFunctionList.add(processorName);
+                        }
+                    }
+                
+                // processors with specified configuration objects
+                } else {
+                    processorFunctionConfig.put(f, processorConfig.getJSONObject(f));
+                    processorFunctionList.add(f);
+                }
+            }
+        }
+        
+        /* 
+         * set up script engine with config object bindings, 
+         *  processors (as functions) and create & bind the
+         *  composed function of all processors.
+        */
+        if (processorFunctionList.size() > 0) {
+            StringBuffer invocationStr = new StringBuffer();
+            
+            /*
+             * pre-bind config in case pre-function definition
+             *  code utilizes function config options.
+            */
+            for(String processorName : processorFunctionList) {
+                scriptEngine.bind(processorName + "Config",
+                                  processorFunctionConfig.get(processorName));
+            }
+            for(String processorName : processorFunctionList) {
+                StringBuffer codeBlock = new StringBuffer();
+                for(String line : context.getBlock(processorName)) {
+                    codeBlock.append(line);
+                    codeBlock.append("\n");
+                }
+                log.info("processor setup: eval/" + field + "/" + processorName);
+                scriptEngine.eval(codeBlock.toString());
+                invocationStr.append(processorName);
+                invocationStr.append("(");
+            }
+            invocationStr.append("obj");
+            for(int i=0; i<processorFunctionList.size(); i++) {
+                invocationStr.append(")");
+            }
+            invocationStr.append(";");
+            scriptEngine.eval(
+                "var " + field + " = " +
+                    "function(obj) { " +
+                        "return " + invocationStr.toString() + 
+                    " };\n");
+            log.info(field + " registered");
+        }
     }
     
     public MVMContext getContext() {
