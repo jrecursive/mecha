@@ -104,7 +104,6 @@ public class RiakMonitor {
                     Mecha.getMonitoring().error("mecha.monitoring.riak-monitor.log-monitor.outer", ex);
                     ex.printStackTrace();
                 }
-
             }
         });
     }

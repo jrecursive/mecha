@@ -14,6 +14,7 @@ import mecha.jinterface.*;
 import mecha.vm.*;
 import mecha.vm.channels.*;
 import mecha.monitoring.*;
+import mecha.riak.*;
 
 public class Mecha {
     final private static Logger log = 
@@ -28,6 +29,7 @@ public class Mecha {
     final private Server server;
     final private HTTPServer httpServer;
     final private SolrManager solrManager;
+    final private RiakManager riakManager;
     final private RiakConnector riakConnector;
     final private RiakRPC riakRPC;
     final private Channels channels;
@@ -57,15 +59,17 @@ public class Mecha {
         throws Exception { }
         
     private Mecha() throws Exception {
+        log.info("* starting monitoring");
+        monitoring = new Monitoring();
+
+        riakManager = new RiakManager();
         if (Mecha.getConfig().<Boolean>get("riak-start")) {
             System.out.println("* starting riak_kv");
+            Mecha.ensureRiak(riakManager);
         } else {
             System.out.println("! not forcing erlang shutdown !");
         }
     
-        log.info("* starting monitoring");
-        monitoring = new Monitoring();
-
         log.info("* starting channels");
         channels = new Channels();
 
@@ -175,6 +179,10 @@ public class Mecha {
     
     public static Monitoring getMonitoring() {
         return get().monitoring;
+    }
+    
+    public static RiakManager getRiakManager() {
+        return get().riakManager;
     }
     
     /*
@@ -313,11 +321,44 @@ public class Mecha {
      * Riak management
     */
     
-    public static void riakDown() {
-        if (shuttingDown) {
+    public static void riakDown() throws Exception {
+        if (shuttingDown ||
+            !Mecha.getConfig().<Boolean>get("riak-start")) {
             return;
         }
         log.info("restarting riak (not responding)");
+        ensureRiak(Mecha.getRiakManager());
+    }
+    
+    private static synchronized void ensureRiak(RiakManager riakManager) throws Exception {
+        log.info("starting riak");
+        String response;
+        while(true) {
+            try {
+                response = riakManager.riakCommand("ping");
+                if (response.indexOf("not responding to pings") != -1) {
+                    response = riakManager.riakCommand("start");
+                    if (response.indexOf("Node is already running!") != -1) {
+                        log.info("Node already running?  Retrying ping in 1 second.");
+                        continue;
+                    } else {
+                        /* 
+                         * there is no indicator (other than lack of "Node is already running")
+                         *  for a successful node start, so let's continue through and 
+                         *  the ping should succeed.
+                        */
+                        log.info("riak seems to have started... retrying ping");
+                        continue;
+                    }
+                } else if (response.indexOf("pong") != -1) {
+                    log.info("riak responded!");
+                    return;
+                }
+            } catch (Exception ex) {
+                ex.printStackTrace();
+                Thread.sleep(1000);
+            }
+        }
     }
     
     /*
@@ -343,7 +384,8 @@ public class Mecha {
                         Mecha.getMonitoring().stop();
                         if (Mecha.getConfig().<Boolean>get("riak-stop")) {
                             System.out.println("* stopping riak_kv");
-                            Mecha.getRiakRPC().shutdown();
+                            Mecha.getRiakManager().riakCommand("stop");
+                            //Mecha.getRiakRPC().shutdown();
                         } else {
                             System.out.println("! not forcing erlang shutdown !");
                         }

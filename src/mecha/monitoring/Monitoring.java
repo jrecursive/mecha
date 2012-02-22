@@ -166,6 +166,7 @@ public class Monitoring {
     }
     
     public void log(String name, String message, Logger logger) {
+        if (message.trim().equals("")) return;
         logger.info(name + ": " + message);
         logData(name, message, null);
     }

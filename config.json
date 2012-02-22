@@ -82,10 +82,7 @@
     ## ***************************************
     ## 
     
-    ##
-    ## 'which tail'
-    ##
-    
+    "bash-binary": "/bin/bash",
     "tail-binary": "/usr/bin/tail",
     
     ##
@@ -151,8 +148,8 @@
     ##  the riak-home setting above.
     ##
     
-    "riak-command": "bin/riak",
-    "riak-admin-command": "bin/riak-admin",
+    "riak-script": "bin/riak",
+    "riak-admin-script": "bin/riak-admin",
     
     "riak-app-config": "etc/app.config",
     "riak-vm-config": "etc/vm.config",
@@ -170,7 +167,7 @@
     ##
     
     "riak-start": true,
-    "riak-stop": false
+    "riak-stop": true
 }
 
 
