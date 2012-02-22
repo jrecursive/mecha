@@ -140,9 +140,11 @@ delete(Bucket, Key, _IndexSpecs, State = #state { mecha_node=_MechaNode, partiti
             {error, mecha_error, State}
     end.
 
+% deprecrated
 list(#state { mecha_node=_MechaNode, partition=Partition }) ->
     call_mecha(kv_store, list, [Partition, ?JI_PLACEHOLDER]).
 
+% deprecrated
 list_bucket(#state { mecha_node=_MechaNode, partition=Partition }, Bucket) ->
     call_mecha(kv_store, list_bucket, [Partition, Bucket]).
 
@@ -152,7 +154,6 @@ is_empty(#state { mecha_node=_MechaNode, partition=Partition }) ->
 
 status(_State) ->
     [{mecha, awesome}].
-    %[State].
 
 api_version() ->
     {?API_VERSION, ?CAPABILITIES}.
@@ -174,8 +175,6 @@ fold(FoldType, TriggerFun, State = #state{ mecha_node=_MechaNode, partition=_Par
                                                                 Err]),
             {error, Err, State}
     end.
-
-%%%%% ================================================================================
 
 fold_buckets(FoldBucketsFun, Acc, _Opts, State = #state{ mecha_node=_MechaNode, partition=Partition }) ->
     fold(fold_buckets, 
@@ -218,8 +217,6 @@ fold_objects(FoldObjectsFun, Acc, Opts, State = #state{ mecha_node=_MechaNode, p
                  FoldObjectsFun,
                  Acc)
     end.
-
-%%%%% ================================================================================
 
 drop(State = #state{ mecha_node=_MechaNode, partition=Partition }) ->
     io:format("drop ~p~n", [Partition]),

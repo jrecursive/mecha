@@ -25,12 +25,18 @@ public class MechaMonitor {
                         try {
                             getMechaRuntimeStats();
                             Thread.sleep(1000);
+                        } catch (java.lang.InterruptedException iex) {
+                            log.info("mecha monitor stopped");
+                            return;
                         } catch (Exception ex) {
                             Mecha.getMonitoring().error("mecha.monitoring.mecha-monitor.inner", ex);
                             ex.printStackTrace();
                             Thread.sleep(10000);
                         }
                     }
+                } catch (java.lang.InterruptedException iex) {
+                    log.info("mecha monitor stopped");
+                    return;
                 } catch (Exception ex) {
                     Mecha.getMonitoring().error("mecha.monitoring.mecha-monitor.outer", ex);
                     ex.printStackTrace();
@@ -42,6 +48,10 @@ public class MechaMonitor {
     protected void start() throws Exception {
         log.info("* starting mecha monitor thread");
         mechaMonitorThread.start();
+    }
+    
+    protected void stop() throws Exception {
+        mechaMonitorThread.interrupt();
     }
     
     private void getMechaRuntimeStats() throws Exception {

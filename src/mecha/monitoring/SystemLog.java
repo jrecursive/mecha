@@ -2,6 +2,7 @@ package mecha.monitoring;
 
 import java.util.*;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.*;
 import java.util.logging.*;
 
 import org.apache.solr.client.solrj.*;
@@ -19,8 +20,10 @@ public class SystemLog {
     final private LinkedBlockingQueue<SolrInputDocument> logDocQueue;
     final private Thread indexerThread;
     final private Thread prunerThread;
+    final private AtomicBoolean stopIndexerThread;
     
     public SystemLog() throws Exception {
+        stopIndexerThread = new AtomicBoolean(false);
         logDocQueue = new LinkedBlockingQueue<SolrInputDocument>();
         indexerThread = new Thread(new LogQueueIndexer());
         prunerThread = new Thread(new LogPruner());
@@ -35,7 +38,11 @@ public class SystemLog {
         log.info("Starting system log pruner thread...");
         prunerThread.start();
     }
- 
+    
+    protected void stop() throws Exception {
+        stopIndexerThread.set(true);
+        prunerThread.interrupt();
+    }
     
     /*
      * Indexes batches of system log and metric entries.
@@ -81,12 +88,22 @@ public class SystemLog {
                                          .getChannel(channel)
                                          .send(obj);
                                 }
+                            } catch (java.lang.InterruptedException iex) {
+                                log.info("log indexer thread interrupted!");
+                                return;
                             } catch (Exception ex) {
                                 ex.printStackTrace();
                             }
                         }
                     }
+                    if (stopIndexerThread.get()) {
+                        log.info("log indexer thread stopped");
+                        return;
+                    }
                     Thread.sleep(1000);
+                } catch (java.lang.InterruptedException iex) {
+                    log.info("log indexer thread interrupted!");
+                    return;
                 } catch (Exception ex) {
                     ex.printStackTrace();
                 }
@@ -118,6 +135,9 @@ public class SystemLog {
                                              logPruningInterval + "]");
                     solrServer.commit(false, false);
                     Thread.sleep(60000);
+                } catch (java.lang.InterruptedException iex) {
+                    log.info("pruner thread stopped");
+                    return;
                 } catch (Exception ex) {
                     ex.printStackTrace();
                 }

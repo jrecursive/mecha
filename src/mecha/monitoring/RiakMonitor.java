@@ -31,18 +31,38 @@ public class RiakMonitor {
                         try {
                             getRiakRuntimeStats();
                             Thread.sleep(1000);
+                        } catch (java.lang.InterruptedException iex) {
+                            log.info("riak monitor stopped");
+                            return;
+                        } catch (java.net.ConnectException connectEx) {
+                            Mecha.getMonitoring()
+                                 .error("mecha.monitoring.riak-monitor.inner", 
+                                        connectEx);
+                            Mecha.getMonitoring()
+                                 .log("mecha.monitoring.riak-monitor.inner", 
+                                      "/riak/stats not responding (unable to conect)",
+                                      log);
+                            Mecha.riakDown();
+                            Thread.sleep(30000);
                         } catch (Exception ex) {
                             Mecha.getMonitoring().error("mecha.monitoring.riak-monitor.inner", ex);
                             ex.printStackTrace();
                             Thread.sleep(5000);
                         }
                     }
+                } catch (java.lang.InterruptedException iex) {
+                    log.info("riak monitor stopped");
+                    return;
                 } catch (Exception ex) {
                     Mecha.getMonitoring().error("mecha.monitoring.riak-monitor.outer", ex);
                     ex.printStackTrace();
                 }
             }
         });
+    }
+    
+    protected void stop() throws Exception {
+        riakMonitorThread.interrupt();
     }
     
     protected void start() throws Exception {

@@ -33,6 +33,7 @@ public class Mecha {
     final private Channels channels;
     final private EventLogManager eventLogManager;
     final private Monitoring monitoring;
+    static private boolean shuttingDown = false;
     
     /*
      * startup & init
@@ -56,6 +57,13 @@ public class Mecha {
         throws Exception { }
         
     private Mecha() throws Exception {
+        if (Mecha.getConfig().<Boolean>get("riak-start")) {
+            System.out.println("* starting riak_kv");
+            Mecha.getRiakRPC().shutdown();
+        } else {
+            System.out.println("! not forcing erlang shutdown !");
+        }
+    
         log.info("* starting monitoring");
         monitoring = new Monitoring();
 
@@ -301,19 +309,41 @@ public class Mecha {
     public static JSONObject getRiakConfig() throws Exception {
         return Mecha.getConfig().getJSONObject("riak-config");
     }
-
+    
+    /*
+     * Riak management
+    */
+    
+    public static void riakDown() {
+        if (shuttingDown) {
+            return;
+        }
+        log.info("restarting riak (not responding)");
+    }
+    
     /*
      * Shutdown hook.
     */
+    
+    public static boolean isShuttingDown() {
+        return shuttingDown;
+    }
+    
+    public static void shuttingDown() {
+        shuttingDown = true;
+    }
     
     static {
         Runtime.getRuntime().addShutdownHook(
             new Thread() {
                 public void run() {
+                    Mecha.shuttingDown();
+                    
                     System.out.println("* shutting down...");
                     try {
-                        if (Mecha.getConfig().<Boolean>get("shutdown-erlang")) {
-                            System.out.println("* shutting down riak link");
+                        Mecha.getMonitoring().stop();
+                        if (Mecha.getConfig().<Boolean>get("riak-stop")) {
+                            System.out.println("* stopping riak_kv");
                             Mecha.getRiakRPC().shutdown();
                         } else {
                             System.out.println("! not forcing erlang shutdown !");

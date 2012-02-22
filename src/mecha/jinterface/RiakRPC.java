@@ -41,7 +41,16 @@ public class RiakRPC {
                     new OtpRPC(otpMgr.getNode(), rpcNode);
                 return otpRPC;
             } catch (java.io.IOException ex) {
-                Mecha.getMonitoring().error("mecha.riak-connector", ex);
+                try {
+                    Mecha.getMonitoring().error("mecha.riak-connector", ex);
+                } catch (java.lang.NullPointerException npe) {
+                    /*
+                     * swallow this exception because if mecha tries to
+                     *  talk to riak before monitoring and logging has
+                     *  been brought up when it is first launched.  here
+                     *  we want to just retry quietly until riak is available.
+                    */
+                }
                 log.info("Cannot contact riak, retrying...");
                 Thread.sleep(1000);
             }
@@ -63,9 +72,13 @@ public class RiakRPC {
                         otpRPC.rpc(module, fun, args);
                     return obj;
                 } catch (java.io.IOException ex) {
+                    if (Mecha.isShuttingDown()) {
+                        throw new Exception("Mecha shutting down, ignoring rpc failure.");
+                    }
                     Mecha.getMonitoring().error("mecha.riak-connector", ex);
                     log.info("Riak link broken, restarting...");
                     otpRPC = getOtpRPC();
+                    log.info("Riak link restored.");
                 }
             }
         } finally {

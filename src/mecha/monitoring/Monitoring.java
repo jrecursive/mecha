@@ -103,6 +103,12 @@ public class Monitoring {
         addMonitoredRates(rates);
     }
     
+    public void stop() throws Exception {
+        systemLog.stop();
+        riakMonitor.stop();
+        mechaMonitor.stop();
+    }
+    
     /*
      * Add a value to a metric object by name and index
      *  that value in the system log.

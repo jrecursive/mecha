@@ -130,8 +130,43 @@
     "netty-frame-size": 1048576,
     
     ##
-    ## if set to false, it will not shut down the erlang vm
-    ##  on mecha shutdown (used for development).
+    ## riak_kv automation / management settings
     ##
-    "shutdown-erlang": false    
+    
+    ##
+    ## riak-home is the usual place where you would
+    ##  ordinarily type "bin/riak start", etc.
+    ##
+    
+    "riak-home": "/e/git/riak/riak-1.0.2/rel/riak",
+    
+    ##
+    ## the following paths are all based upon
+    ##  the riak-home setting above.
+    ##
+    
+    "riak-command": "bin/riak",
+    "riak-admin-command": "bin/riak-admin",
+    
+    "riak-app-config": "etc/app.config",
+    "riak-vm-config": "etc/vm.config",
+    
+    "riak-console-log": "log/console.log",
+    "riak-crash-log": "log/crash.log",
+    "riak-error-log": "log/error.log",
+    
+    ##
+    ## start-riak: if set to false, it will not attempt to start
+    ##  riak on mecha startup (usually used for development).
+    ##
+    ## shutdown-riak: if set to false, it will not shut down riak 
+    ##  on mecha shutdown (usually used for development).
+    ##
+    
+    "riak-start": true,
+    "riak-shutdown": false
 }
+
+
+
+
