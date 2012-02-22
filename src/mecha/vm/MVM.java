@@ -514,6 +514,8 @@ public class MVM {
             context.put("root", var);
             context.put("sink", sinkDelegateVar);
             context.put("guid", HashUtils.sha1(Mecha.guid(Velocity.class)));
+            context.put("mecha", Mecha.get());
+            context.put("util", new MacroUtils());
             
             StringWriter w = new StringWriter();
             Velocity.evaluate(context, w, "#" + verb, blockStr);

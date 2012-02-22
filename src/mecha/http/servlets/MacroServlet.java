@@ -184,9 +184,12 @@ public class MacroServlet extends HttpServlet {
     private JSONObject parseParameterMap(Map<String, String[]> requestParamMap) throws Exception {
         JSONObject obj = new JSONObject();
         for(String k : requestParamMap.keySet()) {
+            String[] values = requestParamMap.get(k);
+            for(int j=0; j<values.length; j++) {
+                values[j] = values[j].replaceAll("\"", "\\\"");
+            }
             String[] keyParts = k.split("\\.");
             if (keyParts.length == 1) {
-                String[] values = requestParamMap.get(k);
                 if (values.length == 1) {
                     obj.put(k, values[0]);
                 } else {
@@ -204,7 +207,6 @@ public class MacroServlet extends HttpServlet {
                         dest = dest.getJSONObject(keyPart);
                     }
                 }
-                String[] values = requestParamMap.get(k);
                 if (values.length == 1) {
                     dest.put(lastPart, values[0]);
                 } else {

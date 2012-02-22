@@ -20,10 +20,10 @@ register namespace:$ module-class:mecha.vm.bifs.SystemModule verbs:(splitter:Spl
 /////////////
 
 //
-// spatial-query
+// spatial-select
 //
 
-#define-global spatial-query
+#define-global spatial-select
 #if ($args.filter && $args.filter != "") 
 	#set ($args.logical-connector = "AND") 
 #else #set ($args.logical-connector = "") #end
@@ -31,11 +31,12 @@ register namespace:$ module-class:mecha.vm.bifs.SystemModule verbs:(splitter:Spl
 #if (!$args.materialize) #set ($args.materialize = "true") #end
 #if (!$args.sort-field) #set ($args.sort-field = "key") #end
 #if (!$args.sort-dir) #set ($args.sort-dir = "asc") #end
+#set ($args.filter = $util.escapeQuotes($args.filter))
 
-${root} = (covered-index-select sort-field:${args.sort-field} sort-order:${args.sort-dir} query-marker:"<<${guid}-q>>" host-marker:"<<${guid}-h>>" bucket:${args.bucket} do:(warp host:<<${guid}-h>> do:(solr-select-iterator params:(q:"((<<${guid}-q>>) AND bucket:${args.bucket}) ${args.logical-connector} ${args.filter}" sfield:${args.field} pt:"${args.lat},${args.lon}" d:${args.radius} fq:"{!bbox}" sort:"${args.sort-field} ${args.sort-dir}") materialize:${args.materialize})))
+${root} = (covered-index-select sort-field:${args.sort-field} sort-order:${args.sort-dir} query-marker:"<<${guid}-q>>" host-marker:"<<${guid}-h>>" bucket:\"${args.bucket}\" do:(warp host:<<${guid}-h>> do:(solr-select-iterator params:(q:"((<<${guid}-q>>) AND bucket:\"${args.bucket}\") ${args.logical-connector} ${args.filter}" sfield:${args.field} pt:"${args.lat},${args.lon}" d:${args.radius} fq:"{!bbox}" sort:"${args.sort-field} ${args.sort-dir}") materialize:${args.materialize})))
 ${root} -> ${sink}
 
-#end spatial-query
+#end spatial-select
 
 //
 // facet
@@ -46,6 +47,7 @@ ${root} -> ${sink}
 	#set ($args.logical-connector = "AND") 
 #else #set ($args.logical-connector = "") #end
 #if (!$args.filter) #set ($args.filter = "") #end
+#set ($args.filter = $util.escapeQuotes($args.filter))
 
 #if (!$args.mincount) #set ($args.mincount = "1") #end
 #if (!$args.limit) #set ($args.limit = "100") #end
@@ -57,7 +59,7 @@ ${root} -> ${sink}
 
 #if (!$args.cardinality-only) #set ($args.cardinality-only = "false") #end
 
-${root} = (with-coverage partition-marker:"<<${guid}-p>>" host-marker:"<<${guid}-h>>" bucket:${args.bucket} do:(warp host:<<${guid}-h>> do:(solr-select params:(facet:true facet.limit:${args.limit} facet.field:${args.field} facet.mincount:${args.mincount} facet.offset:${args.start} $prefix_arg facet.sort:${args.sort} rows:0 q:"(partition:<<${guid}-p>> AND bucket:${args.bucket}) ${args.logical-connector} ${args.filter}") cardinality-only:${args.cardinality-only} partition:<<${guid}-p>>)))
+${root} = (with-coverage partition-marker:"<<${guid}-p>>" host-marker:"<<${guid}-h>>" bucket:\"${args.bucket}\" do:(warp host:<<${guid}-h>> do:(solr-select params:(facet:true facet.limit:${args.limit} facet.field:${args.field} facet.mincount:${args.mincount} facet.offset:${args.start} $prefix_arg facet.sort:${args.sort} rows:0 q:"(partition:<<${guid}-p>> AND bucket:\"${args.bucket}\") ${args.logical-connector} ${args.filter}") cardinality-only:${args.cardinality-only} partition:<<${guid}-p>>)))
 
 #if ($args.cardinality-only == "true")
 ${guid}-reducer = (cardinality-reducer)
@@ -75,7 +77,8 @@ ${guid}-reducer -> ${sink}
 
 #define-global cardinality
 #if (!$args.filter) #set ($args.filter = "") #end
-${root} = (#facet bucket:${args.bucket} field:${args.field} filter:"${args.filter}" start:0 limit:-1 sort:index cardinality-only:true)
+#set ($args.filter = $util.escapeQuotes($args.filter))
+${root} = (#facet bucket:\"${args.bucket}\" field:${args.field} filter:"${args.filter}" start:0 limit:-1 sort:index cardinality-only:true)
 ${root} -> ${sink}
 #end cardinality
 
@@ -85,7 +88,8 @@ ${root} -> ${sink}
 
 #define-global count
 #if (!$args.filter) #set ($args.filter = "") #end
-${root} = (with-coverage partition-marker:"<<${guid}-p>>" host-marker:"<<${guid}-h>>" bucket:${args.bucket} do:(warp host:<<${guid}-h>> do:(solr-select params:(q:"partition:<<${guid}-p>> AND bucket:${args.bucket} ${args.filter}") count-only:true)))
+#set ($args.filter = $util.escapeQuotes($args.filter))
+${root} = (with-coverage partition-marker:"<<${guid}-p>>" host-marker:"<<${guid}-h>>" bucket:\"${args.bucket}\" do:(warp host:<<${guid}-h>> do:(solr-select params:(q:"partition:<<${guid}-p>> AND bucket:\"${args.bucket}\" ${args.filter}") count-only:true)))
 ${guid}-reducer = (value-count-reducer)
 ${root} -> ${guid}-reducer
 ${guid}-reducer -> ${sink}
@@ -97,7 +101,7 @@ ${guid}-reducer -> ${sink}
 
 #define-global derive-schema
 #if (!$args.max-samples) #set ($args.max-samples = "-1") #end
-${root} = (with-coverage partition-marker:"<<${guid}-p>>" host-marker:"<<${guid}-h>>" bucket:${args.bucket} do:(warp host:<<${guid}-h>> do:(compute-schema partition:<<${guid}-p>> bucket:${args.bucket} max-samples:${args.max-samples})))
+${root} = (with-coverage partition-marker:"<<${guid}-p>>" host-marker:"<<${guid}-h>>" bucket:\"${args.bucket}\" do:(warp host:<<${guid}-h>> do:(compute-schema partition:<<${guid}-p>> bucket:\"${args.bucket}\" max-samples:${args.max-samples})))
 ${guid}-reducer = (value-count-reducer)
 ${root} -> ${guid}-reducer
 ${guid}-reducer -> ${sink}
@@ -106,9 +110,10 @@ ${guid}-reducer -> ${sink}
 //
 // drop-bucket
 //
+
 #define-global drop-bucket
 #if ($args.bucket)
-${root} = (with-cluster-coverage host-marker:"<<${guid}-h>>" do:(warp host:<<${guid}-h>> do:(global-drop-bucket bucket:${args.bucket})))
+${root} = (with-cluster-coverage host-marker:"<<${guid}-h>>" do:(warp host:<<${guid}-h>> do:(global-drop-bucket bucket:\"${args.bucket}\")))
 ${guid}-reducer = (value-count-reducer)
 ${root} -> ${guid}-reducer
 ${guid}-reducer -> ${sink}
@@ -116,35 +121,10 @@ ${guid}-reducer -> ${sink}
 #end drop-bucket
 
 //
-// query
-//
-
-#define-global query
-#if (!$args.start) #set ($args.start = "0") #end
-#if (!$args.count) #set ($args.count = "10") #end
-#if (!$args.filter) #set ($args.filter = "") #end
-#if (!$args.sort-field) #set ($args.sort-field = "key") #end
-#if (!$args.sort-dir) #set ($args.sort-dir = "asc") #end
-#if (!$args.materialize) #set ($args.materialize = "true") #end
-#if (!$args.external-iterator) #set ($args.external-iterator = "false") #end
-${root} = (with-sorted-coverage sort-field:${args.sort-field} sort-order:${args.sort-dir} partition-marker:"<<${guid}-p>>" host-marker:"<<${guid}-h>>" bucket:${args.bucket} do:(warp host:<<${guid}-h>> do:(solr-select-iterator params:(q:"*:*" fq:"partition:<<${guid}-p>> AND bucket:${args.bucket} ${args.filter}" rows:${args.count} sort:"${args.sort-field} ${args.sort-dir}") materialize:${args.materialize} external-iterator:${args.external-iterator})))
-${guid}-start = (eat count:${args.start})
-${guid}-limit = (limit count:${args.count})
-${root} -> ${guid}-start
-${guid}-start -> ${guid}-limit
-${guid}-limit -> ${sink}
-#end query
-
-//
 // select
-//  (host-optimized version of 'query')
 //
 
 #define-global select
-#*
-    Setup parameter default values.
-*#
-
 #if (!$args.start) #set ($args.start = "0") #end
 #if (!$args.count) #set ($args.count = "-1") #end
 #if (!$args.sort-field) #set ($args.sort-field = "key") #end
@@ -162,6 +142,7 @@ ${guid}-limit -> ${sink}
 	#set ($args.logical-connector = "AND") 
 #else #set ($args.logical-connector = "") #end
 #if (!$args.filter) #set ($args.filter = "") #end
+#set ($args.filter = $util.escapeQuotes($args.filter))
 
 #*
     Generate the chain of:
@@ -170,10 +151,10 @@ ${guid}-limit -> ${sink}
                 solr-select-iterator
 *#
 
-${root} = (covered-index-select sort-field:${args.sort-field} sort-order:${args.sort-dir} query-marker:"<<${guid}-q>>" host-marker:"<<${guid}-h>>" bucket:${args.bucket} do:(warp host:<<${guid}-h>> do:(solr-select-iterator params:(q:"*:*" fq:"((<<${guid}-q>>) AND bucket:${args.bucket}) ${args.logical-connector} ${args.filter}" rows:${args.count} sort:"${args.sort-field} ${args.sort-dir}" fl:"${args.fields}") materialize:${args.materialize} core:${args.core})))
+${root} = (covered-index-select sort-field:${args.sort-field} sort-order:${args.sort-dir} query-marker:"<<${guid}-q>>" host-marker:"<<${guid}-h>>" bucket:\"${args.bucket}\" do:(warp host:<<${guid}-h>> do:(solr-select-iterator params:(q:"*:*" fq:"((<<${guid}-q>>) AND bucket:\"${args.bucket}\") ${args.logical-connector} ${args.filter}" rows:${args.count} sort:"${args.sort-field} ${args.sort-dir}" fl:"${args.fields}") materialize:${args.materialize} core:${args.core})))
 
 #*
-    Account for start & count (e.g., LIMIT <start>,<count>) globally.
+    Account for start & count (e.g., LIMIT <start>,<count>)
 *#
 
 #set ($connecting_vertex = $root)
@@ -193,10 +174,30 @@ ${connecting_vertex} -> ${guid}-limit
 ${connecting_vertex} -> ${sink}
 #end select
 
+//
+// delete-by-select
+//
+
+#define-global delete-by-select
+#if (!$args.core) #set ($args.core = "index") #end
+
+#*
+    "filter" MUST be specified for delete-by-select to do anything.  If one
+    weren't specified, it would simply delete an entire bucket row by row.  To
+    delete an entire bucket, use "#drop-bucket".
+*#
+
+#if ($args.filter)
+    #set ($args.filter = $util.escapeQuotes($args.filter))
+    ${root} = (with-cluster-coverage host-marker:"<<${guid}-h>>" do:(warp host:<<${guid}-h>> do:(solr-select params:(q:"bucket:\"${args.bucket}\" AND ${args.filter}") materialize:false core:${args.core} delete-by-query:true)))
+    ${root} -> ${sink}
+#end
+#end delete-by-select
 
 //
 // join
 // 
+
 #define-global join
 ${root} = (repeater start:true to:(${guid}-left ${guid}-right ${guid}-join))
 ${guid}-left = (#${args.left.type} #foreach($entry in ${args.left.params.entrySet()}) ${entry.getKey()}:"${entry.getValue()}" #end sort-field:${args.left.join-field} sort-dir:asc)
@@ -254,6 +255,7 @@ ${guid}-reducer -> ${sink}
 
 #define-global system-select
 #if (!$args.fields) #set ($args.fields = "*") #end
+#set ($args.filter = $util.escapeQuotes($args.filter))
 ${root} = (warp host:${args.host} do:(solr-select params:(q:"${args.filter}" sort:"${args.sort}" rows:${args.limit} fl:"${args.fields}") core:system))
 ${root} -> ${sink}
 #end system-select
@@ -269,6 +271,7 @@ ${root} -> ${sink}
 #if ($args.prefix) #set ($prefix_arg = "facet.prefix:${args.prefix}")
 #else #set ($prefix_arg = "") #end
 #if (!$args.fields) #set ($args.fields = "*") #end
+#set ($args.filter = $util.escapeQuotes($args.filter))
 ${root} = (warp host:${args.host} do:(solr-select params:(facet:true facet.limit:-1 facet.field:${args.field} facet.mincount:1 $prefix_arg facet.sort:${args.sort} rows:0 q:"${args.filter}" fl:"${args.fields}") core:system))
 ${root} -> ${sink}
 #end system-facet

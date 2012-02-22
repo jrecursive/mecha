@@ -60,12 +60,6 @@ public class JSONObject {
      * put
     */
     
-    /*
-    public void put(String field, Object value) throws Exception {
-        obj.put(field, value);
-    }
-    */
-    
     public void put(String field, Object value) throws Exception {
         if (value instanceof JSONObject) {
             putJSONObject(field, (JSONObject) value);

@@ -555,6 +555,7 @@ public class SolrModule extends MVMModule {
     */
     public class Select extends MVMFunction {
         final private boolean materialize;
+        final private boolean deleteByQuery;
         final private String core;
         final private SimpleDateFormat dateFormat = 
             new java.text.SimpleDateFormat(STANDARD_DATE_FORMAT);
@@ -574,7 +575,14 @@ public class SolrModule extends MVMModule {
             } else {
                 core = "index";
             }
-
+            
+            if (config.has("delete-by-query") &&
+                config.<String>get("delete-by-query").equals("true")) {
+                deleteByQuery = true;
+            } else {
+                deleteByQuery = false;
+            }
+            
             iteratorThread = new Thread(new Runnable() {
                 public void run() {
                     try {
@@ -612,7 +620,7 @@ public class SolrModule extends MVMModule {
                         if (selectParams.has("facet")) {
                             batchSize = 0;
                         }
-
+                        
                         while(true) {
                             ModifiableSolrParams solrParams = new ModifiableSolrParams();
                             for(String k : JSONObject.getNames(selectParams)) {
@@ -681,25 +689,49 @@ public class SolrModule extends MVMModule {
                                 rowLimit = res.getResults().getNumFound();
                             }
                             for(SolrDocument doc : res.getResults()) {
-                                JSONObject msg;
-                                if (materialize) {
-                                    msg = materializePBK("" + doc.get("partition"),
-                                                         "" + doc.get("bucket"),
-                                                         "" + doc.get("key"));
+                                /*
+                                 * delete query
+                                */
+                                if (deleteByQuery) {
+                                    String objPartition = "" + doc.get("partition");
+                                    String objBucket = "" + doc.get("bucket");
+                                    String objKey = "" + doc.get("key");
+                                    if (core.equals("index")) {
+                                        Mecha.getMDB()
+                                             .getBucket(objPartition, objBucket)
+                                             .delete(objKey.getBytes());
+                                    } else {
+                                        Mecha.getSolrManager()
+                                             .getSolrServer(core)
+                                             .deleteByQuery("bucket:" + objBucket + " AND " +
+                                                            "partition:" + objPartition + " AND " +
+                                                            "key:\"" + objKey + "\"");
+                                    }
+                                /* 
+                                 * non-delete query
+                                */
                                 } else {
-                                    msg = new JSONObject();
-                                    for(String fieldName : doc.getFieldNames()) {
-                                        if (fieldName.equals("last_modified") ||
-                                            fieldName.endsWith("_dt")) {
-                                            String date = 
-                                                dateFormat.format((Date)doc.get(fieldName));
-                                            msg.put(fieldName, date);
-                                        } else {
-                                            msg.put(fieldName, doc.get(fieldName));
+                                    JSONObject msg;
+                                    if (materialize) {
+                                        msg = materializePBK("" + doc.get("partition"),
+                                                             "" + doc.get("bucket"),
+                                                             "" + doc.get("key"));
+                                    } else {
+                                        msg = new JSONObject();
+                                        for(String fieldName : doc.getFieldNames()) {
+                                            if (fieldName.equals("last_modified") ||
+                                                fieldName.endsWith("_dt")) {
+                                                String date = 
+                                                    dateFormat.format((Date)doc.get(fieldName));
+                                                msg.put(fieldName, date);
+                                            } else {
+                                                msg.put(fieldName, doc.get(fieldName));
+                                            }
                                         }
                                     }
+                                    broadcastDataMessage(msg);
                                 }
-                                broadcastDataMessage(msg);
+                                
                                 count++; 
                                 batchCount++;
                                 if (count >= rowLimit) break;
@@ -708,15 +740,22 @@ public class SolrModule extends MVMModule {
                             if (start >= rowLimit) break;
                         }
                         long t_elapsed = System.currentTimeMillis() - t_st;
+                        
                         JSONObject doneMsg = new JSONObject();
                         doneMsg.put("elapsed", t_elapsed);
                         doneMsg.put("count", count);
-                        doneMsg.put("found", rawFound);
+                        if (deleteByQuery) {
+                            Mecha.getSolrManager()
+                                 .getSolrServer(core)
+                                 .commit(true, true);
+                            doneMsg.put("deleted", rawFound);
+                        } else {
+                            doneMsg.put("found", rawFound);
+                        }
                         broadcastDone(doneMsg);
-                    
+                        
                     } catch (java.lang.InterruptedException iex) {
                         return;
-                    
                     } catch (Exception ex) {
                         ex.printStackTrace();
                         Mecha.getMonitoring().error("mecha.vm.bifs.solr-module.select", ex);
@@ -735,7 +774,7 @@ public class SolrModule extends MVMModule {
             iteratorThread.interrupt();
         }
     }
-        
+    
     /*
      * Produce an average of the values of all keys
      *  to 'estimate' the cardinality values to a useful 
