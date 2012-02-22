@@ -100,14 +100,14 @@ public class MechaClient extends MechaClientHandler {
                     if (msg.has("c") && msg.has("o")) {
                         String channel = msg.getString("c");
                         JSONObject obj = msg.getJSONObject("o");
-                        if (obj.has("$type") &&
-                            obj.getString("$type").equals("done")) {
+                        if (obj.has("$") &&
+                            obj.getString("$").equals("done")) {
                             handler.onDoneEvent(channel, obj);
-                        } else if (obj.has("$type") &&
-                            obj.getString("$type").equals("control")) {
+                        } else if (obj.has("$") &&
+                            obj.getString("$").equals("control")) {
                             handler.onControlEvent(channel, obj);    
-                        } else if (obj.has("$type") &&
-                            obj.getString("$type").equals("cancel")) {
+                        } else if (obj.has("$") &&
+                            obj.getString("$").equals("cancel")) {
                             handler.onDoneEvent(channel, obj);    
                         } else {
                             handler.onDataMessage(channel, obj);

@@ -117,28 +117,28 @@ public class ClientModule extends MVMModule {
         }
     
         public void onControlMessage(JSONObject msg) throws Exception {
-            msg.put("$type", "control");
+            msg.put("$", "control");
             getContext().send(msg);
         }
 
         public void onDataMessage(JSONObject msg) throws Exception {
-            msg.put("$type", "data");
+            msg.put("$", "data");
             getContext().send(msg);
         }
         
         public void onStartEvent(JSONObject msg) throws Exception {
-            msg.put("$type", "start");
+            msg.put("$", "start");
             getContext().send(msg);
         }
         
         public void onCancelEvent(JSONObject msg) throws Exception {
-            msg.put("$type", "cancel");
+            msg.put("$", "cancel");
             getContext().send(msg);
         }
         
         public void onDoneEvent(JSONObject msg) throws Exception {
             if (!done) {
-                msg.put("$type", "done");
+                msg.put("$", "done");
                 getContext().send(msg);
                 done = true;
             }
@@ -158,27 +158,27 @@ public class ClientModule extends MVMModule {
         }
         
         public void onControlMessage(JSONObject msg) throws Exception {
-            msg.put("$type", "control");
+            msg.put("$", "control");
             Mecha.getChannels().getChannel(channel).send(msg);
         }
         
         public void onDataMessage(JSONObject msg) throws Exception {
-            msg.put("$type", "data");
+            msg.put("$", "data");
             Mecha.getChannels().getChannel(channel).send(msg);
         }
         
         public void onStartEvent(JSONObject msg) throws Exception {
-            msg.put("$type", "start");
+            msg.put("$", "start");
             Mecha.getChannels().getChannel(channel).send(msg);
         }
         
         public void onCancelEvent(JSONObject msg) throws Exception {
-            msg.put("$type", "cancel");
+            msg.put("$", "cancel");
             Mecha.getChannels().getChannel(channel).send(msg);
         }
         
         public void onDoneEvent(JSONObject msg) throws Exception {
-            msg.put("$type", "done");
+            msg.put("$", "done");
             Mecha.getChannels().getChannel(channel).send(msg);
         }
     }

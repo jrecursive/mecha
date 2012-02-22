@@ -113,6 +113,7 @@ public class Mecha {
         JSONObject riakConfig = config.getJSONObject("riak-config");
         riakConfig.put("local-url", riakRPC.getLocalRiakURL());
         riakConfig.put("pb-ip", riakRPC.getLocalPBIP());
+        config.put("server-addr", riakConfig.<String>get("pb-ip"));
         riakConfig.put("pb-port", riakRPC.getLocalPBPort());
         log.info("# introspected riak configuration: " + riakConfig.toString(2));
     }

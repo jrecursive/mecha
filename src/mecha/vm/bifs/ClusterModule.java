@@ -74,14 +74,14 @@ public class ClusterModule extends MVMModule {
                             final String channel = msg.getString("c");
                             final JSONObject obj = msg.getJSONObject("o");
                             obj.put("$delegate-channel", channel);
-                            if (obj.has("$type") &&
-                                obj.getString("$type").equals("done")) {
+                            if (obj.has("$") &&
+                                obj.getString("$").equals("done")) {
                                 sendData(localFunRefId, obj);
-                            } else if (obj.has("$type") &&
-                                obj.getString("$type").equals("control")) {
+                            } else if (obj.has("$") &&
+                                obj.getString("$").equals("control")) {
                                 sendControl(localFunRefId, obj);
-                            } else if (obj.has("$type") &&
-                                obj.getString("$type").equals("cancel")) {
+                            } else if (obj.has("$") &&
+                                obj.getString("$").equals("cancel")) {
                                 sendControl(localFunRefId, obj);
                             } else {
                                 sendData(localFunRefId, obj);

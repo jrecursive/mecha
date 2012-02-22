@@ -84,7 +84,7 @@ public class Monitoring {
         rates = new Rates();
         metrics = new ConcurrentHashMap<String, Metric>();
         systemLog = new SystemLog();
-        rateMonitorables = new HashSet<WeakReference<Rates>>();
+        rateMonitorables = new CopyOnWriteArraySet<WeakReference<Rates>>();
         
         wranglerThread = new Thread(new SolrLogWrangler());
         wranglerThread.start();

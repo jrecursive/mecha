@@ -33,7 +33,7 @@ register namespace:$ module-class:mecha.vm.bifs.SystemModule verbs:(commit:Commi
 #if (!$args.sort-dir) #set ($args.sort-dir = "asc") #end
 #set ($args.filter = $util.escapeQuotes($args.filter))
 
-${root} = (covered-index-select sort-field:${args.sort-field} sort-order:${args.sort-dir} query-marker:"<<${guid}-q>>" host-marker:"<<${guid}-h>>" bucket:\"${args.bucket}\" do:(warp host:<<${guid}-h>> do:(solr-select-iterator params:(q:"((<<${guid}-q>>) AND bucket:\"${args.bucket}\") ${args.logical-connector} ${args.filter}" sfield:${args.field} pt:"${args.lat},${args.lon}" d:${args.radius} fq:"{!bbox}" sort:"${args.sort-field} ${args.sort-dir}") materialize:${args.materialize})))
+${root} = (covered-index-select sort-field:${args.sort-field} sort-order:${args.sort-dir} query-marker:"<<${guid}-q>>" host-marker:"<<${guid}-h>>" bucket:${args.bucket} do:(warp host:<<${guid}-h>> do:(solr-select-iterator params:(q:"((<<${guid}-q>>) AND bucket:${args.bucket}) ${args.logical-connector} ${args.filter}" sfield:${args.field} pt:"${args.lat},${args.lon}" d:${args.radius} fq:"{!bbox}" sort:"${args.sort-field} ${args.sort-dir}") materialize:${args.materialize})))
 ${root} -> ${sink}
 
 #end spatial-select
@@ -59,7 +59,7 @@ ${root} -> ${sink}
 
 #if (!$args.cardinality-only) #set ($args.cardinality-only = "false") #end
 
-${root} = (with-coverage partition-marker:"<<${guid}-p>>" host-marker:"<<${guid}-h>>" bucket:\"${args.bucket}\" do:(warp host:<<${guid}-h>> do:(solr-select params:(facet:true facet.limit:${args.limit} facet.field:${args.field} facet.mincount:${args.mincount} facet.offset:${args.start} $prefix_arg facet.sort:${args.sort} rows:0 q:"(partition:<<${guid}-p>> AND bucket:\"${args.bucket}\") ${args.logical-connector} ${args.filter}") cardinality-only:${args.cardinality-only} partition:<<${guid}-p>>)))
+${root} = (with-coverage partition-marker:"<<${guid}-p>>" host-marker:"<<${guid}-h>>" bucket:${args.bucket} do:(warp host:<<${guid}-h>> do:(solr-select params:(facet:true facet.limit:${args.limit} facet.field:${args.field} facet.mincount:${args.mincount} facet.offset:${args.start} $prefix_arg facet.sort:${args.sort} rows:0 q:"(partition:<<${guid}-p>> AND bucket:${args.bucket}) ${args.logical-connector} ${args.filter}") cardinality-only:${args.cardinality-only} partition:<<${guid}-p>>)))
 
 #if ($args.cardinality-only == "true")
 ${guid}-reducer = (cardinality-reducer)
@@ -78,7 +78,7 @@ ${guid}-reducer -> ${sink}
 #define-global cardinality
 #if (!$args.filter) #set ($args.filter = "") #end
 #set ($args.filter = $util.escapeQuotes($args.filter))
-${root} = (#facet bucket:\"${args.bucket}\" field:${args.field} filter:"${args.filter}" start:0 limit:-1 sort:index cardinality-only:true)
+${root} = (#facet bucket:${args.bucket} field:${args.field} filter:"${args.filter}" start:0 limit:-1 sort:index cardinality-only:true)
 ${root} -> ${sink}
 #end cardinality
 
@@ -89,7 +89,7 @@ ${root} -> ${sink}
 #define-global count
 #if (!$args.filter) #set ($args.filter = "") #end
 #set ($args.filter = $util.escapeQuotes($args.filter))
-${root} = (with-coverage partition-marker:"<<${guid}-p>>" host-marker:"<<${guid}-h>>" bucket:\"${args.bucket}\" do:(warp host:<<${guid}-h>> do:(solr-select params:(q:"partition:<<${guid}-p>> AND bucket:\"${args.bucket}\" ${args.filter}") count-only:true)))
+${root} = (with-coverage partition-marker:"<<${guid}-p>>" host-marker:"<<${guid}-h>>" bucket:${args.bucket} do:(warp host:<<${guid}-h>> do:(solr-select params:(q:"partition:<<${guid}-p>> AND bucket:${args.bucket} ${args.filter}") count-only:true)))
 ${guid}-reducer = (value-count-reducer)
 ${root} -> ${guid}-reducer
 ${guid}-reducer -> ${sink}
@@ -101,7 +101,7 @@ ${guid}-reducer -> ${sink}
 
 #define-global derive-schema
 #if (!$args.max-samples) #set ($args.max-samples = "-1") #end
-${root} = (with-coverage partition-marker:"<<${guid}-p>>" host-marker:"<<${guid}-h>>" bucket:\"${args.bucket}\" do:(warp host:<<${guid}-h>> do:(compute-schema partition:<<${guid}-p>> bucket:\"${args.bucket}\" max-samples:${args.max-samples})))
+${root} = (with-coverage partition-marker:"<<${guid}-p>>" host-marker:"<<${guid}-h>>" bucket:${args.bucket} do:(warp host:<<${guid}-h>> do:(compute-schema partition:<<${guid}-p>> bucket:${args.bucket} max-samples:${args.max-samples})))
 ${guid}-reducer = (value-count-reducer)
 ${root} -> ${guid}-reducer
 ${guid}-reducer -> ${sink}
@@ -113,7 +113,7 @@ ${guid}-reducer -> ${sink}
 
 #define-global drop-bucket
 #if ($args.bucket)
-${root} = (with-cluster-coverage host-marker:"<<${guid}-h>>" do:(warp host:<<${guid}-h>> do:(global-drop-bucket bucket:\"${args.bucket}\")))
+${root} = (with-cluster-coverage host-marker:"<<${guid}-h>>" do:(warp host:<<${guid}-h>> do:(global-drop-bucket bucket:${args.bucket})))
 ${guid}-reducer = (value-count-reducer)
 ${root} -> ${guid}-reducer
 ${guid}-reducer -> ${sink}
@@ -151,7 +151,7 @@ ${guid}-reducer -> ${sink}
                 solr-select-iterator
 *#
 
-${root} = (covered-index-select sort-field:${args.sort-field} sort-order:${args.sort-dir} query-marker:"<<${guid}-q>>" host-marker:"<<${guid}-h>>" bucket:\"${args.bucket}\" do:(warp host:<<${guid}-h>> do:(solr-select-iterator params:(q:"*:*" fq:"((<<${guid}-q>>) AND bucket:\"${args.bucket}\") ${args.logical-connector} ${args.filter}" rows:${args.count} sort:"${args.sort-field} ${args.sort-dir}" fl:"${args.fields}") materialize:${args.materialize} core:${args.core})))
+${root} = (covered-index-select sort-field:${args.sort-field} sort-order:${args.sort-dir} query-marker:"<<${guid}-q>>" host-marker:"<<${guid}-h>>" bucket:${args.bucket} do:(warp host:<<${guid}-h>> do:(solr-select-iterator params:(q:"*:*" fq:"((<<${guid}-q>>) AND bucket:${args.bucket}) ${args.logical-connector} ${args.filter}" rows:${args.count} sort:"${args.sort-field} ${args.sort-dir}" fl:"${args.fields}") materialize:${args.materialize} core:${args.core})))
 
 #*
     Account for start & count (e.g., LIMIT <start>,<count>)
@@ -189,7 +189,7 @@ ${connecting_vertex} -> ${sink}
 
 #if ($args.filter)
     #set ($args.filter = $util.escapeQuotes($args.filter))
-    ${root} = (with-cluster-coverage host-marker:"<<${guid}-h>>" do:(warp host:<<${guid}-h>> do:(solr-select params:(q:"bucket:\"${args.bucket}\" AND ${args.filter}") materialize:false core:${args.core} delete-by-query:true)))
+    ${root} = (with-cluster-coverage host-marker:"<<${guid}-h>>" do:(warp host:<<${guid}-h>> do:(solr-select params:(q:"bucket:${args.bucket} AND ${args.filter}") materialize:false core:${args.core} delete-by-query:true)))
     ${root} -> ${sink}
 #end
 #end delete-by-select

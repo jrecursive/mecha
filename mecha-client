@@ -1,2 +1,2 @@
-java -cp lib/*:bin mecha.client.MechaCLI 127.0.0.1 10102 me3ch4a
+java -cp lib/*:bin mecha.client.MechaCLI 75.125.240.202 10102 me3ch4a
 

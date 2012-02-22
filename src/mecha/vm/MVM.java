@@ -445,6 +445,7 @@ public class MVM {
                 resolvedChannel + "'  '" + controlChannelName + "': " + msg.toString());
             nativeDumpVars(ctx);
             ex.printStackTrace();
+            throw ex;
         }
     }
     

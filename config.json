@@ -64,7 +64,6 @@
     ## server-addr: interface to bind server to
     ## server-port: socket client listen port
     ##
-    "server-addr": "127.0.0.1",
     "server-port": 10102,
     
     ##

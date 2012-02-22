@@ -359,7 +359,7 @@ public abstract class MVMFunction {
     */
     public void broadcastDataMessage(JSONObject msg) throws Exception {
         msg.put("$origin", getRefId());
-        if (!msg.has("$type")) {
+        if (!msg.has("$")) {
             msg = postprocessDataMessage(msg);
         }
         for(PubChannel channel : outgoingChannels) {
@@ -404,7 +404,7 @@ public abstract class MVMFunction {
     public void broadcastDone(JSONObject msg) {
         try {
             msg.put("$", "done");
-            msg.put("$type", "done");
+            msg.put("$", "done");
             broadcastDataMessage(msg);
         } catch (Exception ex) {
             Mecha.getMonitoring().error("mecha.mvm-function", ex);
