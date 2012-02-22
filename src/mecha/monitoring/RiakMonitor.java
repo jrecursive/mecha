@@ -1,5 +1,6 @@
 package mecha.monitoring;
 
+import java.io.*;
 import java.util.*;
 import java.util.logging.*;
 
@@ -12,6 +13,8 @@ public class RiakMonitor {
         Logger.getLogger(RiakMonitor.class.getName());
     
     final private Thread riakMonitorThread;
+    final private Thread riakLogMonitorThread;
+    final private Process riakLogMonitorProcess;
     private String riakURL;
     private String riakStatsURL;
     
@@ -24,6 +27,23 @@ public class RiakMonitor {
     };
     
     public RiakMonitor() throws Exception {
+        List<String> riakLogMonitorProcessArgs = 
+            new ArrayList<String>();
+        String riakBasePath = Mecha.getConfig().<String>get("riak-home");
+        if (!riakBasePath.endsWith("/")) {
+            riakBasePath += "/";
+        }
+        riakLogMonitorProcessArgs.add(Mecha.getConfig().<String>get("tail-binary"));
+        riakLogMonitorProcessArgs.add("-F");
+        for(String logFile : Mecha.getConfig().<List<String>>get("riak-logs")) {
+            log.info("monitoring riak_kv log: " + logFile);
+            riakLogMonitorProcessArgs.add(riakBasePath + logFile);
+        }
+        riakLogMonitorProcess = 
+            new ProcessBuilder(riakLogMonitorProcessArgs)
+                .redirectErrorStream(true)
+                .start();
+    
         riakMonitorThread = new Thread(new Runnable() {
             public void run() {
                 try {
@@ -59,10 +79,43 @@ public class RiakMonitor {
                 }
             }
         });
+
+        /*
+         * monitor stdout of an instance of 
+         *  tail -f <console.log> <error.log> <error.log> [...]
+        */
+        riakLogMonitorThread = new Thread(new Runnable() {
+            public void run() {
+                try {
+                    InputStream riakLogInputStream = 
+                        riakLogMonitorProcess.getInputStream();
+                    String logLine;
+                    BufferedReader logReader = 
+                        new BufferedReader(
+                            new InputStreamReader(
+                                riakLogMonitorProcess.getInputStream()));
+                    while ((logLine = logReader.readLine()) != null) {
+                        log.info(logLine.toString());
+                        Mecha.getMonitoring()
+                             .log("riak.log",
+                                  logLine);
+                    }
+                } catch (Exception ex) {
+                    Mecha.getMonitoring().error("mecha.monitoring.riak-monitor.log-monitor.outer", ex);
+                    ex.printStackTrace();
+                }
+
+            }
+        });
     }
     
     protected void stop() throws Exception {
         riakMonitorThread.interrupt();
+        riakLogMonitorThread.interrupt();
+        riakLogMonitorProcess.destroy();
+        log.info("waiting for riak log monitor to stop...");
+        riakLogMonitorProcess.waitFor();
+        log.info("riak log monitor stopped");
     }
     
     protected void start() throws Exception {
@@ -71,6 +124,7 @@ public class RiakMonitor {
 
         log.info("* starting riak monitor thread <" + riakURL + ">");
         riakMonitorThread.start();
+        riakLogMonitorThread.start();
     }
     
     private void getRiakRuntimeStats() throws Exception {

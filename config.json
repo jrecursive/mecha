@@ -83,6 +83,12 @@
     ## 
     
     ##
+    ## 'which tail'
+    ##
+    
+    "tail-binary": "/usr/bin/tail",
+    
+    ##
     ## system metrics, log messages, & errors
     ##
     ## metric-pruning-interval covers any numeric
@@ -151,9 +157,9 @@
     "riak-app-config": "etc/app.config",
     "riak-vm-config": "etc/vm.config",
     
-    "riak-console-log": "log/console.log",
-    "riak-crash-log": "log/crash.log",
-    "riak-error-log": "log/error.log",
+    "riak-logs": [ "log/console.log",
+                   "log/crash.log",
+                   "log/error.log" ],
     
     ##
     ## start-riak: if set to false, it will not attempt to start
@@ -164,7 +170,7 @@
     ##
     
     "riak-start": true,
-    "riak-shutdown": false
+    "riak-stop": false
 }
 
 

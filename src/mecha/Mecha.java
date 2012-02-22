@@ -59,7 +59,6 @@ public class Mecha {
     private Mecha() throws Exception {
         if (Mecha.getConfig().<Boolean>get("riak-start")) {
             System.out.println("* starting riak_kv");
-            Mecha.getRiakRPC().shutdown();
         } else {
             System.out.println("! not forcing erlang shutdown !");
         }
