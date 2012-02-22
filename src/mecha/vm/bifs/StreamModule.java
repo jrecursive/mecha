@@ -93,7 +93,6 @@ public class StreamModule extends MVMModule {
              *  the maximum count).
             */
             if (count <= total) {
-                log.info("<done> limit: " + msg.toString());
                 broadcastDone(msg);
             } else {
                 doneMsg = msg;

@@ -298,4 +298,8 @@ public class Bucket {
     public String getBucketName() {
         return bucketStr;
     }
+    
+    public void commit() {
+        // not needed for leveldb (sync)
+    }
 }

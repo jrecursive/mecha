@@ -110,7 +110,6 @@ public class Server {
                 PubChannel pchan = 
                     Mecha.getChannels().getChannel(chan);
                 if (pchan != null) {
-                    log.info("removing subscription to " + chan + " for <" + cl + ">");
                     pchan.removeMember(cl);
                     if (pchan.getMembers().size() == 0) {
                         Mecha.getChannels().destroyChannel(pchan.getName());
@@ -147,7 +146,8 @@ public class Server {
             Client cl = clientMap.get(connection);
             
             if (cl == null) {
-                send(connection, "ERR :no client for connection :this should never happen");
+                send(connection, "ERR :no client");
+                connection.getChannel().close();
                 return;
             }
             
@@ -162,10 +162,8 @@ public class Server {
                 if (request.equals("#end " + cl.getBlockName())) {
                     if (cl.withinGlobalBlock()) {
                         Mecha.getMVM().setGlobalBlock(cl.getBlockName(), cl.getBlock());
-                        log.info("defined global block " + cl.getBlockName());
                     } else {
                         cl.getContext().setBlock(cl.getBlockName(), cl.getBlock());
-                        log.info("defined local block " + cl.getBlockName());
                     }
                     cl.setWithinBlock(false);
                     cl.setWithinGlobalBlock(false);

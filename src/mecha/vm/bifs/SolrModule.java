@@ -39,31 +39,7 @@ public class SolrModule extends MVMModule {
     
     public void moduleUnload() throws Exception {
     }
-    
-    /*
-     * SolrCommit performs a cluster-wide commit
-     *  to all index solr instances.
-    */
-    public class SolrCommit extends MVMFunction {
-        Map<String, Integer> facetMap;
         
-        public SolrCommit(String refId, MVMContext ctx, JSONObject config) 
-            throws Exception {
-            super(refId, ctx, config);
-        }
-        
-        public void onStartEvent(JSONObject msg) throws Exception {
-            long t_st = System.currentTimeMillis();
-            Mecha.getSolrManager().getIndexServer().commit(true,true);
-            long t_elapsed = System.currentTimeMillis() - t_st;
-            JSONObject response = new JSONObject();
-            response.put("host", Mecha.getHost());
-            response.put("elapsed", t_elapsed);
-            broadcastDataMessage(response);
-            broadcastDone();
-        }
-    }
-    
     /*
      * Solr-specific optimization of WithSortedCoverage.
      *
@@ -172,7 +148,6 @@ public class SolrModule extends MVMModule {
                 }
                 partitionQuery.append("\n");
                 String query = partitionQuery.toString().replace(" OR \n", "");
-                log.info("composite query: " + host + ": " + query);
                 
                 String doVerb = config.getJSONObject("do").getString("$");
                 String proxyVar = 
@@ -185,7 +160,6 @@ public class SolrModule extends MVMModule {
                 doAstStr = doAstStr.replaceAll(hostMarker, host);
                 doAstStr = doAstStr.replaceAll(queryMarker, query);
                 JSONObject doAst = new JSONObject(doAstStr);
-                log.info("doAst: " + doAst.toString(2));
                 String vertexRefId = 
                     Mecha.getMVM().nativeAssignment(getContext(), proxyVar, doAst);
                 Mecha.getMVM().nativeFlowAddEdge(getContext(), proxyVar, thisInstVar);
@@ -264,7 +238,6 @@ public class SolrModule extends MVMModule {
         
         public void onDoneEvent(JSONObject msg) throws Exception {
             doneCount++;
-            log.info("<iterator> done: " + doneCount + " of " + proxyVars.size());
             if (doneCount == proxyVars.size()) {
             
                 /*
@@ -280,7 +253,6 @@ public class SolrModule extends MVMModule {
                 JSONObject doneMsg = new JSONObject();
                 doneMsg.put("complete", doneCount);
                 broadcastDone(doneMsg);
-                log.info("<iterator> done: " + msg.toString());
             } else {
                 processTable();
             }
@@ -389,20 +361,21 @@ public class SolrModule extends MVMModule {
                                 long solr_t_st = System.currentTimeMillis();
                                 QueryResponse res = 
                                     Mecha.getSolrManager().getSolrServer(core).query(solrParams);
-                                Mecha.getMonitoring().metric("mecha.vm.bifs.solr-module." + core + ".select-iterator.query.ms",
-                                                             System.currentTimeMillis() - solr_t_st);
-
+                                
+                                Mecha.getMonitoring()
+                                     .metric("mecha.vm.bifs.solr-module." + 
+                                                core + ".select-iterator.query.ms",
+                                             System.currentTimeMillis() - solr_t_st);
                                 
                                 rawFound = res.getResults().getNumFound();
                                 if (start == rawFound) break;
                                 if (res.getResults().getNumFound() == 0) {
-                                    log.info("no results! " + getConfig().toString());
                                     break;
                                 }
                                 if (rowLimit == -1) {
                                     rowLimit = res.getResults().getNumFound();
-                                    log.info("rowLimit -1, rowLimit set to " + rowLimit);
                                 }
+                                
                                 for(SolrDocument doc : res.getResults()) {
                                     try {
                                         /*
@@ -491,7 +464,6 @@ public class SolrModule extends MVMModule {
                         doneMsg.put("stopped", earlyExit.get());
                         doneMsg.put("count", count);
                         doneMsg.put("$solr-config", getConfig());
-                        log.info("<done> solr iterator " + doneMsg.toString());
                         broadcastDone(doneMsg);
                     } catch (Exception ex1) {
                         Mecha.getMonitoring().error("mecha.vm.bifs.solr-module", ex1);

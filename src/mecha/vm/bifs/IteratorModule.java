@@ -100,7 +100,6 @@ public class IteratorModule extends MVMModule {
         }
         
         public void onDoneEvent(JSONObject msg) throws Exception {
-            log.info("<done> " + msg.toString());
             buffer.put(msg);
         }
         

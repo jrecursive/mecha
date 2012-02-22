@@ -84,6 +84,18 @@ public class MDB {
         log.info("started");
     }
     
+    public void commit() throws Exception {
+        Mecha.getMonitoring().log("mecha.db.mdb", "starting object store commit");
+        for(Map.Entry<String, Map<String, Bucket>> entry : partitionBuckets.entrySet()) {
+            for(Map.Entry <String, Bucket> bucketEntry : entry.getValue().entrySet()) {
+                log.info("commit: " + entry.getKey() + ": " + bucketEntry.getKey());
+                bucketEntry.getValue().commit();
+            }
+        }
+        Mecha.getMonitoring().log("mecha.db.mdb", "object store commit complete");
+        log.info("object store commit complete");
+    }
+    
     private void startAllPartitions() throws Exception {
         String dataDirRoot = Mecha.getConfig().getString("data-directory");
         File rc = new File(dataDirRoot);
@@ -331,7 +343,6 @@ public class MDB {
         if (null == bucketMap.get(b)) {
             String bEnc = HashUtils.sha1(b);
             String bucketDataDir = partitionDirs.get(partition) + "/" + bEnc;
-            log.info("starting Bucket(" + partition + "," + bucketDataDir + ")");
             String mdFn = bucketDataDir + ".bucket";
             String bucketName = TextFile.get(mdFn);
             if (null == bucketName) {
@@ -351,7 +362,6 @@ public class MDB {
         if (rc.isDirectory()) {
             for (File f : rc.listFiles()) {
                 if (f.toString().endsWith(".bucket")) {
-                    //log.info("openBuckets: " + partition + ", " + pDir + " -> " + f.toString());
                     byte[] bucket = TextFile.get(f.toString()).getBytes("UTF-8");
                     getBucket(partition, bucket); // TODO don't initialize by side effect
                 }

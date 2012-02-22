@@ -694,8 +694,6 @@ public class MVM {
         StringWriter w = new StringWriter();
         Velocity.evaluate(context, w, "#" + verb, blockStr);
         
-        log.info("Rendered macro: " + w.toString());
-        
         String[] renderedMacro = w.toString().split("\n");
         for(String line : renderedMacro) {
             execute(ctx, line);

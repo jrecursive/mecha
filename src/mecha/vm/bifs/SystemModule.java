@@ -24,6 +24,31 @@ public class SystemModule extends MVMModule {
     public void moduleUnload() throws Exception {
     }
     
+    /*
+     * Commit performs a commit operation on
+     *  both the local Solr "index" core and
+     *  the object store.
+    */
+    public class Commit extends MVMFunction {
+        Map<String, Integer> facetMap;
+        
+        public Commit(String refId, MVMContext ctx, JSONObject config) 
+            throws Exception {
+            super(refId, ctx, config);
+        }
+        
+        public void onStartEvent(JSONObject msg) throws Exception {
+            long t_st = System.currentTimeMillis();
+            Mecha.getSolrManager().getIndexServer().commit(true,true);
+            long t_elapsed = System.currentTimeMillis() - t_st;
+            JSONObject response = new JSONObject();
+            response.put("host", Mecha.getHost());
+            response.put("elapsed", t_elapsed);
+            broadcastDataMessage(response);
+            broadcastDone();
+        }
+    }
+    
     public class Repeater extends MVMFunction {
         final private boolean splitData;
         final private boolean splitControl;

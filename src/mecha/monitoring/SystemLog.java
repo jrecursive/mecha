@@ -106,15 +106,10 @@ public class SystemLog {
                         Mecha.getConfig()
                              .getJSONObject("log")
                              .getString("metric-pruning-interval");
-
                     String logPruningInterval = 
                         Mecha.getConfig()
                              .getJSONObject("log")
                              .getString("log-pruning-interval");
-
-                    log.info("Pruning metrics on interval " + 
-                        metricPruningInterval + ", log on interval " + 
-                        logPruningInterval);
                     solrServer.deleteByQuery("bucket:metric AND last_modified:[* TO NOW-" +
                                              metricPruningInterval + "]");
                     solrServer.deleteByQuery("bucket:log AND last_modified:[* TO NOW-" +

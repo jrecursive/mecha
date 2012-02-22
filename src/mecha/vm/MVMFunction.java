@@ -199,6 +199,57 @@ public abstract class MVMFunction {
 
         onCreate(refId, context, config);
     }
+        
+    public MVMContext getContext() {
+        return context;
+    }
+    
+    public JSONObject getConfig() {
+        return config;
+    }
+    
+    public String getRefId() {
+        return refId;
+    }
+    
+    /*
+     * Channels
+    */
+    public String getDataChannelName() {
+        return dataChannelName;
+    }
+    
+    public String getControlChannelName() {
+        return controlChannelName;
+    }
+    
+    public PubChannel getDataChannel() {
+        return Mecha.getChannels().getChannel(getDataChannelName());
+    }
+
+    public PubChannel getControlChannel() {
+        return Mecha.getChannels().getChannel(getControlChannelName());
+    }
+
+    protected static String deriveControlChannelName(String dataChannelName) {
+        return dataChannelName + CONTROL_CHANNEL_SUFFIX;
+    }    
+    
+    public void addIncomingChannel(PubChannel channel) {
+        incomingChannels.add(channel);
+    }
+    
+    public void addOutgoingChannel(PubChannel channel) {
+        outgoingChannels.add(channel);
+    }
+    
+    public Set<PubChannel> getIncomingChannels() {
+        return incomingChannels;
+    }
+    
+    public Set<PubChannel> getOutgoingChannels() {
+        return outgoingChannels;
+    }
     
     private void interpretPrePostConfig(List<String> processorFunctionList, 
                                         Map<String, JSONObject> processorFunctionConfig,
@@ -283,57 +334,6 @@ public abstract class MVMFunction {
                     " };\n");
             log.info(field + " registered");
         }
-    }
-    
-    public MVMContext getContext() {
-        return context;
-    }
-    
-    public JSONObject getConfig() {
-        return config;
-    }
-    
-    public String getRefId() {
-        return refId;
-    }
-    
-    /*
-     * Channels
-    */
-    public String getDataChannelName() {
-        return dataChannelName;
-    }
-    
-    public String getControlChannelName() {
-        return controlChannelName;
-    }
-    
-    public PubChannel getDataChannel() {
-        return Mecha.getChannels().getChannel(getDataChannelName());
-    }
-
-    public PubChannel getControlChannel() {
-        return Mecha.getChannels().getChannel(getControlChannelName());
-    }
-
-    protected static String deriveControlChannelName(String dataChannelName) {
-        return dataChannelName + CONTROL_CHANNEL_SUFFIX;
-    }    
-    
-    public void addIncomingChannel(PubChannel channel) {
-        incomingChannels.add(channel);
-    }
-    
-    public void addOutgoingChannel(PubChannel channel) {
-        outgoingChannels.add(channel);
-    }
-    
-    public Set<PubChannel> getIncomingChannels() {
-        return incomingChannels;
-    }
-    
-    public Set<PubChannel> getOutgoingChannels() {
-        return outgoingChannels;
     }
     
     /*
