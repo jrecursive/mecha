@@ -70,7 +70,7 @@ public class Monitoring {
                         rates.clear();
                     }
                     rateMonitorables.removeAll(deadRefs);
-                    Thread.sleep(1000);
+                    Thread.sleep(5000);
                 } catch (Exception ex) {
                     ex.printStackTrace();
                 }
@@ -119,9 +119,11 @@ public class Monitoring {
             createMetric(name, DEFAULT_RATE_WINDOW_SIZE);
         }
         metrics.get(name).addValue(val);
+        /*
         JSONObject doc = new JSONObject();
         doc.put("value_d", val);
         systemLog.logMetric(name, doc);
+        */
     }
     
     /*
@@ -182,6 +184,18 @@ public class Monitoring {
     */
     public Metric getMetric(String name) throws Exception {
         return metrics.get(name);
+    }
+    
+    public JSONObject asJSON(int entries) throws Exception {
+        JSONObject obj = new JSONObject(); 
+        for(String name : metrics.keySet()) {
+            obj.put(name, metrics.get(name).asJSON(entries));
+        }
+        return obj;
+    }
+    
+    public Map<String, Metric> getMetrics() {
+        return metrics;
     }
     
     /*

@@ -16,9 +16,9 @@
                     class="${solr.directoryFactory:solr.RAMDirectoryFactory}"/>
   <indexDefaults>
     <useCompoundFile>false</useCompoundFile>
-    <mergeFactor>10</mergeFactor>
+    <mergeFactor>100</mergeFactor>
     <ramBufferSizeMB>32</ramBufferSizeMB>
-    <maxBufferedDocs>500</maxBufferedDocs>
+    <maxBufferedDocs>10000</maxBufferedDocs>
     <maxFieldLength>10000</maxFieldLength>
     <writeLockTimeout>1000</writeLockTimeout>
     <commitLockTimeout>10000</commitLockTimeout>
@@ -29,7 +29,7 @@
   <mainIndex>
     <useCompoundFile>false</useCompoundFile>
     <ramBufferSizeMB>32</ramBufferSizeMB>
-    <mergeFactor>10</mergeFactor>
+    <mergeFactor>100</mergeFactor>
     <unlockOnStartup>false</unlockOnStartup>
     <reopenReaders>true</reopenReaders>
     <deletionPolicy class="solr.SolrDeletionPolicy">
@@ -42,7 +42,7 @@
   <updateHandler class="solr.DirectUpdateHandler2">
        <autoCommit> 
          <maxDocs>10000</maxDocs>
-         <maxTime>10000</maxTime> 
+         <maxTime>1000</maxTime> 
        </autoCommit>
     <!-- Update Related Event Listeners
          

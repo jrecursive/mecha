@@ -133,7 +133,6 @@ public class SystemLog {
                                              logPruningInterval + "]");
                     solrServer.deleteByQuery("bucket:error AND last_modified:[* TO NOW-" +
                                              logPruningInterval + "]");
-                    solrServer.commit(false, false);
                     Thread.sleep(60000);
                 } catch (java.lang.InterruptedException iex) {
                     log.info("pruner thread stopped");

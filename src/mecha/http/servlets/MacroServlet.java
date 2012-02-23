@@ -180,6 +180,7 @@ public class MacroServlet extends HttpServlet {
             } finally {
                 mechaClient.exec("reset");
                 mechaClient.exec("$bye");
+                mechaClient = null;
             }
         } catch (Exception ex) {
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);

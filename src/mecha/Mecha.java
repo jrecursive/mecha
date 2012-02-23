@@ -261,7 +261,11 @@ public class Mecha {
      *  class.
     */
     public static String guid(Class c) throws Exception {
-        return guid(c.getName());
+        
+        String[] parts = c.getName().split("\\.");
+        return guid(parts[parts.length-1]);
+        
+        //return guid(c.getName());
     }
     
     /*
@@ -277,21 +281,8 @@ public class Mecha {
     public static String guid(String guidType) throws Exception {
         String nodeId = Mecha.getConfig()
                              .getString("server-addr");
-        return nodeId + GUID_SEP + UUID.randomUUID() + GUID_SEP + guidType;
-    }
-    
-    /*
-     * Get the host from which the supplied guid originated.
-    */
-    public static String getGuidHost(String guid) throws Exception {
-        return guid.split(GUID_SEP)[0];
-    }
-    
-    /*
-     * Get the type of the guid supplied.
-    */
-    public static String getGuidType(String guid) throws Exception {
-        return guid.split(GUID_SEP)[2];
+        return HashUtils.sha1(nodeId + GUID_SEP + UUID.randomUUID()) + GUID_SEP + guidType;
+        //return nodeId + GUID_SEP + UUID.randomUUID() + GUID_SEP + guidType;
     }
     
     /*

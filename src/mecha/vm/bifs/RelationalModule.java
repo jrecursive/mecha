@@ -128,14 +128,14 @@ public class RelationalModule extends MVMModule {
         }
         
         private void advanceLeft() throws Exception {
-            if (leftDone) throw new Exception("cannot advance left-hand source after end of stream");
+            if (leftDone) joinComplete();
             JSONObject nextMsg = new JSONObject();
             nextMsg.put("$", "next");
             Mecha.getMVM().nativeControlMessage(getContext(), leftInputVar, nextMsg);
         }
 
         private void advanceRight() throws Exception {
-            if (rightDone) throw new Exception("cannot advance right-hand source after end of stream");
+            if (rightDone) joinComplete();
             JSONObject nextMsg = new JSONObject();
             nextMsg.put("$", "next");
             Mecha.getMVM().nativeControlMessage(getContext(), rightInputVar, nextMsg);
@@ -152,6 +152,8 @@ public class RelationalModule extends MVMModule {
                 if (left == null) {
                     rightDone = true;
                     log.info("No lefthand results.");
+                    joinComplete();
+                    return;
                 } else {
                     log.info("<left-done> left: " + left.toString());
                 }
@@ -161,6 +163,8 @@ public class RelationalModule extends MVMModule {
                 if (right == null) {
                     leftDone = true;
                     log.info("No righthand results.");
+                    joinComplete();
+                    return;
                 } else {
                     log.info("<right-done> right: " + right.toString());
                 }

@@ -16,6 +16,7 @@ import mecha.vm.*;
 import mecha.client.*;
 import mecha.json.*;
 import mecha.monitoring.*;
+import mecha.util.*;
 
 @SuppressWarnings("serial")
 public class ProcServlet extends HttpServlet {
@@ -30,17 +31,6 @@ public class ProcServlet extends HttpServlet {
         throws ServletException, IOException {
         try {
             response.setCharacterEncoding("UTF-8");
-            
-            log.info(">> " + request);
-            log.info(">> " + request.getPathInfo());
-            log.info(">> " + request.getQueryString());
-            log.info(">> " + request.getServletPath());
-            log.info(">> " + request.getParameterMap());
-            
-            System.out.println("request.getPathInfo = " + request.getPathInfo());
-            System.out.println("request.getQueryString = " + request.getQueryString());
-            System.out.println("request.getParameterMap = " + request.getParameterMap());
-            
             final JSONObject params = new JSONObject();
             Map<String, String[]> requestParamMap = request.getParameterMap();
             for(String k : requestParamMap.keySet()) {
@@ -115,7 +105,34 @@ public class ProcServlet extends HttpServlet {
      * /system/metrics/<name>   most recent value of <name>
     */
     private JSONObject doMetricsRequest(String[] parts, JSONObject params) throws Exception {
+        int entries;
+        if (params.has("entries")) {
+            entries = Integer.parseInt("" + params.get("entries"));
+        } else {
+            entries = 30;
+        }
+        if (params.has("all") &&
+            params.<String>get("all").equals("true")) {
+            return doClusterMetricsRequest(params, entries);
+        }
+        return Mecha.getMonitoring().asJSON(entries);
+    }
+    
+    private JSONObject doClusterMetricsRequest(JSONObject params, int entries) throws Exception {
+        Set<String> hosts = Mecha.getRiakRPC().getClusterHosts();
         JSONObject result = new JSONObject();
+        for(String host : hosts) {
+            String url = "http://" + host + ":" + 
+                Mecha.getConfig().get("http-port") +
+                "/proc/metrics?entries=" + entries;
+            try {
+                JSONObject obj = 
+                    new JSONObject(HTTPUtils.fetch(url));
+                result.put(host, obj.getJSONObject("result"));
+            } catch(Exception ex) {
+                ex.printStackTrace();
+            }
+        }
         return result;
     }
     
@@ -145,4 +162,5 @@ public class ProcServlet extends HttpServlet {
     }
     
 }
+
 

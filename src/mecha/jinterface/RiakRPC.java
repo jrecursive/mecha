@@ -83,9 +83,13 @@ public class RiakRPC {
                     }
                     Mecha.getMonitoring().error("mecha.riak-connector", ex);
                     log.info("Riak link broken, restarting...");
+                    Mecha.getMonitoring().log("mecha.jinterface.riak-rpc.rpc", 
+                                              "Riak link broken, restarting...");
                     Mecha.riakDown();
                     otpRPC = getOtpRPC();
                     log.info("Riak link restored.");
+                    Mecha.getMonitoring().log("mecha.jinterface.riak-rpc.rpc", 
+                                              "Riak link restored.");
                 }
             }
         } finally {

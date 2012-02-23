@@ -470,7 +470,7 @@ public abstract class MVMFunction {
     }
     
     public void control(JSONObject msg) throws Exception {
-        rates.add("mecha.vm.mvm-function.global.control-message");
+        rates.add("mecha.mvm.control-msg");
         
         /*
          * detect & intercept 'native' control messages:
@@ -498,7 +498,7 @@ public abstract class MVMFunction {
     }
     
     public void data(JSONObject msg) throws Exception {
-        rates.add("mecha.vm.mvm-function.global.data-message");
+        rates.add("mecha.mvm.data-msg");
         if (msg.has("$") &&
             msg.getString("$").equals("done")) {
             done(msg);
@@ -517,7 +517,7 @@ public abstract class MVMFunction {
     }
     
     public void start(JSONObject msg) throws Exception {
-        rates.add("mecha.vm.mvm-function.global.start-message");
+        rates.add("mecha.mvm.start-msg");
         onStartEvent(msg);
     }
     
@@ -525,7 +525,7 @@ public abstract class MVMFunction {
     }
     
     public void cancel(JSONObject msg) throws Exception {
-        rates.add("mecha.vm.mvm-function.global.cancel-message");
+        rates.add("mecha.mvm.cancel-msg");
         onCancelEvent(msg);
     }
     
@@ -537,7 +537,7 @@ public abstract class MVMFunction {
     }
     
     public void done(JSONObject msg) throws Exception {
-        rates.add("mecha.vm.mvm-function.global.done-message");
+        rates.add("mecha.mvm.done-msg");
         /*
         if (isDone) {
             throw new Exception("MVMFunction already called done!");

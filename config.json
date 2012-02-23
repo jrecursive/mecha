@@ -97,7 +97,7 @@
     ##  and any related indexed exception traces.
     ##
     "log": {
-        "metric-pruning-interval": "2HOUR",
+        "metric-pruning-interval": "5MINUTE",
         "log-pruning-interval": "24HOUR"
     },
     
@@ -168,8 +168,8 @@
     ##  on mecha shutdown (usually used for development).
     ##
     
-    "riak-start": true,
-    "riak-stop": true
+    "riak-start": false,
+    "riak-stop": false
 }
 
 

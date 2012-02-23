@@ -77,7 +77,7 @@ public class MDB {
         documentQueueIndexerThread.start();
         
         log.info("Starting all existing partitions...");
-        startAllPartitions();
+        //startAllPartitions();
         
         Mecha.getMonitoring().addMonitoredRates(rates);
         

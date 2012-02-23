@@ -255,7 +255,6 @@ ${guid}-reducer -> ${sink}
 
 #define-global system-select
 #if (!$args.fields) #set ($args.fields = "*") #end
-#set ($args.filter = $util.escapeQuotes($args.filter))
 ${root} = (warp host:${args.host} do:(solr-select params:(q:"${args.filter}" sort:"${args.sort}" rows:${args.limit} fl:"${args.fields}") core:system))
 ${root} -> ${sink}
 #end system-select

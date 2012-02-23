@@ -55,5 +55,29 @@ public class Metric {
         stats.clear();
     }
     
+    public JSONObject asJSON(int recentValueCount) throws Exception {
+        JSONObject obj = new JSONObject();
+        JSONArray values = new JSONArray();
+        long sz = stats.getN();
+        for(int i=0; i<recentValueCount; i++) {
+            int idx = (int) sz - i - 1;
+            if (idx < 0) break;
+            values.put(stats.getElement(idx));
+        }
+        obj.put("values", values);
+        obj.put("min", stats.getMin());
+        obj.put("max", stats.getMax());
+        obj.put("mean", stats.getMean());
+        obj.put("100th", stats.getPercentile(99));
+        obj.put("99th", stats.getPercentile(99));
+        obj.put("95th", stats.getPercentile(99));
+        obj.put("variance", stats.getVariance());
+        obj.put("stddev", stats.getStandardDeviation());
+        obj.put("kurtosis", stats.getKurtosis());
+        obj.put("skewness", stats.getSkewness());
+        obj.put("sumsq", stats.getSumsq());
+        return obj;
+    }
+    
 }
 
