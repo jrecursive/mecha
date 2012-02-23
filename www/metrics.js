@@ -51,7 +51,7 @@ function getMetrics() {
                 // }
                 dnames.push(dname);
             }
-            html += "<td style='width:" + Math.ceil(100/(td_max+1)) + "%'>" + host + "</td>";
+            html += "<td style='vertical-align:middle; horizontal-align:center; width:" + Math.ceil(100/(td_max+1)) + "%'><center>" + host + "</center></td>";
             
             td_c = 0;
             for (var i=0; i<names.length; i++) {
@@ -76,8 +76,8 @@ function getMetrics() {
                                 var cv = 1 - (pre_val / cur_val);
                                 bgcol = "rgba(255,0,0," + cv + ")";
                             } else if (cur_val < pre_val) {
-                                var cv = 1 - (pre_val / cur_val);
-                                bgcol = "rgba(0,0,255," + cv +")";
+                                var cv = (cur_val / pre_val) * 0.25;
+                                bgcol = "rgba(0,186,255," + cv +")";
                             }
                             console.log(bgcol);
                         }
@@ -133,7 +133,7 @@ function getMetrics() {
         $(".dynamicsparkline").sparkline();
         $("div.tooltip").remove();
         $("a.lbl").tooltip({ "trigger": "hover" });
-        setTimeout("getMetrics();", 250);
+        setTimeout("getMetrics();", 100);
     });
 }
 
