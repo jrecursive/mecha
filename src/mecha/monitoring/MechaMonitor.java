@@ -97,16 +97,23 @@ public class MechaMonitor {
             threadTaskCount += funEx.getTaskCount();
         }
         
-        m.metric("mecha.mvm.global.vars", numVars);
+        //m.metric("mecha.mvm.global.vars", numVars);
         m.metric("mecha.mvm.global.functions", numFuns);
-        m.metric("mecha.mvm.global.blocks", numBlocks);
-        m.metric("mecha.mvm.global.fibers", numFibers);
+        //m.metric("mecha.mvm.global.blocks", numBlocks);
+        //m.metric("mecha.mvm.global.fibers", numFibers);
         m.metric("mecha.mvm.global.memory-channels", numMemChans);
         m.metric("mecha.mvm.global.functions.active", threadActive);
         m.metric("mecha.mvm.global.functions.complete", threadComplete);
         m.metric("mecha.mvm.global.functions.pool-size", threadPoolSize);
         m.metric("mecha.mvm.global.functions.queue-depth", threadQueueDepth);
         m.metric("mecha.mvm.global.functions.task-count", threadTaskCount);
+        
+        /*
+         * JVM
+        */
+        m.metric("jvm.free-memory", Runtime.getRuntime().freeMemory());
+        m.metric("jvm.used-memory", Runtime.getRuntime().maxMemory() - 
+                                    Runtime.getRuntime().freeMemory());
         
         /*
          * Channels

@@ -5,7 +5,7 @@ prevdata = {};
 function getMetrics() {
     var writtenHeader = false;
     var html = "<table class='table table-bordered table-condensed'>";
-    $.getJSON('/proc/metrics?entries=20&all=true', function(data) {
+    $.getJSON('/proc/metrics?entries=30&all=true', function(data) {
         metrics = data.result;
         names = new Array();
         dnames = new Array();
@@ -31,24 +31,9 @@ function getMetrics() {
             for(var idx in names) {
                 var name = names[idx];
                 parts = name.split(".");
-                var dname = "";
-                /*if (parts.length >= 3) {
-                    var dname = 
-                        parts[parts.length-3] + "." + 
-                        parts[parts.length-2] + "." + 
-                        parts[parts.length-1]
-                } else {
-                */
-                    var dname = 
-                        parts[parts.length-2] + "." + 
-                        parts[parts.length-1]
-                    if ($.inArray(dname, dnames)) {
-                        dname = 
-                            parts[parts.length-3] + "." + 
-                            parts[parts.length-2] + "." + 
-                            parts[parts.length-1]
-                    }
-                // }
+                var dname = 
+                    parts[parts.length-2] + "." + 
+                    parts[parts.length-1]
                 dnames.push(dname);
             }
             html += "<td style='vertical-align:middle; horizontal-align:center; width:" + Math.ceil(100/(td_max+1)) + "%'><center>" + host + "</center></td>";
@@ -76,7 +61,7 @@ function getMetrics() {
                                 var cv = 1 - (pre_val / cur_val);
                                 bgcol = "rgba(255,0,0," + cv + ")";
                             } else if (cur_val < pre_val) {
-                                var cv = (cur_val / pre_val) * 0.25;
+                                var cv = (cur_val / pre_val) * 0.15;
                                 bgcol = "rgba(0,186,255," + cv +")";
                             }
                             console.log(bgcol);
@@ -95,7 +80,7 @@ function getMetrics() {
                 
                 html += "<td style='vertical-align:middle; background:" + bgcol + "; " +
                         "width:" + Math.ceil(100/(td_max+1)) + "%'>" + 
-                        "<center><a class='lbl' style='color:black;' href='#' rel='tooltip' title='" + name + "'>" + dname + "</a><br>";
+                        "<center><a class='lbl' style='color:black;' href='#' rel='tooltip' title='" + name + ": " + metric.values[metric.values.length-1] + "'>" + dname + "</a><br>";
                 html += "<span style='display:inline;' class='dynamicsparkline'>";
                 for(var j=0; j<metric.values.length; j++) {
                     var value = metric.values[j];
@@ -133,7 +118,7 @@ function getMetrics() {
         $(".dynamicsparkline").sparkline();
         $("div.tooltip").remove();
         $("a.lbl").tooltip({ "trigger": "hover" });
-        setTimeout("getMetrics();", 100);
+        setTimeout("getMetrics();", 1000);
     });
 }
 
@@ -147,7 +132,7 @@ function getLog(host) {
     }
     var url = "/mecha/system-select?host=" + 
         host + 
-        "&sort=last_modified desc&limit=100&filter=bucket:log AND NOT name:riak.log";
+        "&sort=last_modified desc&limit=10&filter=bucket:log AND NOT name:riak.log";
     log_ok = false;
     xhr = $.getJSON(url, function(data) {
         log_triggered = true;
