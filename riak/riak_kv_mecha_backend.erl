@@ -30,32 +30,29 @@
 -endif.
 
 -export([api_version/0,
+         capabilities/1,
+         capabilities/2,
          start/2, 
          stop/1,
          get/3, 
          put/5,
-         
-         list/1,
-         list_bucket/2,
-         
+         delete/4,
+         drop/1,
          fold_buckets/4,
          fold_keys/4,
          fold_objects/4,
-         delete/4,
-         status/1,
-         
          is_empty/1,
-         drop/1,
+         status/1,
          callback/3,
-         
+
          bucket_coverage/1,
-         bkey_preflist/2]).
+         bkey_preflist/2,
+         stream_processor/4]).
 
-% Internal processes
--export([stream_processor/4]).
-
-% @type state() = term().
 -record(state, {mecha_node, partition, callback_pid}).
+
+-type state() :: #state{}.
+-type config() :: [].
 
 % api_version
 -define(API_VERSION, 1).
@@ -67,7 +64,7 @@
 -define(JI_PLACEHOLDER, '_').
 
 %%
-%% custom backend functions
+%% mecha-specific backend functions (called via RPC)
 %%
 
 bucket_coverage(Bucket) ->
@@ -97,6 +94,18 @@ bkey_preflist(Bucket, Key) ->
 %% standard backend functions
 %%
 
+%% @doc Return the capabilities of the backend.
+-spec capabilities(state()) -> {ok, [atom()]}.
+capabilities(_) ->
+    {ok, ?CAPABILITIES}.
+
+%% @doc Return the capabilities of the backend.
+-spec capabilities(riak_object:bucket(), state()) -> {ok, [atom()]}.
+capabilities(_, _) ->
+    {ok, ?CAPABILITIES}.
+
+%% @doc Start the memory backend
+-spec start(integer(), config()) -> {ok, state()}.
 start(Partition, Config) ->
     io:format("start ~p~n", [Partition]),
     put(mecha_node, config_value(mecha_node, Config, 'mecha_ji@127.0.0.1')),
@@ -108,12 +117,19 @@ start(Partition, Config) ->
                             partition=Partition }};
         _  -> {error, cannot_contact_mecha}
     end.
-    
+
+%% @doc Stop the memory backend
+-spec stop(state()) -> ok.
 stop(#state { mecha_node=_MechaNode, partition=Partition}) -> 
     io:format("stop ~p~n", [Partition]),
     call_mecha(kv_store, stop, [Partition, ?JI_PLACEHOLDER]),
     ok.
     
+%% @doc Retrieve an object from the memory backend
+-spec get(riak_object:bucket(), riak_object:key(), state()) ->
+                 {ok, any(), state()} |
+                 {ok, not_found, state()} |
+                 {error, term(), state()}.
 get(Bucket, Key, State = #state { mecha_node=_MechaNode, partition=Partition }) ->
     case call_mecha(kv_store, get, [Partition, Bucket, Key]) of
         {error, not_found} ->
@@ -122,6 +138,14 @@ get(Bucket, Key, State = #state { mecha_node=_MechaNode, partition=Partition }) 
             {ok, term_to_binary(riak_object:from_json(mochijson2:decode(Value0))), State}
     end.
 
+%% @doc Insert an object into the memory backend.
+%% NOTE: The memory backend does not currently
+%% support secondary indexing and the _IndexSpecs
+%% parameter is ignored.
+-type index_spec() :: {add, Index, SecondaryKey} | {remove, Index, SecondaryKey}.
+-spec put(riak_object:bucket(), riak_object:key(), [index_spec()], binary(), state()) ->
+                 {ok, state()} |
+                 {error, term(), state()}.
 put(Bucket, Key, _IndexSpecs, Value, State = #state { mecha_node=_MechaNode, partition=Partition }) ->
     RObj = binary_to_term(Value),
     Value1 = list_to_binary(mochijson2:encode(riak_object:to_json(RObj))),
@@ -132,6 +156,12 @@ put(Bucket, Key, _IndexSpecs, Value, State = #state { mecha_node=_MechaNode, par
             {error, mecha_put_error, State}
     end.
 
+%% @doc Delete an object from the memory backend
+%% NOTE: The memory backend does not currently
+%% support secondary indexing and the _IndexSpecs
+%% parameter is ignored.
+-spec delete(riak_object:bucket(), riak_object:key(), [index_spec()], state()) ->
+                    {ok, state()}.
 delete(Bucket, Key, _IndexSpecs, State = #state { mecha_node=_MechaNode, partition=Partition }) ->
     case call_mecha(kv_store, delete, [Partition, Bucket, Key]) of
         ok ->
@@ -140,18 +170,15 @@ delete(Bucket, Key, _IndexSpecs, State = #state { mecha_node=_MechaNode, partiti
             {error, mecha_error, State}
     end.
 
-% deprecrated
-list(#state { mecha_node=_MechaNode, partition=Partition }) ->
-    call_mecha(kv_store, list, [Partition, ?JI_PLACEHOLDER]).
-
-% deprecrated
-list_bucket(#state { mecha_node=_MechaNode, partition=Partition }, Bucket) ->
-    call_mecha(kv_store, list_bucket, [Partition, Bucket]).
-
+%% @doc Returns true if this memory backend contains any
+%% non-tombstone values; otherwise returns false.
+-spec is_empty(state()) -> boolean().
 is_empty(#state { mecha_node=_MechaNode, partition=Partition }) ->
     io:format("is_empty ~p~n", [Partition]),
     call_mecha(kv_store, is_empty, [Partition, ?JI_PLACEHOLDER]).
 
+%% @doc Get the status information for this memory backend
+-spec status(state()) -> [{atom(), term()}].
 status(_State) ->
     [{mecha, awesome}].
 
@@ -169,6 +196,11 @@ fold(FoldType, TriggerFun, State = #state{ mecha_node=_MechaNode, partition=_Par
     receive
         {Ref, done, Result} ->
             {ok, Result};
+        {Ref, error, Err} ->
+            io:format("~p: fold: error: Ref = ~p, Err = ~p~n", [?MODULE,
+                                                                Ref,
+                                                                Err]),
+            {error, Err, State};
         {Ref, Err} ->
             io:format("~p: fold: error: Ref = ~p, Err = ~p~n", [?MODULE,
                                                                 Ref,
@@ -176,6 +208,11 @@ fold(FoldType, TriggerFun, State = #state{ mecha_node=_MechaNode, partition=_Par
             {error, Err, State}
     end.
 
+%% @doc Fold over all the buckets.
+-spec fold_buckets(riak_kv_backend:fold_buckets_fun(),
+                   any(),
+                   [],
+                   state()) -> {ok, any()}.
 fold_buckets(FoldBucketsFun, Acc, _Opts, State = #state{ mecha_node=_MechaNode, partition=Partition }) ->
     fold(fold_buckets, 
          fun(StreamToPid) -> cast_mecha(kv_store, fold_buckets, [Partition, StreamToPid]) end,
@@ -183,6 +220,11 @@ fold_buckets(FoldBucketsFun, Acc, _Opts, State = #state{ mecha_node=_MechaNode, 
          FoldBucketsFun,
          Acc).
 
+%% @doc Fold over all the keys for one or all buckets.
+-spec fold_keys(riak_kv_backend:fold_keys_fun(),
+                any(),
+                [{atom(), term()}],
+                state()) -> {ok, term()} | {async, fun()}.
 fold_keys(FoldKeysFun, Acc, Opts, State = #state{ mecha_node=_MechaNode, partition=Partition }) ->
     Bucket =  proplists:get_value(bucket, Opts),
     case Bucket of
@@ -200,6 +242,11 @@ fold_keys(FoldKeysFun, Acc, Opts, State = #state{ mecha_node=_MechaNode, partiti
                  Acc)
     end.
 
+%% @doc Fold over all the objects for one or all buckets.
+-spec fold_objects(riak_kv_backend:fold_objects_fun(),
+                   any(),
+                   [{atom(), term()}],
+                   state()) -> {ok, any()} | {async, fun()}.
 fold_objects(FoldObjectsFun, Acc, Opts, State = #state{ mecha_node=_MechaNode, partition=Partition }) ->
     io:format("fold_objects ~p~n", [Partition]),
     Bucket =  proplists:get_value(bucket, Opts),
@@ -218,14 +265,22 @@ fold_objects(FoldObjectsFun, Acc, Opts, State = #state{ mecha_node=_MechaNode, p
                  Acc)
     end.
 
+%% @doc Delete all objects from this memory backend
+-spec drop(state()) -> {ok, state()}.
 drop(State = #state{ mecha_node=_MechaNode, partition=Partition }) ->
     io:format("drop ~p~n", [Partition]),
     call_mecha(kv_store, drop, [Partition, ?JI_PLACEHOLDER]),
     {ok, State}.
     
 %% Ignore callbacks for other backends so multi backend works
+%% @doc Register an asynchronous callback
+-spec callback(reference(), any(), state()) -> {ok, state()}.
 callback(_State, _Ref, _Msg) ->
     ok.
+
+%% ===================================================================
+%% Internal functions
+%% ===================================================================
 
 wait_for_mecha_node(MechaNode) ->
     case net_adm:ping(MechaNode) of
@@ -272,6 +327,10 @@ stream_processor(Config, fold_buckets, Fun0, Acc) ->
             ReplyPid = proplists:get_value(reply_pid, Config),
             ReplyRef = proplists:get_value(reply_ref, Config),
             ReplyPid ! {ReplyRef, done, Acc}
+        after 60000 ->
+            ReplyPid = proplists:get_value(reply_pid, Config),
+            ReplyRef = proplists:get_value(reply_ref, Config),
+            ReplyPid ! {ReplyRef, error, timeout}
     end;
 
 stream_processor(Config, fold_keys, Fun0, Acc) ->
@@ -284,6 +343,10 @@ stream_processor(Config, fold_keys, Fun0, Acc) ->
             ReplyPid = proplists:get_value(reply_pid, Config),
             ReplyRef = proplists:get_value(reply_ref, Config),
             ReplyPid ! {ReplyRef, done, Acc}
+        after 60000 ->
+            ReplyPid = proplists:get_value(reply_pid, Config),
+            ReplyRef = proplists:get_value(reply_ref, Config),
+            ReplyPid ! {ReplyRef, error, timeout}
     end;
 
 stream_processor(Config, fold_objects, Fun0, Acc) ->    
@@ -297,11 +360,11 @@ stream_processor(Config, fold_objects, Fun0, Acc) ->
             io:format("fold_objects: done~n"),
             ReplyPid = proplists:get_value(reply_pid, Config),
             ReplyRef = proplists:get_value(reply_ref, Config),
-            ReplyPid ! {ReplyRef, done, Acc};
-        Other ->
-            erlang:garbage_collect(),
-            io:format("stream_processor Other? = ~p~n", [Other]),
-            stream_processor(Config, fold_objects, Fun0, Acc)
+            ReplyPid ! {ReplyRef, done, Acc}
+        after 60000 ->
+            ReplyPid = proplists:get_value(reply_pid, Config),
+            ReplyRef = proplists:get_value(reply_ref, Config),
+            ReplyPid ! {ReplyRef, error, timeout}
     end.
 
 config_value(Key, Config, Default) ->
