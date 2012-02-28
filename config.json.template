@@ -5,7 +5,7 @@
     "hostname": "crusty",
     
     ##
-    ## websocket server password
+    ## socket server password
     ##
     "password": "me3ch4a",
 
@@ -14,31 +14,58 @@
     ##
     "mecha-nodename": "mecha_ji@127.0.0.1",
     
+    ##
+    ## riak_kv automation / management settings
+    ##
+    
     ## 
     ## riak-nodename: full node name of local riak node
     ## riak-cookie: cookie for riak cluster
+    ## riak-http-port: port for riak http server to listen on
     ## 
-    "riak-nodename": "riak@75.125.240.202",
-    "riak-cookie": "re14ak",
+    "riak-nodename": "riak@127.0.0.1",
+    "riak-cookie": "riak",
+    "riak-http-port": 8098,
     
     ##
-    ## riak-config: is used by the system at
-    ##  runtime;
-    ##      local-url: e.g., http://0.0.0.0:8098/riak/
-    ##      pb-host: 1.2.3.4
-    ##      pb-port: 9999
+    ## once riak-partitions is set DO NOT CHANGE!
     ##
-    "riak-config": { },
+    "riak-partitions": 32,
+    
+    ##
+    ## riak-home is the usual place where you would
+    ##  ordinarily type "bin/riak start", etc.
+    ##
+    
+    "riak-home": "./riak",
+    
+    ##
+    ## the following paths are all based upon
+    ##  the riak-home setting above.
+    ##
+    
+    "riak-script": "bin/riak",
+    "riak-admin-script": "bin/riak-admin",
+    
+    "riak-app-config-template": "etc/app.config.template",
+    "riak-vm-config-template": "etc/vm.args.template",
+    
+    "riak-app-config": "etc/app.config",
+    "riak-vm-config": "etc/vm.args",
+    
+    "riak-logs": [ "log/console.log",
+                   "log/crash.log",
+                   "log/error.log" ],
     
     ##
     ## data-directory: where leveldb object store files go
     ## 
-    "data-directory": "/mecha/obj",
+    "data-directory": "./data/mecha/obj",
     
     ##
     ## log-directory: where mecha event logs go
     ##
-    "event-log-directory": "/mecha/log",
+    "event-log-directory": "./data/mecha/log",
     
     ##
     ## event-log-mode: RandomAccessFile open mode for
@@ -48,29 +75,30 @@
     ## rws: read/write content + metadata synchronous
     ## rwd: read/write content synchronous
     ##
-    "event-log-mode": "rw",
+    "event-log-mode": "rws",
     
     ##
     ## solr-home: directory where solr.xml exists
     ## solr-cores: solr cores defined in solr.xml to automatically start
     ##
     "solr-home": "./solr",
-    "solr-data-dir": "/mecha/index",
-    "solr-temporary-data-dir": "/mecha/tmp",
-    "solr-system-data-dir": "/mecha/system",
+    "solr-data-dir": "./data/mecha/index",
+    "solr-temporary-data-dir": "./data/mecha/tmp",
+    "solr-system-data-dir": "./data/mecha/system",
     "solr-cores": [ "index", "tmp", "system" ],
     
     ##
-    ## server-addr: interface to bind server to
-    ## server-port: socket client listen port
+    ## server-addr: interface to bind socket server
+    ## server-port: socket server client listen port
     ##
+    "server-addr": "127.0.0.1",
     "server-port": 10102,
     
     ##
-    ## http-port: http client listen port
+    ## http-port: http server listen port
     ## www-root: directory /* files are served from
     ##
-    "http-addr": "75.125.240.202",
+    "http-addr": "127.0.0.1",
     "http-port": 10103,
     "www-root": "./www",
     
@@ -83,6 +111,10 @@
     ##
     ## ***************************************
     ## 
+    
+    ##
+    ## Used for riak log monitoring processes.
+    ##
     
     "bash-binary": "/bin/bash",
     "tail-binary": "/usr/bin/tail",
@@ -113,52 +145,13 @@
         "cache-per-bucket": 209715200,
         "sync-on-write": true
     },
-    
-    ##
-    ## The number of documents to retrieve and buffer in any
-    ##  iterator or iterator-derived functions (e.g., 
-    ##  SolrSelectIterator).
-    ##
-    "iterator-buffer-size": 5000,
-    "fair-iterator-queues": false,
-    ## 
-    ## in seconds:
-    ##
-    "queue-offer-timeout": 1,
-    "iterator-poll-timeout": 30,
-    
+        
     ##
     ## If you start having problems with really large
     ##  objects or are using large vector sequences and
     ##  seeing framing or interest changes, double this.
     ##
     "netty-frame-size": 1048576,
-    
-    ##
-    ## riak_kv automation / management settings
-    ##
-    
-    ##
-    ## riak-home is the usual place where you would
-    ##  ordinarily type "bin/riak start", etc.
-    ##
-    
-    "riak-home": "/e/git/riak/riak-1.0.2/rel/riak",
-    
-    ##
-    ## the following paths are all based upon
-    ##  the riak-home setting above.
-    ##
-    
-    "riak-script": "bin/riak",
-    "riak-admin-script": "bin/riak-admin",
-    
-    "riak-app-config": "etc/app.config",
-    "riak-vm-config": "etc/vm.config",
-    
-    "riak-logs": [ "log/console.log",
-                   "log/crash.log",
-                   "log/error.log" ],
     
     ##
     ## start-riak: if set to false, it will not attempt to start
@@ -168,10 +161,20 @@
     ##  on mecha shutdown (usually used for development).
     ##
     
-    "riak-start": false,
-    "riak-stop": false
+    "riak-start": true,
+    "riak-stop": true,
+        
+    ##
+    ## Do not touch the below items even if you do know what you're doing.
+    ##
+    
+    ##
+    ## riak-config: is used by the system at
+    ##  runtime;
+    ##      local-url: e.g., http://0.0.0.0:8098/riak/
+    ##      pb-host: 1.2.3.4
+    ##      pb-port: 9999
+    ##
+    "riak-config": { }
+
 }
-
-
-
-

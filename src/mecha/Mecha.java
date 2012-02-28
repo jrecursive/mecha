@@ -45,6 +45,9 @@ public class Mecha {
     static {
         log.info("* reading config.json");
         config = loadConfig(TextFile.get("config.json"));
+        log.info("* generating riak config");
+        generateRiakConfigs(config);
+        System.exit(-1);
         try {
             mechaInst = new Mecha();
             mechaInst.start();
@@ -205,6 +208,10 @@ public class Mecha {
     }
     
     private static JSONObject loadConfig(String configFileStr) {
+        if (configFileStr == null) {
+            log.info("there must be a config file named 'config.json'");
+            System.exit(-1);
+        }
         try {
             StringBuffer cfsb = new StringBuffer();
             String[] configFileStrLines = configFileStr.split("\n");
@@ -240,6 +247,57 @@ public class Mecha {
             System.exit(-1);
         }
         return null;
+    }
+    
+    private static void generateRiakConfigs(JSONObject config) {
+        try {
+            String riakHome = config.<String>get("riak-home");
+            String appTemplateFn = 
+                riakHome + "/" + config.<String>get("riak-app-config-template");
+            String vmTemplateFn = 
+                riakHome + "/" + config.<String>get("riak-vm-config-template");
+            String appConfigFn = 
+                riakHome + "/" + config.<String>get("riak-app-config");
+            String vmConfigFn = 
+                riakHome + "/" + config.<String>get("riak-vm-config");
+            log.info("* writing " + appConfigFn + " via " + appTemplateFn);
+            TextFile.put(appConfigFn, 
+                         makeRiakConfig(TextFile.get(appTemplateFn), config));
+            log.info("* writing " + vmConfigFn + " via " + vmTemplateFn);
+            TextFile.put(vmConfigFn, 
+                         makeRiakConfig(TextFile.get(vmTemplateFn), config));
+            log.info("* riak config generation complete");
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            System.exit(-1);
+        }
+    }
+    
+    private static String makeRiakConfig(String str, JSONObject config) throws Exception {
+        StringBuffer cfsb = new StringBuffer();
+        try {
+            String[] configFileStrLines = str.split("\n");
+            for(String configFileLine : configFileStrLines) {
+                String cleanLine = configFileLine;
+                
+                int idx;
+                while((idx = cleanLine.indexOf("<<mecha:"))!=-1) {
+                    int idx1 = cleanLine.indexOf(">>", idx);
+                    String line0 = cleanLine.substring(0,idx);
+                    String line1 = cleanLine.substring(idx1+2);
+                    String varName = cleanLine.substring(idx+8, idx1).trim();
+                    cleanLine = line0 + config.get(varName) + line1;
+                }
+                cfsb.append(cleanLine);
+                cfsb.append("\n");
+            }
+            return cfsb.toString();
+        } catch (Exception configException) {
+            configException.printStackTrace();
+            log.info("could not parse riak config template file!  processed version: ");
+            log.info(cfsb.toString());
+            throw configException;
+        }
     }
     
     /*
