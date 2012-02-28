@@ -118,7 +118,7 @@ function getMetrics() {
         $(".dynamicsparkline").sparkline();
         $("div.tooltip").remove();
         $("a.lbl").tooltip({ "trigger": "hover" });
-        setTimeout("getMetrics();", 1000);
+        setTimeout("getMetrics();", 500);
     });
 }
 
