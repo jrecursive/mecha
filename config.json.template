@@ -25,7 +25,7 @@
     ## 
     "riak-nodename": "riak@127.0.0.1",
     "riak-cookie": "riak",
-    "riak-http-port": 8098,
+    "riak-http-port": 18098,
     
     ##
     ## once riak-partitions is set DO NOT CHANGE!

@@ -186,7 +186,7 @@ function getLog(host) {
         $("#log").html(html);
         log_ok = true;
     })
-    setTimeout("getLog('" + host + "');", 15000);
+    setTimeout("getLog('" + host + "');", 5000);
 }
 
 function getTrace(host, trace_id, ex_ct) {

@@ -476,6 +476,10 @@ public class MVM {
         if (verb.startsWith("#")) {
             String macroName = verb.substring(1);
             List<String> blockDef = resolveBlock(ctx, macroName);
+            if (blockDef == null) {
+                throw new Exception("Macro '" + macroName + "' does not exist.");
+            }
+            
             StringBuffer blockStrBuf = new StringBuffer();
             /*
              * Pre-macro wrapper code.

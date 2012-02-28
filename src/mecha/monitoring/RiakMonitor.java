@@ -127,9 +127,16 @@ public class RiakMonitor {
     }
     
     private void getRiakRuntimeStats() throws Exception {
-        JSONObject stats = 
-            new JSONObject(
-                HTTPUtils.fetch(riakStatsURL));
+        JSONObject stats;
+        try {
+            stats = 
+                new JSONObject(
+                    HTTPUtils.fetch(riakStatsURL));
+        } catch (java.io.IOException ex) {
+            Mecha.getMonitoring().log("mecha.monitoring.riak-monitor",
+                                      "warning: unable to contact riak via /stats");
+            return;
+        }
         
         /*
          * detect & transform all vnode_*, node_*, cpu_*,
