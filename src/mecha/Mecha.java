@@ -64,16 +64,16 @@ public class Mecha {
         log.info("* starting monitoring");
         monitoring = new Monitoring();
 
+        log.info("* starting channels");
+        channels = new Channels();
+        
         riakManager = new RiakManager();
         if (Mecha.getConfig().<Boolean>get("riak-start")) {
             System.out.println("* starting riak_kv");
             Mecha.ensureRiak(riakManager);
         } else {
-            System.out.println("! not forcing erlang shutdown !");
+            System.out.println("! not forcing erlang startup !");
         }
-    
-        log.info("* starting channels");
-        channels = new Channels();
 
         log.info("* establishing riak link");
         riakRPC = new RiakRPC();
@@ -102,8 +102,6 @@ public class Mecha {
         
         log.info("* starting riak connector");
         riakConnector = new RiakConnector(mdb);
-        
-        // TODO: fix init problem
         
     }
     

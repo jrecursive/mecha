@@ -41,37 +41,6 @@
          <maxDocs>100000</maxDocs>
          <maxTime>120000</maxTime> 
        </autoCommit>
-    <!-- Update Related Event Listeners
-         
-         Various IndexWriter related events can trigger Listeners to
-         take actions.
-
-         postCommit - fired after every commit or optimize command
-         postOptimize - fired after every optimize command
-      -->
-    <!-- The RunExecutableListener executes an external command from a
-         hook such as postCommit or postOptimize.
-         
-         exe - the name of the executable to run
-         dir - dir to use as the current working directory. (default=".")
-         wait - the calling thread waits until the executable returns. 
-                (default="true")
-         args - the arguments to pass to the program.  (default is none)
-         env - environment variables to set.  (default is none)
-      -->
-    <!-- This example shows how RunExecutableListener could be used
-         with the script based replication...
-         http://wiki.apache.org/solr/CollectionDistribution
-      -->
-    <!--
-       <listener event="postCommit" class="solr.RunExecutableListener">
-         <str name="exe">solr/bin/snapshooter</str>
-         <str name="dir">.</str>
-         <bool name="wait">true</bool>
-         <arr name="args"> <str>arg1</str> <str>arg2</str> </arr>
-         <arr name="env"> <str>MYVAR=val1</str> </arr>
-       </listener>
-      -->
   </updateHandler>
      <indexReaderFactory name="IndexReaderFactory" 
                          class="solr.StandardIndexReaderFactory">
@@ -91,82 +60,21 @@
                    size="512"
                    initialSize="512"
                    autowarmCount="0"/>
-    <!--
-       <fieldValueCache class="solr.FastLRUCache"
-                        size="512"
-                        autowarmCount="128"
-                        showItems="32" />
-      -->
+                   
+    <fieldValueCache class="solr.FastLRUCache"
+                    size="16384"
+                    initialSize="4096"
+                    autowarmCount="4096" />
+                    
+                    <!-- showItems="32" /> -->
 
-    <enableLazyFieldLoading>true</enableLazyFieldLoading>
-
-   <!-- Use Filter For Sorted Query
-
-        A possible optimization that attempts to use a filter to
-        satisfy a search.  If the requested sort does not include
-        score, then the filterCache will be checked for a filter
-        matching the query. If found, the filter will be used as the
-        source of document ids, and then the sort will be applied to
-        that.
-
-        For most situations, this will not be useful unless you
-        frequently get the same search repeatedly with different sort
-        options, and none of them ever use "score"
-     -->
-   <!--
-      <useFilterForSortedQuery>true</useFilterForSortedQuery>
-     -->
-
-   <!-- Result Window Size
-
-        An optimization for use with the queryResultCache.  When a search
-        is requested, a superset of the requested number of document ids
-        are collected.  For example, if a search for a particular query
-        requests matching documents 10 through 19, and queryWindowSize is 50,
-        then documents 0 through 49 will be collected and cached.  Any further
-        requests in that range can be satisfied via the cache.  
-     -->
-   <queryResultWindowSize>100</queryResultWindowSize>
-
+   <enableLazyFieldLoading>true</enableLazyFieldLoading>
+   <queryResultWindowSize>1000</queryResultWindowSize>
+    
    <!-- Maximum number of documents to cache for any entry in the
         queryResultCache. 
      -->
-   <queryResultMaxDocsCached>200</queryResultMaxDocsCached>
-
-   <!-- Query Related Event Listeners
-
-        Various IndexSearcher related events can trigger Listeners to
-        take actions.
-
-        newSearcher - fired whenever a new searcher is being prepared
-        and there is a current searcher handling requests (aka
-        registered).  It can be used to prime certain caches to
-        prevent long request times for certain requests.
-
-        firstSearcher - fired whenever a new searcher is being
-        prepared but there is no current registered searcher to handle
-        requests or to gain autowarming data from.
-
-        
-     -->
-    <!-- QuerySenderListener takes an array of NamedList and executes a
-         local query request for each NamedList in sequence. 
-      -->
-    <listener event="newSearcher" class="solr.QuerySenderListener">
-      <arr name="queries">
-        <!--
-           <lst><str name="q">solr</str><str name="sort">price asc</str></lst>
-           <lst><str name="q">rocks</str><str name="sort">weight asc</str></lst>
-          -->
-      </arr>
-    </listener>
-    <listener event="firstSearcher" class="solr.QuerySenderListener">
-      <arr name="queries">
-        <lst>
-          <str name="q">static firstSearcher warming in solrconfig.xml</str>
-        </lst>
-      </arr>
-    </listener>
+   <queryResultMaxDocsCached>1000</queryResultMaxDocsCached>
 
     <!-- Use Cold Searcher
 
@@ -609,115 +517,6 @@
     </arr>
   </requestHandler>
 
-  <!-- Clustering Component
-
-       http://wiki.apache.org/solr/ClusteringComponent
-
-       This relies on third party jars which are notincluded in the
-       release.  To use this component (and the "/clustering" handler)
-       Those jars will need to be downloaded, and you'll need to set
-       the solr.cluster.enabled system property when running solr...
-
-          java -Dsolr.clustering.enabled=true -jar start.jar
-    -->
-  <searchComponent name="clustering" 
-                   enable="${solr.clustering.enabled:false}"
-                   class="solr.clustering.ClusteringComponent" >
-    <!-- Declare an engine -->
-    <lst name="engine">
-      <!-- The name, only one can be named "default" -->
-      <str name="name">default</str>
-
-      <!-- Class name of Carrot2 clustering algorithm. 
-           
-           Currently available algorithms are:
-           
-           * org.carrot2.clustering.lingo.LingoClusteringAlgorithm
-           * org.carrot2.clustering.stc.STCClusteringAlgorithm
-           * org.carrot2.clustering.kmeans.BisectingKMeansClusteringAlgorithm
-           
-           See http://project.carrot2.org/algorithms.html for the
-           algorithm's characteristics.
-        -->
-      <str name="carrot.algorithm">org.carrot2.clustering.lingo.LingoClusteringAlgorithm</str>
-
-      <!-- Overriding values for Carrot2 default algorithm attributes.
-
-           For a description of all available attributes, see:
-           http://download.carrot2.org/stable/manual/#chapter.components.
-           Use attribute key as name attribute of str elements
-           below. These can be further overridden for individual
-           requests by specifying attribute key as request parameter
-           name and attribute value as parameter value.
-        -->
-      <str name="LingoClusteringAlgorithm.desiredClusterCountBase">20</str>
-      
-      <!-- Location of Carrot2 lexical resources.
-
-           A directory from which to load Carrot2-specific stop words
-           and stop labels. Absolute or relative to Solr config directory.
-           If a specific resource (e.g. stopwords.en) is present in the
-           specified dir, it will completely override the corresponding
-           default one that ships with Carrot2.
-
-           For an overview of Carrot2 lexical resources, see:
-           http://download.carrot2.org/head/manual/#chapter.lexical-resources
-        -->
-      <str name="carrot.lexicalResourcesDir">clustering/carrot2</str>
-
-      <!-- The language to assume for the documents.
-           
-           For a list of allowed values, see:
-           http://download.carrot2.org/stable/manual/#section.attribute.lingo.MultilingualClustering.defaultLanguage
-       -->
-      <str name="MultilingualClustering.defaultLanguage">ENGLISH</str>
-    </lst>
-    <lst name="engine">
-      <str name="name">stc</str>
-      <str name="carrot.algorithm">org.carrot2.clustering.stc.STCClusteringAlgorithm</str>
-    </lst>
-  </searchComponent>
-
-  <!-- A request handler for demonstrating the clustering component
-
-       This is purely as an example.
-
-       In reality you will likely want to add the component to your 
-       already specified request handlers. 
-    -->
-  <requestHandler name="/clustering"
-                  startup="lazy"
-                  enable="${solr.clustering.enabled:false}"
-                  class="solr.SearchHandler">
-    <lst name="defaults">
-      <bool name="clustering">true</bool>
-      <str name="clustering.engine">default</str>
-      <bool name="clustering.results">true</bool>
-      <!-- The title field -->
-      <str name="carrot.title">name</str>
-      <str name="carrot.url">id</str>
-      <!-- The field to cluster on -->
-       <str name="carrot.snippet">features</str>
-       <!-- produce summaries -->
-       <bool name="carrot.produceSummary">true</bool>
-       <!-- the maximum number of labels per cluster -->
-       <!--<int name="carrot.numDescriptions">5</int>-->
-       <!-- produce sub clusters -->
-       <bool name="carrot.outputSubClusters">false</bool>
-       
-       <str name="defType">edismax</str>
-       <str name="qf">
-          text^0.5 features^1.0 name^1.2 sku^1.5 id^10.0 manu^1.1 cat^1.4
-       </str>
-       <str name="q.alt">*:*</str>
-       <str name="rows">10</str>
-       <str name="fl">*,score</str>
-    </lst>     
-    <arr name="last-components">
-      <str>clustering</str>
-    </arr>
-  </requestHandler>
-  
   <!-- Terms Component
 
        http://wiki.apache.org/solr/TermsComponent
@@ -737,181 +536,6 @@
     </arr>
   </requestHandler>
 
-
-  <!-- Query Elevation Component
-
-       http://wiki.apache.org/solr/QueryElevationComponent
-
-       a search component that enables you to configure the top
-       results for a given query regardless of the normal lucene
-       scoring.
-    -->
-  <searchComponent name="elevator" class="solr.QueryElevationComponent" >
-    <!-- pick a fieldType to analyze queries -->
-    <str name="queryFieldType">string</str>
-    <str name="config-file">elevate.xml</str>
-  </searchComponent>
-
-  <!-- A request handler for demonstrating the elevator component -->
-  <requestHandler name="/elevate" class="solr.SearchHandler" startup="lazy">
-    <lst name="defaults">
-      <str name="echoParams">explicit</str>
-    </lst>
-    <arr name="last-components">
-      <str>elevator</str>
-    </arr>
-  </requestHandler>
-
-  <!-- Highlighting Component
-
-       http://wiki.apache.org/solr/HighlightingParameters
-    -->
-  <searchComponent class="solr.HighlightComponent" name="highlight">
-    <highlighting>
-      <!-- Configure the standard fragmenter -->
-      <!-- This could most likely be commented out in the "default" case -->
-      <fragmenter name="gap" 
-                  default="true"
-                  class="solr.highlight.GapFragmenter">
-        <lst name="defaults">
-          <int name="hl.fragsize">100</int>
-        </lst>
-      </fragmenter>
-
-      <!-- A regular-expression-based fragmenter 
-           (for sentence extraction) 
-        -->
-      <fragmenter name="regex" 
-                  class="solr.highlight.RegexFragmenter">
-        <lst name="defaults">
-          <!-- slightly smaller fragsizes work better because of slop -->
-          <int name="hl.fragsize">70</int>
-          <!-- allow 50% slop on fragment sizes -->
-          <float name="hl.regex.slop">0.5</float>
-          <!-- a basic sentence pattern -->
-          <str name="hl.regex.pattern">[-\w ,/\n\&quot;&apos;]{20,200}</str>
-        </lst>
-      </fragmenter>
-
-      <!-- Configure the standard formatter -->
-      <formatter name="html" 
-                 default="true"
-                 class="solr.highlight.HtmlFormatter">
-        <lst name="defaults">
-          <str name="hl.simple.pre"><![CDATA[<em>]]></str>
-          <str name="hl.simple.post"><![CDATA[</em>]]></str>
-        </lst>
-      </formatter>
-
-      <!-- Configure the standard encoder -->
-      <encoder name="html" 
-               class="solr.highlight.HtmlEncoder" />
-
-      <!-- Configure the standard fragListBuilder -->
-      <fragListBuilder name="simple" 
-                       default="true"
-                       class="solr.highlight.SimpleFragListBuilder"/>
-
-      <!-- Configure the single fragListBuilder -->
-      <fragListBuilder name="single" 
-                       class="solr.highlight.SingleFragListBuilder"/>
-
-      <!-- default tag FragmentsBuilder -->
-      <fragmentsBuilder name="default" 
-                        default="true"
-                        class="solr.highlight.ScoreOrderFragmentsBuilder">
-        <!-- 
-        <lst name="defaults">
-          <str name="hl.multiValuedSeparatorChar">/</str>
-        </lst>
-        -->
-      </fragmentsBuilder>
-
-      <!-- multi-colored tag FragmentsBuilder -->
-      <fragmentsBuilder name="colored" 
-                        class="solr.highlight.ScoreOrderFragmentsBuilder">
-        <lst name="defaults">
-          <str name="hl.tag.pre"><![CDATA[
-               <b style="background:yellow">,<b style="background:lawgreen">,
-               <b style="background:aquamarine">,<b style="background:magenta">,
-               <b style="background:palegreen">,<b style="background:coral">,
-               <b style="background:wheat">,<b style="background:khaki">,
-               <b style="background:lime">,<b style="background:deepskyblue">]]></str>
-          <str name="hl.tag.post"><![CDATA[</b>]]></str>
-        </lst>
-      </fragmentsBuilder>
-    </highlighting>
-  </searchComponent>
-
-  <!-- Update Processors
-
-       Chains of Update Processor Factories for dealing with Update
-       Requests can be declared, and then used by name in Update
-       Request Processors
-
-       http://wiki.apache.org/solr/UpdateRequestProcessor
-
-    --> 
-  <!-- Deduplication
-
-       An example dedup update processor that creates the "id" field
-       on the fly based on the hash code of some other fields.  This
-       example has overwriteDupes set to false since we are using the
-       id field as the signatureField and Solr will maintain
-       uniqueness based on that anyway.  
-       
-    -->
-  <!--
-     <updateRequestProcessorChain name="dedupe">
-       <processor class="solr.processor.SignatureUpdateProcessorFactory">
-         <bool name="enabled">true</bool>
-         <str name="signatureField">id</str>
-         <bool name="overwriteDupes">false</bool>
-         <str name="fields">name,features,cat</str>
-         <str name="signatureClass">solr.processor.Lookup3Signature</str>
-       </processor>
-       <processor class="solr.LogUpdateProcessorFactory" />
-       <processor class="solr.RunUpdateProcessorFactory" />
-     </updateRequestProcessorChain>
-    -->
-
-  <!-- Response Writers
-
-       http://wiki.apache.org/solr/QueryResponseWriter
-
-       Request responses will be written using the writer specified by
-       the 'wt' request parameter matching the name of a registered
-       writer.
-
-       The "default" writer is the default and will be used if 'wt' is
-       not specified in the request.
-    -->
-  <!-- The following response writers are implicitly configured unless
-       overridden...
-    -->
-  <!--
-     <queryResponseWriter name="xml" 
-                          default="true"
-                          class="solr.XMLResponseWriter" />
-     <queryResponseWriter name="json" class="solr.JSONResponseWriter"/>
-     <queryResponseWriter name="python" class="solr.PythonResponseWriter"/>
-     <queryResponseWriter name="ruby" class="solr.RubyResponseWriter"/>
-     <queryResponseWriter name="php" class="solr.PHPResponseWriter"/>
-     <queryResponseWriter name="phps" class="solr.PHPSerializedResponseWriter"/>
-     <queryResponseWriter name="velocity" class="solr.VelocityResponseWriter"/>
-     <queryResponseWriter name="csv" class="solr.CSVResponseWriter"/>
-    -->
-  <!--
-     Custom response writers can be declared as needed...
-    -->
-  <!--
-     <queryResponseWriter name="custom" class="com.example.MyResponseWriter"/>
-    -->
-
-  <!-- XSLT response writer transforms the XML output by any xslt file found
-       in Solr's conf/xslt directory.  Changes to xslt files are checked for
-       every xsltCacheLifetimeSeconds.  
-    -->
   <queryResponseWriter name="xslt" class="solr.XSLTResponseWriter">
     <int name="xsltCacheLifetimeSeconds">5</int>
   </queryResponseWriter>
@@ -941,17 +565,7 @@
      <valueSourceParser name="myfunc" 
                         class="com.mycompany.MyValueSourceParser" />
     -->
-
-  <!-- Legacy config for the admin interface -->
   <admin>
     <defaultQuery>*:*</defaultQuery>
-
-    <!-- configure a healthcheck file for servers behind a
-         loadbalancer 
-      -->
-    <!--
-       <healthcheck type="file">server-enabled</healthcheck>
-      -->
   </admin>
-
 </config>

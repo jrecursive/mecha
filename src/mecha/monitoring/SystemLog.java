@@ -184,6 +184,9 @@ public class SystemLog {
                 }
             }
             logDocQueue.put(doc);
+        } catch (java.lang.InterruptedException iex) {
+            log.info("log indexer thread interrupted (shutting down)");
+            return;
         } catch (Exception ex) {
             ex.printStackTrace();
         }

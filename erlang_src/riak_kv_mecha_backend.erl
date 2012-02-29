@@ -112,6 +112,7 @@ start(Partition, Config) ->
     put(p, Partition),
     
     io:format("~p: start(~p) -> ~p~n", [?MODULE, Partition, get(mecha_node)]),
+    wait_for_mecha_node(get(mecha_node)),
     case call_mecha(kv_store, start, [Partition, self()]) of
         ok -> {ok, #state { mecha_node=get(mecha_node), 
                             partition=Partition }};
@@ -303,7 +304,7 @@ call_mecha(Subsystem, Cmd, Args) ->
     Ref = cast_mecha(Subsystem, Cmd, Args),
     receive 
         {Ref, Result} -> Result
-    after 60000 ->
+    after 1000 ->
         io:format("call_mecha: error:~n to:~p Subsystem:~p Cmd:~p Args:~p~n",
                   [get(mecha_node), Subsystem, Cmd, Args]),
         io:format("re-establishing link and retrying request...~n"),
