@@ -105,7 +105,7 @@
     ##
     ## bucket-driver: default bucket driver class
     ##
-    "bucket-driver": "mecha.db.drivers.LevelDBBucketDriver",
+    "bucket-driver": "mecha.db.drivers.BDBJEBucketDriver",
     
     ##
     ## ***************************************
