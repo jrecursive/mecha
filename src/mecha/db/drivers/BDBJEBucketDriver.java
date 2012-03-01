@@ -183,12 +183,10 @@ public class BDBJEBucketDriver implements BucketDriver {
     }
     
     public void commit() {
-        log.info(bucketStr + ": commit(): synchronizing");
         synchronized(txn) {
-            log.info(bucketStr + ": commit(): txn: " + txn);
             txn.commit();
             txn = newTxn();
-            log.info(bucketStr + ": commit(): complete");
+            log.info(bucketStr + ": commit: ok");
         }
     }
     
