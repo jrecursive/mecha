@@ -70,35 +70,6 @@ public class LevelDBBucketDriver implements BucketDriver {
     
     public void put(byte[] key, byte[] value) throws Exception {
         try {
-            JSONObject obj = new JSONObject(new String(value));
-            JSONArray values = obj.getJSONArray("values");
-            
-            /*
-             *
-             * TODO: intelligently, consistently handle siblings (or disable them entirely?)
-             *
-             * CURRENT: index only the "most current" value
-             *
-            */
-            JSONObject jo1 = values.getJSONObject(values.length()-1);
-            JSONObject jo = new JSONObject(jo1.getString("data"));
-
-            /*
-             *
-             * If the object has been deleted via any concurrent process, remove object record & index entry
-             *
-            */
-            if (jo1.has("metadata") &&
-                jo1.getJSONObject("metadata").has("X-Riak-Deleted")) {
-                if (jo1.getJSONObject("metadata").getString("X-Riak-Deleted").equals("true")) {
-                    delete(key);
-                    return;
-                }
-            }
-            
-            /*
-             * Because the object is not deleted, write to object store.
-            */
             db.put(getWriteOptions(), key, value);        
         } catch (Exception ex) {
             Mecha.getMonitoring().error("mecha.db.mdb", ex);

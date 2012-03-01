@@ -5,10 +5,10 @@ import java.util.List;
 import java.util.ArrayList;
 import java.util.concurrent.*;
 import java.util.logging.*;
-import org.fusesource.leveldbjni.*;
-import static org.fusesource.leveldbjni.DB.*;
-import org.apache.solr.client.solrj.*;
-import org.apache.solr.common.*;
+
+import java.io.File;
+
+import com.sleepycat.je.*;
 
 import mecha.Mecha;
 import mecha.util.*;
@@ -24,12 +24,13 @@ public class BDBJEBucketDriver implements BucketDriver {
     final private String bucketStr;
     final private String partition;
     final private String dataDir;
+    final private File envDir;
     
-    // leveldb
-    final private DB db;
-        
-    // config
-    final private boolean syncOnWrite;
+    final private EnvironmentConfig envConfig;
+    final private Environment env;
+    final private DatabaseConfig dbConfig;
+    final private Database db;
+    private Transaction txn;
     
     public BDBJEBucketDriver(String partition, 
                              String bucketStr, 
@@ -37,68 +38,85 @@ public class BDBJEBucketDriver implements BucketDriver {
         this.partition = partition;
         this.bucketStr = bucketStr;
         this.dataDir = dataDir;
-        syncOnWrite = Mecha.getConfig().getJSONObject("leveldb").<Boolean>get("sync-on-write");
+        envDir = new File(dataDir);
+        envDir.mkdirs();
         
-        Options options = new Options()
-            .createIfMissing(true)
-            .cache(new Cache(Mecha.getConfig().getJSONObject("leveldb").getInt("cache-per-bucket")))
-            .compression(CompressionType.kSnappyCompression);
-        log.info("Bucket: " + partition + ": " + bucketStr + ": " + dataDir);
-        synchronized(BDBJEBucketDriver.class) {
-            db = DB.open(options, new File(dataDir));
-        }
-    }
-    
-    private WriteOptions getWriteOptions() {
-        return new WriteOptions().sync(syncOnWrite);
+        envConfig = new EnvironmentConfig();
+        envConfig.setTransactional(true);
+        envConfig.setAllowCreate(true);
+        
+        env = new Environment(envDir, envConfig);
+        txn = newTxn();
+        
+        dbConfig = new DatabaseConfig();
+        dbConfig.setTransactional(true);
+        dbConfig.setAllowCreate(true);
+        dbConfig.setSortedDuplicates(false);
+        dbConfig.setKeyPrefixing(true);
+        
+        /*
+         * TODO: configurable
+        */
+        dbConfig.setNodeMaxEntries(128);
+        
+        db = env.openDatabase(txn,
+                              bucketStr,
+                              dbConfig);
+        txn.commit();
+        txn = newTxn();
     }
     
     public void stop() throws Exception {
         // deletes the JNI-bound object (not the db)
-        db.delete();
+        try {
+            if (txn.isValid()) {
+                log.info(bucketStr + ": committing closing transaction");
+                txn.commit();
+            }
+            log.info(bucketStr + ": commit ok");
+        } finally {
+            log.info(bucketStr + ": closing database");
+            db.close();
+            log.info(bucketStr + ": closing environment");
+            env.close();
+        }
+        log.info(bucketStr + ": stopped");
     }
     
     public byte[] get(byte[] key) throws Exception {
-        try {
-            return db.get(new ReadOptions(), key);
-        } catch (DBException notFound) {
-            // do not log this message.
+        DatabaseEntry data = new DatabaseEntry();
+        /*
+         * TODO: configurable LockMode:
+         *  READ_UNCOMMITTED
+         *  READ_COMMITTED
+         *  DEFAULT
+         *  RMW
+        */
+        OperationStatus status =
+            db.get(null, 
+                   dbentry(key),
+                   data,
+                   LockMode.READ_UNCOMMITTED);
+        if (status == OperationStatus.SUCCESS) {
+            return data.getData();
+        } else if (status == OperationStatus.NOTFOUND) {
             return null;
+        } else {
+            throw new Exception(bucketStr + ": " +
+                "get: unknown status: " + status);
         }
     }
     
     public void put(byte[] key, byte[] value) throws Exception {
         try {
-            JSONObject obj = new JSONObject(new String(value));
-            JSONArray values = obj.getJSONArray("values");
-            
-            /*
-             *
-             * TODO: intelligently, consistently handle siblings (or disable them entirely?)
-             *
-             * CURRENT: index only the "most current" value
-             *
-            */
-            JSONObject jo1 = values.getJSONObject(values.length()-1);
-            JSONObject jo = new JSONObject(jo1.getString("data"));
-
-            /*
-             *
-             * If the object has been deleted via any concurrent process, remove object record & index entry
-             *
-            */
-            if (jo1.has("metadata") &&
-                jo1.getJSONObject("metadata").has("X-Riak-Deleted")) {
-                if (jo1.getJSONObject("metadata").getString("X-Riak-Deleted").equals("true")) {
-                    delete(key);
-                    return;
-                }
+            OperationStatus status;
+            synchronized(txn) {
+                status = db.put(txn, dbentry(key), dbentry(value));
             }
-            
-            /*
-             * Because the object is not deleted, write to object store.
-            */
-            db.put(getWriteOptions(), key, value);        
+            if (status != OperationStatus.SUCCESS) {
+                throw new RuntimeException(bucketStr + 
+                    ": put: non-success status: " + status);
+            }
         } catch (Exception ex) {
             Mecha.getMonitoring().error("mecha.db.mdb", ex);
             ex.printStackTrace();
@@ -109,77 +127,34 @@ public class BDBJEBucketDriver implements BucketDriver {
     
     public void delete(byte[] key) throws Exception {
         log.info(partition + ": delete: " + (new String(key)));
-        try {
-            db.delete(getWriteOptions(), key);
-        } catch (DBException notFound) {
-            /*
-             * TODO: analysis of discontinuity scenarios
-             *       where solr delete succeeds (0 or more) &
-             *       leveldb reports key not found; does this
-             *       warrant any action other than to log it
-             *       and otherwise ignore?
-            */
-        } catch (Exception ex) {
-            Mecha.getMonitoring().error("mecha.db.store.level-db-driver", ex);
-            /*
-             * Any other error should be rethrown.  Any exception here
-             *  indicates an error during either server.deleteByQuery (in
-             *  which case the Solr server is broken in some way), or 
-             *  any error other than key not found in the leveldb store;
-             *  ultimately, this presents a discontinuity between the
-             *  store and the index and should be handled by bubbling
-             *  the error up to the client so they may act to resolve
-             *  what amounts to a failed delete.
-            */
-            ex.printStackTrace();
-            throw ex;
+        synchronized(txn) {
+            db.delete(txn, dbentry(key));
         }
     }
     
     public boolean foreach(MDB.ForEachFunction forEachFunction) throws Exception {
-        ReadOptions ro = null;
-        Iterator iterator = null;
+        DatabaseEntry keyEntry = new DatabaseEntry();
+        DatabaseEntry dataEntry = new DatabaseEntry();
+        Cursor cursor = db.openCursor(null, null);
         try {
             boolean itrsw = true;
-            ro = new ReadOptions().snapshot(db.getSnapshot());
-            iterator = db.iterator(ro);
-            for(iterator.seekToFirst(); iterator.isValid(); iterator.next()) {
-                if (!forEachFunction.each(bucketStr.getBytes(), iterator.key(), iterator.value())) {
+            while (cursor.getNext(keyEntry, dataEntry, LockMode.READ_UNCOMMITTED) ==
+                OperationStatus.SUCCESS) {
+                if (!forEachFunction.each(bucketStr.getBytes(), 
+                                          keyEntry.getData(), 
+                                          dataEntry.getData())) {
                     itrsw = false;
                     break;
                 }
             }
             return itrsw;
         } finally {
-            if (null != iterator) {
-                iterator.delete();
-            }
-            if (null != ro) {
-                db.releaseSnapshot(ro.snapshot());
-                ro.snapshot(null);
-            }
+            cursor.close();
         }
     }
     
     public long count() throws Exception {
-        ReadOptions ro = null; 
-        Iterator iterator = null; 
-        long ct = 0;
-        try {
-            ro = new ReadOptions().snapshot(db.getSnapshot());
-            iterator = db.iterator(ro);
-            for(iterator.seekToFirst(); iterator.isValid(); iterator.next())
-                ct++;
-        } finally {
-            if (null != iterator) {
-                iterator.delete();
-            }
-            if (null != ro) {
-                db.releaseSnapshot(ro.snapshot());
-                ro.snapshot(null);
-            }
-        }
-        return ct;
+        return db.count();
     }
     
     public boolean isEmpty() throws Exception {
@@ -187,7 +162,10 @@ public class BDBJEBucketDriver implements BucketDriver {
     }
     
     public synchronized void drop() throws Exception {
-        db.delete();
+        log.info(bucketStr + ": drop(): stopping database");
+        stop();
+        log.info(bucketStr + ": drop(): deleting directory: " +
+            dataDir);
         File rc = new File(dataDir);
         deleteFile(rc);
     }
@@ -205,6 +183,25 @@ public class BDBJEBucketDriver implements BucketDriver {
     }
     
     public void commit() {
-        // not needed for leveldb (sync)
+        log.info(bucketStr + ": commit(): synchronizing");
+        synchronized(txn) {
+            log.info(bucketStr + ": commit(): txn: " + txn);
+            txn.commit();
+            txn = newTxn();
+            log.info(bucketStr + ": commit(): complete");
+        }
     }
+    
+    /*
+     * helpers...
+    */
+    
+    private Transaction newTxn() {
+        return env.beginTransaction(null, null);
+    }
+    
+    private DatabaseEntry dbentry(byte[] bytes) throws Exception {
+        return new DatabaseEntry(bytes);
+    }
+    
 }
