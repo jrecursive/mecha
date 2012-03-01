@@ -28,16 +28,12 @@ public class Bucket {
     final private String bucketStr;
     final private String partition;
     final private String dataDir;
-    
-    // leveldb
-    final private DB db;
+    final private String bucketDriverClassName;
+    final private BucketDriver db;
     
     // solr
     final private SolrServer server;
     final private LinkedBlockingQueue<SolrInputDocument> solrDocQueue;
-    
-    // config
-    final private boolean syncOnWrite;
     
     public Bucket(String partition, 
                   byte[] bucket, 
@@ -51,20 +47,15 @@ public class Bucket {
         this.dataDir = dataDir;
         this.server = server;
         this.solrDocQueue = solrDocQueue;
-        syncOnWrite = Mecha.getConfig().getJSONObject("leveldb").<Boolean>get("sync-on-write");
+        this.bucketDriverClassName = Mecha.getConfig().<String>get("bucket-driver");
         
-        Options options = new Options()
-            .createIfMissing(true)
-            .cache(new Cache(Mecha.getConfig().getJSONObject("leveldb").getInt("cache-per-bucket")))
-            .compression(CompressionType.kSnappyCompression);
-        log.info("Bucket: " + partition + ": " + bucketStr + ": " + dataDir);
-        synchronized(Bucket.class) {
-            db = DB.open(options, new File(dataDir));
-        }
-    }
-    
-    private WriteOptions getWriteOptions() {
-        return new WriteOptions().sync(syncOnWrite);
+        Class driverClassObj = Class.forName(bucketDriverClassName);
+        Class[] argTypes = { String.class, String.class, String.class };
+        Object[] args = { partition, bucketStr, dataDir };
+        db = (BucketDriver) driverClassObj.getConstructor(argTypes).newInstance(args);
+        
+        log.info("[" + bucketDriverClassName + "] " + 
+            "Bucket: " + partition + ": " + bucketStr + ": " + dataDir);
     }
     
     private void queueForIndexing(SolrInputDocument doc) throws Exception {
@@ -72,18 +63,12 @@ public class Bucket {
     }
     
     public void stop() throws Exception {
-        // deletes the JNI-bound object (not the db)
-        db.delete();
+        db.stop();
     }
     
     public byte[] get(byte[] key) throws Exception {
-        try {
-            rates.add("mecha.db.bucket.global.get");
-            return db.get(new ReadOptions(), key);
-        } catch (DBException notFound) {
-            // do not log this message.
-            return null;
-        }
+        rates.add("mecha.db.bucket.global.get");
+        return db.get(key);
     }
     
     public void put(byte[] key, byte[] value) throws Exception {
@@ -118,7 +103,7 @@ public class Bucket {
             /*
              * Because the object is not deleted, write to object store.
             */
-            db.put(getWriteOptions(), key, value);
+            db.put(key, value);
                         
             String id = makeid(key);
             
@@ -181,17 +166,7 @@ public class Bucket {
         try {
             rates.add("mecha.db.bucket.global.delete");
             server.deleteByQuery("id:" + makeid(key));
-            try {
-                db.delete(getWriteOptions(), key);
-            } catch (DBException notFound) {
-                /*
-                 * TODO: analysis of discontinuity scenarios
-                 *       where solr delete succeeds (0 or more) &
-                 *       leveldb reports key not found; does this
-                 *       warrant any action other than to log it
-                 *       and otherwise ignore?
-                */
-            }
+            db.delete(key);
         } catch (Exception ex) {
             Mecha.getMonitoring().error("mecha.db.mdb", ex);
             /*
@@ -210,83 +185,31 @@ public class Bucket {
     }
     
     public boolean foreach(MDB.ForEachFunction forEachFunction) throws Exception {
-        ReadOptions ro = null;
-        Iterator iterator = null;
-        try {
-            rates.add("mecha.db.bucket.global.foreach");
-            boolean itrsw = true;
-            ro = new ReadOptions().snapshot(db.getSnapshot());
-            iterator = db.iterator(ro);
-            for(iterator.seekToFirst(); iterator.isValid(); iterator.next()) {
-                if (!forEachFunction.each(bucket, iterator.key(), iterator.value())) {
-                    itrsw = false;
-                    break;
-                }
-            }
-            return itrsw;
-        } finally {
-            if (null != iterator) {
-                iterator.delete();
-            }
-            if (null != ro) {
-                db.releaseSnapshot(ro.snapshot());
-                ro.snapshot(null);
-            }
-        }
+        rates.add("mecha.db.bucket.global.foreach");
+        return db.foreach(forEachFunction);
     }
     
     public long count() throws Exception {
-        ReadOptions ro = null; 
-        Iterator iterator = null; 
-        long ct = 0;
-        try {
-            rates.add("mecha.db.bucket.global.count");
-            ro = new ReadOptions().snapshot(db.getSnapshot());
-            iterator = db.iterator(ro);
-            for(iterator.seekToFirst(); iterator.isValid(); iterator.next())
-                ct++;
-        } finally {
-            if (null != iterator) {
-                iterator.delete();
-            }
-            if (null != ro) {
-                db.releaseSnapshot(ro.snapshot());
-                ro.snapshot(null);
-            }
-        }
-        return ct;
+        rates.add("mecha.db.bucket.global.count");
+        return db.count();
     }
     
     public boolean isEmpty() throws Exception {
         rates.add("mecha.db.bucket.global.is-empty");
-        return count() == 0;
+        return db.isEmpty();
     }
     
     public synchronized void drop() throws Exception {
         rates.add("mecha.db.bucket.global.drop");
-        db.delete();
-        File rc = new File(dataDir);
-        deleteFile(rc);
         try {
             server.deleteByQuery(
                 "partition:" + partition + 
                 " AND bucket:" + bucketStr);
+            db.drop();
         } catch (Exception ex) {
             Mecha.getMonitoring().error("mecha.db.mdb", ex);
             ex.printStackTrace();
         }
-    }
-    
-    private void deleteFile(File rc) throws Exception {
-        if (rc.isDirectory()) {
-            log.info(bucketStr + ": deleteFile: directory: " + rc.getCanonicalPath());
-            for (File f : rc.listFiles()) {
-                log.info(bucketStr + ": deleteFile: file: " + f.getCanonicalPath());
-                deleteFile(f);
-            }
-        }
-        log.info("delete: " + rc.toString());
-        rc.delete();
     }
     
     private String makeid(byte[] key) throws Exception {
@@ -300,6 +223,6 @@ public class Bucket {
     }
     
     public void commit() {
-        // not needed for leveldb (sync)
+        db.commit();
     }
 }

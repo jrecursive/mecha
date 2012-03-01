@@ -25,7 +25,7 @@ public class MDB {
     public interface ForEachFunction {
         public boolean each(byte[] bucket, byte[] key, byte[] value);
     }
-        
+    
     // maps partitions to Bucket instances
     final private Map<String, Map<String, Bucket>> partitionBuckets =
         new ConcurrentHashMap<String, Map<String, Bucket>>();
@@ -76,11 +76,7 @@ public class MDB {
             new Thread(new DocumentQueueIndexer());
         documentQueueIndexerThread.start();
         
-        log.info("Starting all existing partitions...");
-        //startAllPartitions();
-        
         Mecha.getMonitoring().addMonitoredRates(rates);
-        
         log.info("started");
     }
     
@@ -94,20 +90,6 @@ public class MDB {
         }
         Mecha.getMonitoring().log("mecha.db.mdb", "object store commit complete");
         log.info("object store commit complete");
-    }
-    
-    private void startAllPartitions() throws Exception {
-        String dataDirRoot = Mecha.getConfig().getString("data-directory");
-        File rc = new File(dataDirRoot);
-        if (rc.isDirectory()) {
-            for (File f : rc.listFiles()) {
-                if (f.isDirectory()) {
-                    log.info("startAllPartitions: starting: " + f.getName() + 
-                    " path: " + f.getCanonicalPath());
-                    start(f.getName());
-                }
-            }
-        }
     }
     
     public Set<String> getActivePartitions() throws Exception {

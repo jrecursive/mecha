@@ -1,2 +1,4 @@
+export JAVA_HOME=./jre
+export PATH=./jre/bin:${PATH}
 java -cp lib/*:bin mecha.client.MechaCLI 
 

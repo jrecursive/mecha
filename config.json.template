@@ -103,6 +103,11 @@
     "www-root": "./www",
     
     ##
+    ## bucket-driver: default bucket driver class
+    ##
+    "bucket-driver": "mecha.db.drivers.LevelDBBucketDriver",
+    
+    ##
     ## ***************************************
     ##
     ## Advanced configuration options
