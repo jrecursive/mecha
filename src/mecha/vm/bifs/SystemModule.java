@@ -174,40 +174,58 @@ public class SystemModule extends MVMModule {
             scriptBlockName = config.get("script");
             scriptBlock = Mecha.getMVM().resolveBlock(getContext(), scriptBlockName);
             
+            final JSONObject args;
+            if (config.has("args")) {
+                args = config.getJSONObject("args");
+            } else {
+                args = new JSONObject();
+            }
+            
             scriptEngine = new ScriptEngine("js");
+            scriptEngine.bind("$refid", refId);
+            scriptEngine.bind("$context", ctx);
+            scriptEngine.bind("$args", args);
             scriptEngine.bind("$log", log);
-            /*
-                (JSONObject) scriptEngine.invoke("$preprocess", obj);
-                scriptEngine.eval(codeBlock.toString());
-            */
+            scriptEngine.bind("$mecha", Mecha.get());
+            scriptEngine.bind("$", this);
+            
+            scriptEngine.eval(render(scriptBlock));
         }
         
         public void onControlMessage(JSONObject msg) throws Exception {
             log.info("Control message: " + msg.toString(2));
+            scriptEngine.invoke("onControlMessage", msg);
         }
 
         public void onDataMessage(JSONObject msg) throws Exception {
             log.info("Data message: " + msg.toString(2));
+            scriptEngine.invoke("onDataMessage", msg);
         }
         
         public void onStartEvent(JSONObject msg) throws Exception {
             log.info("onStartEvent: " + msg.toString(2));
-            
-            /*
-             * .. xxx message passing test code
-            */
-            JSONObject newMsg = new JSONObject();
-            newMsg.put("welcome", "to the new database");
-            broadcastDataMessage(newMsg);
+            scriptEngine.invoke("onStartEvent", msg);
         }
         
         public void onCancelEvent(JSONObject msg) throws Exception {
             log.info("onCancelEvent: " + msg.toString(2));
+            scriptEngine.invoke("onCancelEvent", msg);
         }
         
         public void onDoneEvent(JSONObject msg) throws Exception {
             log.info("onDoneEvent: " + msg.toString(2));
+            scriptEngine.invoke("onDoneEvent", msg);
         }
+        
+        private String render(List<String> lines) throws Exception {
+            StringBuffer sb = new StringBuffer();
+            for(String line: lines) {
+                sb.append(line);
+                sb.append("\n");
+            }
+            return sb.toString();
+        }
+        
     }
     
     public class Put extends MVMFunction {

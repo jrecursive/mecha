@@ -13,7 +13,7 @@ register namespace:$ module-class:mecha.vm.bifs.ClusterModule verbs:(with-covera
 register namespace:$ module-class:mecha.vm.bifs.StreamModule verbs:(vector-sequencer:VectorSequencer eat:Eat limit:Limit)
 register namespace:$ module-class:mecha.vm.bifs.RelationalModule verbs:(sort-merge-equijoin:SortMergeEquiJoin)
 register namespace:$ module-class:mecha.vm.bifs.IteratorModule verbs:(buffered-iterator:BufferedIterator)
-register namespace:$ module-class:mecha.vm.bifs.SystemModule verbs:(commit:Commit splitter:Splitter repeater:Repeater)
+register namespace:$ module-class:mecha.vm.bifs.SystemModule verbs:(commit:Commit splitter:Splitter repeater:Repeater invoke:Invoke)
 
 /////////////
 // globals //
@@ -274,3 +274,19 @@ ${root} -> ${sink}
 ${root} = (warp host:${args.host} do:(solr-select params:(facet:true facet.limit:-1 facet.field:${args.field} facet.mincount:1 $prefix_arg facet.sort:${args.sort} rows:0 q:"${args.filter}" fl:"${args.fields}") core:system))
 ${root} -> ${sink}
 #end system-facet
+
+//
+// "real-time" global cluster metrics, errors & logging
+//
+
+#define-global subscribe-global
+#if ($args.channel)
+    (with-cluster-coverage host-marker:"<<h>>" do:(warp host:<<h>> do:(subscribe channel:${args.channel})))
+#end
+#end subscribe-global
+
+#define-global publish-global
+#if ($args.channel && $args.data)
+    (with-cluster-coverage host-marker:"<<${guid}-h>>" do:(warp host:<<${guid}-h>> do:(publish channel:${args.channel} data:${args.data})))
+#end
+#end publish-global
