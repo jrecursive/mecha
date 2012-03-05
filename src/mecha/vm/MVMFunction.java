@@ -479,17 +479,22 @@ public abstract class MVMFunction {
          *  done
          *  ping
         */
-        String cmd = msg.getString("$");
-        if (cmd.equals("start")) {
-            start(msg);
         
-        } else if (cmd.equals("cancel")) {
-            cancel(msg);
-        
-        } else if (cmd.equals("ping")) {
-            log.info("pong");
-        
+        if (msg.has("$")) {
+            String cmd = msg.getString("$");
+            if (cmd.equals("start")) {
+                start(msg);
+            
+            } else if (cmd.equals("cancel")) {
+                cancel(msg);
+            
+            } else if (cmd.equals("ping")) {
+                log.info("pong");
+            } else {
+                onControlMessage(msg);
+            }
         } else {
+            log.info("Unmarked control message: " + msg.toString(2));
             onControlMessage(msg);
         }
     }
