@@ -6,8 +6,7 @@
     <property name="source" value="1.6"/>
     
     <path id="mecha.classpath">
-        <pathelement location="bin"/>
-        <pathelement location="wordnet/classes"/>
+        <pathelement location="build/classes"/>
         <fileset refid="jar.fileset"/>
     </path>
     
@@ -16,14 +15,14 @@
     </fileset>
     
     <target name="init">
-        <mkdir dir="bin"/>
-        <copy includeemptydirs="false" todir="bin">
-            <fileset dir="src" excludes="**/*.launch, **/*.java"/>
+        <mkdir dir="build/classes"/>
+        <copy includeemptydirs="false" todir="build/classes">
+            <fileset dir="src/java" excludes="**/*.launch, **/*.java"/>
         </copy>
     </target>
     
     <target name="clean">
-        <delete dir="bin"/>
+        <delete dir="build/classes"/>
     </target>
     
     <target depends="clean" name="cleanall"/>
@@ -34,15 +33,15 @@
     
     <target depends="init" name="build-project">
         <echo message="${ant.project.name}: ${ant.file}"/>
-        <javac debug="true" debuglevel="${debuglevel}" destdir="bin" source="${source}" target="${target}">
-            <src path="src"/>
+        <javac debug="true" debuglevel="${debuglevel}" destdir="build/classes" source="${source}" target="${target}">
+            <src path="src/java"/>
             <classpath refid="mecha.classpath"/>
         </javac>
     </target>
     
     <target name="package" depends="build-project">
         <jar destfile="mecha.jar"
-            basedir="bin" />
+            basedir="build/classes" />
     </target>
 
     
