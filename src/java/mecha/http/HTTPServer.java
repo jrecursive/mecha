@@ -10,6 +10,7 @@ import org.eclipse.jetty.servlet.ServletHolder;
 
 import mecha.Mecha;
 import mecha.http.servlets.*;
+import mecha.http.websockets.*;
 import mecha.json.*;
 
 public class HTTPServer {
@@ -22,6 +23,8 @@ public class HTTPServer {
     
     final private Server server;
     final private ServletContextHandler context;
+    
+    final private WebSocketServer webSocketServer;
 
     public HTTPServer() throws Exception {
         port = Mecha.getConfig().getInt("http-port");
@@ -41,10 +44,14 @@ public class HTTPServer {
         
         context.addServlet(new ServletHolder(new MacroServlet()),"/mecha/*");
         context.addServlet(new ServletHolder(new ProcServlet()),"/proc/*");
+        
+        log.info("* starting websocket server");
+        webSocketServer = new WebSocketServer();
     }
     
     public void start() throws Exception {
         server.start();
+        webSocketServer.start();
     }
     
 }

@@ -85,12 +85,15 @@
     "server-port": 7282,
     
     ##
+    ## http-addr: interface to bind http server
     ## http-port: http server listen port
     ## www-root: directory /* files are served from
+    ## websocket-port: port to serve websocket connections on
     ##
     "http-addr": "127.0.0.1",
     "http-port": 7283,
     "www-root": "./www",
+    "websocket-port": 7284,
     
     ##
     ## bucket-driver: default bucket driver class

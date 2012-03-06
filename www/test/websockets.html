@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title>mecha - websockets test</title>
+        
+        <link href="../bootstrap/css/bootstrap.css" rel="stylesheet">
+        <link href="../bootstrap/css/bootstrap-responsive.css" rel="stylesheet">
+        
+        <!-- Le HTML5 shim, for IE6-8 support of HTML5 elements -->
+        <!--[if lt IE 9]>
+          <script src="//html5shim.googlecode.com/svn/trunk/html5.js"></script>
+        <![endif]-->
+        
+        <script type="text/javascript" src="../js/jquery-1.7.1.min.js"></script>
+        <script type="text/javascript" src="../js/jquery.sparkline.min.js"></script>
+        <script type="text/javascript" src="../js/jquery.websockets.js"></script>
+        <script src="http://jquery-json.googlecode.com/files/jquery.json-2.2.min.js"></script>
+        
+        <script src="../bootstrap/js/bootstrap-transition.js"></script>
+        <script src="../bootstrap/js/bootstrap-alert.js"></script>
+        <script src="../bootstrap/js/bootstrap-modal.js"></script>
+        <script src="../bootstrap/js/bootstrap-dropdown.js"></script>
+        <script src="../bootstrap/js/bootstrap-scrollspy.js"></script>
+        <script src="../bootstrap/js/bootstrap-tab.js"></script>
+        <script src="../bootstrap/js/bootstrap-tooltip.js"></script>
+        <script src="../bootstrap/js/bootstrap-popover.js"></script>
+        <script src="../bootstrap/js/bootstrap-button.js"></script>
+        <script src="../bootstrap/js/bootstrap-collapse.js"></script>
+        <script src="../bootstrap/js/bootstrap-carousel.js"></script>
+        <script src="../bootstrap/js/bootstrap-typeahead.js"></script>
+        <script src="../js/moment.min.js"></script>
+        <script type="text/javascript">
+        
+            function log(msg) {
+                $("#log").html("<pre>" + $("#log").text() + msg + "\n</pre>");
+            }
+            
+            $(document).ready(function() {
+                log("connecting...");
+                
+                var socket = new WebSocket("ws://localhost:7284/mecha");  
+                socket.onopen = function(){  
+                     log('Socket Status: '+socket.readyState+' (open)');  
+                }  
+          
+                socket.onmessage = function(msg){  
+                     log('Received: '+msg.data);  
+                }  
+          
+                socket.onclose = function(){  
+                     log('Socket Status: '+socket.readyState+' (Closed)');  
+                }             
+          
+
+                $('#message').change(function(){
+                    socket.send(this.value);
+                    this.value = '';
+                });
+                
+                log("ok, type");
+            });
+        
+        </script>
+        
+        <style type="text/css">
+        * {
+            font-face: arial;
+            font-size: 12px;
+        }
+        
+        .lbl {
+            font-size: 10px;
+            display:inline;
+        }
+        
+        table {
+        }
+        
+        td {
+            align:center;
+        }
+        
+        tr {
+            height:50px;
+            overflow:hidden;
+        }
+        
+        .hdr {
+            font-size:10px;
+            position:relative;
+        }
+        
+        .dynamicsparkline {
+        }
+        
+        .value {
+            font-size:10px;
+        }
+        </style>
+    </head>
+    <body>
+        <br>
+        <div class="container-fluid">
+          <div class="row-fluid">
+            
+            <!-- body -->
+            <div class="span12">
+                <input id="message" type="text"/>
+                <span id="log"></span>
+            </div>
+          </div>
+        </div>
+    </body>
+</html>
