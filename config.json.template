@@ -1,19 +1,9 @@
 {
     ##
-    ## machine hostname
-    ##
-    "hostname": "crusty",
-    
-    ##
     ## socket server password
     ##
     "password": "me3ch4a",
 
-    ##
-    ## mecha jinterface settings
-    ##
-    "mecha-nodename": "mecha_ji@127.0.0.1",
-    
     ##
     ## riak_kv automation / management settings
     ##
@@ -37,7 +27,7 @@
     ##  ordinarily type "bin/riak start", etc.
     ##
     
-    "riak-home": "./riak",
+    "riak-home": "./build/riak-1.1.1rc1/rel/riak",
     
     ##
     ## the following paths are all based upon
@@ -92,14 +82,14 @@
     ## server-port: socket server client listen port
     ##
     "server-addr": "127.0.0.1",
-    "server-port": 10102,
+    "server-port": 7282,
     
     ##
     ## http-port: http server listen port
     ## www-root: directory /* files are served from
     ##
     "http-addr": "127.0.0.1",
-    "http-port": 10103,
+    "http-port": 7283,
     "www-root": "./www",
     
     ##
@@ -150,7 +140,7 @@
         "cache-per-bucket": 209715200,
         "sync-on-write": true
     },
-        
+    
     ##
     ## If you start having problems with really large
     ##  objects or are using large vector sequences and
@@ -180,6 +170,11 @@
     ##      pb-host: 1.2.3.4
     ##      pb-port: 9999
     ##
-    "riak-config": { }
-
+    "riak-config": { },
+    
+    ##
+    ## mecha jinterface settings
+    ##
+    "mecha-nodename": "mecha_ji@127.0.0.1"
+    
 }
