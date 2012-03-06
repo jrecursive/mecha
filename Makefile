@@ -2,13 +2,13 @@
 all: riak mecha
 
 riak:
-	build/build-riak.sh
+	@build/build-riak.sh
 
 mecha:
-	ant
+	@ant
 
 clean:
-	build/riak-clean.sh
+	build/clean-riak.sh
 	ant clean
 
 
