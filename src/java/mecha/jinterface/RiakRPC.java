@@ -79,17 +79,18 @@ public class RiakRPC {
                     return obj;
                 } catch (java.io.IOException ex) {
                     if (Mecha.isShuttingDown()) {
-                        throw new Exception("Mecha shutting down, ignoring rpc failure.");
+                        log.info("Mecha shutting down, ignoring rpc failure.");
+                    } else {
+                        Mecha.getMonitoring().error("mecha.riak-connector", ex);
+                        log.info("Riak link broken, restarting...");
+                        Mecha.getMonitoring().log("mecha.jinterface.riak-rpc.rpc", 
+                                                  "Riak link broken, restarting...");
+                        Mecha.riakDown();
+                        otpRPC = getOtpRPC();
+                        log.info("Riak link restored.");
+                        Mecha.getMonitoring().log("mecha.jinterface.riak-rpc.rpc", 
+                                                  "Riak link restored.");
                     }
-                    Mecha.getMonitoring().error("mecha.riak-connector", ex);
-                    log.info("Riak link broken, restarting...");
-                    Mecha.getMonitoring().log("mecha.jinterface.riak-rpc.rpc", 
-                                              "Riak link broken, restarting...");
-                    Mecha.riakDown();
-                    otpRPC = getOtpRPC();
-                    log.info("Riak link restored.");
-                    Mecha.getMonitoring().log("mecha.jinterface.riak-rpc.rpc", 
-                                              "Riak link restored.");
                 }
             }
         } finally {
