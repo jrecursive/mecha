@@ -7,6 +7,10 @@
 
 	make
 
+* Config (set up for 1 node, localhost only):
+	
+	cp config.json.template config.json
+
 ** start:
 
 bin/mecha
