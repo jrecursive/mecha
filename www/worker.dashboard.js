@@ -139,7 +139,7 @@ self.addEventListener('message', function(e) {
         }
         prevdata[host] = result[host];
     }
-    setTimeout('refresh();', 500);
+    setTimeout('refresh();', 1000);
 }, false);
 
 function refresh() {
