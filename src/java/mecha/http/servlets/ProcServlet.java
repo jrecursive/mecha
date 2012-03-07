@@ -65,28 +65,28 @@ public class ProcServlet extends HttpServlet {
             long t_start = System.currentTimeMillis();
             
             /*
-             * /system/metrics
+             * /proc/metrics
             */
             if (subsystem.equals("metrics")) {
                 result = doMetricsRequest(parts, params);
             
             /*
-             * /system/top
+             * /proc/top
             */
             } else if (subsystem.equals("top")) {
                 result = doTopRequest(parts, params);
               
             /*
-             * /system/cluster
+             * /proc/cluster
             */  
             } else if (subsystem.equals("cluster")) {
                 result = doClusterRequest(parts, params);
             
             /* 
-             * /system/proc
+             * /proc/config
             */
-            } else if (subsystem.equals("proc")) {
-                result = doProcRequest(parts, params);
+            } else if (subsystem.equals("config")) {
+                result = doConfigRequest(parts, params);
             
             /*
              * unknown request
@@ -114,9 +114,9 @@ public class ProcServlet extends HttpServlet {
     }
     
     /*
-     * /system/metrics          list of all metric names
-     * /system/metrics/all      most recent value of all metrics
-     * /system/metrics/<name>   most recent value of <name>
+     * /proc/metrics          list of all metric names
+     * /proc/metrics/all      most recent value of all metrics
+     * /proc/metrics/<name>   most recent value of <name>
     */
     private JSONObject doMetricsRequest(String[] parts, JSONObject params) throws Exception {
         int entries;
@@ -151,7 +151,7 @@ public class ProcServlet extends HttpServlet {
     }
     
     /*
-     * /system/top
+     * /proc/top
     */
     private JSONObject doTopRequest(String[] parts, JSONObject params) throws Exception {
         JSONObject result = new JSONObject();
@@ -159,7 +159,7 @@ public class ProcServlet extends HttpServlet {
     }
     
     /*
-     * /system/cluster
+     * /proc/cluster
     */
     private JSONObject doClusterRequest(String[] parts, JSONObject params) throws Exception {
         JSONObject result = new JSONObject();
@@ -167,12 +167,11 @@ public class ProcServlet extends HttpServlet {
     }
     
     /*
-     * /system/proc/<ctx-ref>           MVMContext dump-vars
-     * /system/proc/<ctx-ref>/<ref-id>  MVMFunction state & metrics
+     * /proc/proc/<ctx-ref>           MVMContext dump-vars
+     * /proc/proc/<ctx-ref>/<ref-id>  MVMFunction state & metrics
     */
-    private JSONObject doProcRequest(String[] parts, JSONObject params) throws Exception {
-        JSONObject result = new JSONObject();
-        return result;
+    private JSONObject doConfigRequest(String[] parts, JSONObject params) throws Exception {
+        return Mecha.getConfig();
     }
     
 }

@@ -77,9 +77,11 @@ function dashboard_metric(host, row, col, label, data) {
         var sparkline = $(metric).find("span.dynamicsparkline");
     }
 
-    $(metric).find(".metric-label").html(label);
-    element.html("");
-    element.append(metric);
+    if ($(metric).find(".metric-label").text() != label) {
+        $(metric).find(".metric-label").html(label);
+        element.html("");
+        element.append(metric);
+    }
     $(sparkline).sparkline(data);
 }
 
@@ -211,5 +213,6 @@ function _layout() {
     var w = $(".metric").width();
     var h = w * (3/4) * .9;
     $(".surface").height(h);
+    $(".metric-rows .metric").css("margin-left", "10px");
     //$(".dynamicsparkline canvas").css("height", h*.6).css("width", w*.8);
 }

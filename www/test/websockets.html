@@ -5,7 +5,6 @@
         <title>mecha - websockets test</title>
         
         <link href="../bootstrap/css/bootstrap.css" rel="stylesheet">
-        <link href="../bootstrap/css/bootstrap-responsive.css" rel="stylesheet">
         
         <!-- Le HTML5 shim, for IE6-8 support of HTML5 elements -->
         <!--[if lt IE 9]>
@@ -32,20 +31,53 @@
         <script src="../js/moment.min.js"></script>
         <script type="text/javascript">
             
+            var config = {};
             function log(msg) {
-                $("#log").html("<pre>" + $("#log").text() + msg + "\n</pre>");
-                //$("#log").append(prettyPrint(msg));
+                $("#log").html("<pre class='console-pre'>" + $("#log").text() + msg + "\n</pre>");
+                scroll_console();
+            }
+            
+            var lastHeight;
+            function scroll_console() {
                 var element = document.getElementById("log");
                 var currentHeight = element.scrollHeight;
                 if(lastHeight != currentHeight){
                     element.scrollTop = currentHeight;
                     lastHeight = currentHeight;
                 }
+                $(".console-pre").height($(window).height()-135);
             }
+
             
             var lastHeight = 0;
             $(document).ready(function() {
-                $("#log").height($(window).height() - 100);
+                // tweak bootstrap
+                $("#cmdline").focus();
+                $(".console").css("margin-left", "0px");
+                
+                $.getJSON('/proc/config', function(data) {
+                    config = data.result;
+                    console.log(data);
+                    console_connect();
+                });
+                $(window).resize(console_layout);
+                lastHeight=0;
+                console_layout();
+            });
+            
+            function console_layout() {
+                var w = $(window).width()-40;
+                var h = $(window).height()-100;
+                $("#log").width(w).height(h);
+                $(".console-pre").height(h);
+                $("#cmdline").width(w-50);
+                $(".input-box").width(w-40);
+                scroll_console();
+            }
+            
+            function console_connect() {
+                var pw = config.password;
+                //$("#log").height($(window).height() - 100);
                 log("connecting...");
                 
                 element = document.getElementById("log");
@@ -54,6 +86,7 @@
                 var socket = new WebSocket("ws://localhost:7284/mecha");  
                 socket.onopen = function(){  
                      log('Socket Status: '+socket.readyState+' (open)');  
+                     socket.send("auth " + pw);
                 }  
           
                 socket.onmessage = function(msg0){
@@ -61,11 +94,24 @@
                     if (msg.charAt(0) == '{') {
                         var obj = $.evalJSON(msg);
                         //log(obj.o);
-                        
+                        if (!obj) {
+                            console.log("huh");
+                            return;
+                        } else if (!obj.c) {
+                            if (obj.error) {
+                                log("error: " + obj.error);
+                                return;
+                            }
+                            return;
+                        }
                         if (obj.c.indexOf("socket-") == 0) {
                             log(">> " + $.toJSON(obj.o));
                         } else {
                             log(obj.c + ": " + $.toJSON(obj.o));
+                        }
+                        if (obj.o["$"] &&
+                            obj.o["$"] == "done") {
+                            log("----------------------------------------------------------");
                         }
                         
                     } else {
@@ -79,63 +125,94 @@
                 }             
           
 
-                $('#message').change(function(){
+                $('#cmdline').change(function(){
                     socket.send(this.value);
                     this.value = '';
                 });
                 
                 log("ok, type");
-            });
+            };
         
         </script>
         
         <style type="text/css">
-        * {
-            font-face: arial;
-            font-size: 12px;
-        }
-        
-        .lbl {
-            font-size: 10px;
-            display:inline;
-        }
-        
-        table {
-        }
-        
-        td {
-            align:center;
-        }
-        
-        tr {
-            height:50px;
-            overflow:hidden;
-        }
-        
-        .hdr {
-            font-size:10px;
-            position:relative;
-        }
-        
-        .dynamicsparkline {
-        }
-        
-        .value {
-            font-size:10px;
-        }
+            body {
+                margin:0px;
+                padding:0px;
+                overflow:hidden;
+            }
+            
+            * {
+                font-face: arial;
+                font-size: 12px;
+            }
+            
+            .lbl {
+                font-size: 10px;
+                display:inline;
+            }
+            
+            table {
+            }
+            
+            td {
+                align:center;
+            }
+            
+            tr {
+                height:50px;
+                overflow:hidden;
+            }
+            
+            .hdr {
+                font-size:10px;
+                position:relative;
+            }
+            
+            .dynamicsparkline {
+            }
+            
+            .value {
+                font-size:10px;
+            }
+            
+            .input-box {
+                position:absolute;
+                bottom:-10px;
+                left:20px;
+                width:100%;
+            }
+            
+            #cmdline {
+                position:relative;
+                top:5px;
+            }
+            
+            .console {
+                position:relative;
+                top:20px;
+            }
+            
+            .console-pre {
+                
+            }
         </style>
     </head>
     <body>
-        <br>
+
         <div class="container-fluid">
-          <div class="row-fluid">
+            <div class="row-fluid">
+                
+                <div class="input-box span12 well">
+                    <input id="cmdline" type="text"/>
+                </div>
+                
+                <div class="span12 console">
+                    <div style='height:300px; width:100%; display:block; overflow:auto;' id="log"></div>
+                </div>
             
-            <!-- body -->
-            <div class="span12">
-                <input id="message" type="text"/>
-                <div style='height:300px; width:99%; display:block; overflow:auto;' id="log"></div>
             </div>
-          </div>
         </div>
+        
     </body>
 </html>
