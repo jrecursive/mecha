@@ -10,12 +10,14 @@
         <script src="js/jquery.json-2.3.min.js"></script>
         
         <!-- effects -->
-        <script src="js/tweenjs/Tween.js"></script>
         <script src="js/tweenjs/Ease.js"></script>
         <script src="js/tweenjs/Timeline.js"></script>
+        <script src="js/tweenjs/Ticker.js"></script>
+        <script src="js/tweenjs/Tween.js"></script>
         
-        <!-- date parsing -->
+        <!-- utils -->
         <script src="js/moment.min.js"></script>
+        <script src="js/md5.js"></script>
         
         <!-- twitter bootstrap -->
         <script src="bootstrap/js/bootstrap-transition.js"></script>
@@ -30,6 +32,9 @@
         <script src="bootstrap/js/bootstrap-collapse.js"></script>
         <script src="bootstrap/js/bootstrap-carousel.js"></script>
         <script src="bootstrap/js/bootstrap-typeahead.js"></script>
+        
+        <!-- application -->
+        <script src="admin.js"></script>
                 
         <link href="bootstrap/css/bootstrap.css" rel="stylesheet">
         <link href="bootstrap/css/bootstrap-responsive.css" rel="stylesheet">
@@ -40,28 +45,120 @@
         <![endif]-->
 
         <style type="text/css">
+            .mecha-panel {
+                padding-top: 50px;
+            }
+            
+            .template-container {
+                display:none;
+            }
+            
+            .metric {
+                margin:auto;
+            }
+            
+            .metric-label {
+                font-size: 70%;
+                display:block;
+            }
+            
+            .metric-sparkline {
+                display:inline-block;
+            }
+            
+            .host-label {
+                font-size:18px;
+                font-face:arial;
+            }
+            
+            .surface {
+                width: 100%;
+                height: 100%;
+                border: 1px #666 solid;
+                display: block;
+                text-align: center;
+                margin: auto;
+            }
+            
+            .dynamicsparkline {
+                display:inline;
+            }
+            
         </style>
     </head>
     <body>
+        
+        <!-- navbar -->
+    
         <div class="navbar navbar-fixed-top">
-          <div class="navbar-inner">
-            <div class="container-fluid">
-              <a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
-              </a>
-              <a class="brand" href="#">Mecha</a>
-              <div class="nav-collapse">
-                <ul class="nav">
-                  <li class="active"><a href="#dashboard">Dashboard</a></li>
-                  <li><a href="#log">Log</a></li>
-                  <li><a href="#console">Console</a></li>
-                </ul>
-                <p class="navbar-text pull-right"><a target="_new" href="/admin/docs/">Help</a></p>
-              </div><!--/.nav-collapse -->
+            <div class="navbar-inner">
+                <div class="container-fluid">
+                    <a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                    </a>
+                    <a class="brand" href="#">Mecha</a>
+                    <div class="nav-collapse">
+                        <ul class="nav">
+                            <li class="active">
+                                <a class="nav-tab" href="#dashboard">Dashboard</a>
+                            </li>
+                            <li><a class="nav-tab" href="#log">Log</a></li>
+                            <li><a class="nav-tab" href="#console">Console</a></li>
+                        </ul>
+                        <p class="navbar-text pull-right"><a target="_new" href="/admin/docs/">Documentation</a></p>
+                    </div><!--/.nav-collapse -->
+                </div>
             </div>
-          </div>
+        </div>
+        
+        <!-- panels -->
+        <div id="Dashboard" class="mecha-panel">
+        </div>
+        
+        <div id="Log" class="mecha-panel">
+            log
+        </div>
+        
+        <div id="Console" class="mecha-panel">
+            console
+        </div>       
+        
+        <!-- templates -->
+        
+        <div class="template-container">
+            <div id="host-row-template">
+                <div class="host-row row-fluid">
+                    <div class="span12 host-label">127.0.0.1</div>
+                </div>
+                <div class="metric-rows">
+                </div>
+            </div>
+            <div id="metric-row-template">
+                <div class="metric-row row-fluid">
+                    <div class="span1 metric col-0"><div class="surface">0</div></div>
+                    <div class="span1 metric col-1"><div class="surface">1</div></div>
+                    <div class="span1 metric col-2"><div class="surface">2</div></div>
+                    <div class="span1 metric col-3"><div class="surface">3</div></div>
+                    <div class="span1 metric col-4"><div class="surface">4</div></div>
+                    <div class="span1 metric col-5"><div class="surface">5</div></div>
+                    <div class="span1 metric col-6"><div class="surface">6</div></div>
+                    <div class="span1 metric col-7"><div class="surface">7</div></div>
+                    <div class="span1 metric col-8"><div class="surface">8</div></div>
+                    <div class="span1 metric col-9"><div class="surface">9</div></div>
+                    <div class="span1 metric col-10"><div class="surface">10</div></div>
+                    <div class="span1 metric col-11"><div class="surface">11</div></div>
+                </div>
+            </div>
+            <div id="metric-template">
+                <div class="metric-label"></div>
+                <div class="metric-sparkline">
+                </div>
+            </div>
+            <div id="sparkline-template">
+                <span class="dynamicsparkline">sparkline</span>
+            </div>
         </div>
     </body>    
 </html>
