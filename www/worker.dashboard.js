@@ -58,7 +58,7 @@ self.addEventListener('message', function(e) {
                             bgcol = {"r":255, "g":255, "b":255, "a":1.0};
                         } else if (cur_val > pre_val) {
                             cv = 1 - (pre_val / cur_val);
-                            scv = 1+(.15 * cv);
+                            scv = 1+(.5 * cv);
                             bgcol = {"r":255, "g":0, "b":0, "a":cv};
                         } else if (cur_val < pre_val) {
                             cv = (cur_val / pre_val) * 0.15;
@@ -121,9 +121,7 @@ self.addEventListener('message', function(e) {
             if (cv == 1) scv = 1;
             prevscale[host][name] = scv;
             
-            if (pscv != scv) { /* && 
-                (scv > 1 ||
-                 pscv > 1)) { */
+            if (pscv != scv) {
                 postMessage({"scope": {}, 
                              "fun":"metric_scale", 
                              "args": [
@@ -142,11 +140,6 @@ self.addEventListener('message', function(e) {
         }
         prevdata[host] = result[host];
     }
-    /*
-    postMessage({"scope": {}, 
-                 "fun":"layout", 
-                 "args": []});    
-    */
     setTimeout('refresh();', 1000);
 }, false);
 

@@ -99,8 +99,8 @@ function metric_scale(host, row, col, fromScale, toScale) {
     var scaleTween = 
         new Tween(new Object(),
                   'xyz',
-                  Tween.linear,
-                  fromScale, toScale, .1);
+                  Tween.BounceEaseOut,
+                  fromScale, toScale, 1);
     scaleTween.onMotionChanged = function(event) { 
         var val = event.target._pos;
         apply_transform(element, "scale(" + val + "," + val + ")");
