@@ -75,6 +75,37 @@ function dashboard_metric(host, row, col, label, data) {
     layout();
 }
 
+function metric_color(host, row, col, r, g, b, a) {
+    var element = dashboard_element(host, row, col);
+    element.css("background-color", "rgba(" + r + "," + g + "," + b + "," + a +")");
+}
+
+function metric_scale(host, row, col, fromScale, toScale) {
+    var element = dashboard_element(host, row, col);
+    var scaleTween = 
+        new Tween(new Object(),
+                  'xyz',
+                  Tween.elasticEaseOut,
+                  fromScale, toScale, 3);
+    scaleTween.onMotionChanged = function(event) { 
+        var val = event.target._pos;
+        apply_transform(element, "scale(" + val + "," + val + ")");
+    };
+    scaleTween.start();
+}
+
+function metric_alpha(host, row, col, alpha) {
+    dashboard_element(host, row, col).css("opacity", alpha);
+}
+
+
+function apply_transform(el, transform) {
+    el.css("-moz-transform", transform)
+      .css("-webkit-transform", transform)
+      .css("-ms-transform", transform)
+      .css("transform", transform);
+}
+
 /*
  * console
 */
@@ -99,7 +130,12 @@ $(document).ready(function() {
     dashboard_add_metric_row("127.0.0.1");
     dashboard_add_metric_row("127.0.0.1");
     dashboard_metric("127.0.0.1", 1, 3, "test.label", [0, 1, 12, 15, 20, 9, 0, 1, 12, 15, 20, 9, 5]);
+    metric_color("127.0.0.1", 1, 3, 0,50,25,0.6);
+    metric_alpha("127.0.0.1", 1, 3, 0.8);
+    metric_scale("127.0.0.1", 1, 3, 1, 1.2);
     dashboard_metric("127.0.0.1", 0, 11, "test2.label", [0, 1, 12, 15, 20, 9, 0, 1, 12, 15, 20, 9, 5]);
+    
+    setTimeout('metric_scale("127.0.0.1", 1, 3, 1.2, 1);', 3000);
     
     console.log(dashboard);
 });
@@ -113,6 +149,6 @@ function layout() {
 function _layout() {
     var w = $(".metric").width();
     var h = w * (3/4);
-    $(".surface").height(h);
+    $(".surface").height(h).width(w);
     $(".dynamicsparkline canvas").css("height", h*.6).css("width", w*.8);
 }
