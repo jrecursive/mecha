@@ -3,6 +3,9 @@
  * @author Stoyan Stefanov <sstoo@gmail.com>
  * @link   http://www.phpied.com/rgb-color-parser-in-javascript/
  * @license Use it if you like it
+ *
+ * rgba/alpha modifications by John Muellerleile @jrecursive
+ * 
  */
 function RGBColor(color_string)
 {
@@ -179,7 +182,20 @@ function RGBColor(color_string)
                 return [
                     parseInt(bits[1]),
                     parseInt(bits[2]),
-                    parseInt(bits[3])
+                    parseInt(bits[3]),
+                    1.0
+                ];
+            }
+        },
+        {
+            re: /^rgba\((\d+),\s*(\d+),\s*(\d+),(\s*\d+\.\d+)*\)$/,
+            example: ['rgb(123, 234, 45, 1.0)', 'rgb(255,234,245,.6)'],
+            process: function (bits){
+                return [
+                    parseInt(bits[1]),
+                    parseInt(bits[2]),
+                    parseInt(bits[3]),
+                    parseInt(bits[4])
                 ];
             }
         },
@@ -190,7 +206,8 @@ function RGBColor(color_string)
                 return [
                     parseInt(bits[1], 16),
                     parseInt(bits[2], 16),
-                    parseInt(bits[3], 16)
+                    parseInt(bits[3], 16),
+                    1.0
                 ];
             }
         },
@@ -201,7 +218,8 @@ function RGBColor(color_string)
                 return [
                     parseInt(bits[1] + bits[1], 16),
                     parseInt(bits[2] + bits[2], 16),
-                    parseInt(bits[3] + bits[3], 16)
+                    parseInt(bits[3] + bits[3], 16),
+                    1.0
                 ];
             }
         }
@@ -217,6 +235,7 @@ function RGBColor(color_string)
             this.r = channels[0];
             this.g = channels[1];
             this.b = channels[2];
+            this.a = channels[3];
             this.ok = true;
         }
 

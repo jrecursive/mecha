@@ -75,9 +75,41 @@ function dashboard_metric(host, row, col, label, data) {
     layout();
 }
 
-function metric_color(host, row, col, r, g, b, a) {
+function metric_color(host, row, col, toRGBA) {
     var element = dashboard_element(host, row, col);
-    element.css("background-color", "rgba(" + r + "," + g + "," + b + "," + a +")");
+    var fromRGBA = new RGBColor($(element).css("background-color"));
+    console.log(fromRGBA.a);
+    console.log(toRGBA.a);
+    var colorTween = 
+        new Tween(new Object(),
+                  'xyz',
+                  Tween.linear,
+                  0, 1, 3);
+    var smaller = function(a, b) { return Math.abs(a - b); };
+    var bigger = function(a, b) { return Math.abs(a + b); };
+    
+    var r_fun, g_fun, b_fun, a_fun;
+    if (toRGBA.r < fromRGBA.r) r_fun = smaller;
+    else r_fun = bigger;
+    if (toRGBA.g < fromRGBA.g) g_fun = smaller;
+    else g_fun = bigger;
+    if (toRGBA.b < fromRGBA.b) b_fun = smaller;
+    else b_fun = bigger;
+    if (toRGBA.a < fromRGBA.a) a_fun = smaller;
+    else a_fun = smaller;
+    
+    colorTween.onMotionChanged = function(event) { 
+        var pct = event.target._pos;
+        var red = Math.floor(r_fun(fromRGBA.r, ((fromRGBA.r - toRGBA.r) * pct)));
+        var green = Math.floor(g_fun(fromRGBA.g, ((fromRGBA.g - toRGBA.g) * pct)));
+        var blue = Math.floor(b_fun(fromRGBA.b, ((fromRGBA.b - toRGBA.b) * pct)));
+        var alpha = a_fun(fromRGBA.a, ((fromRGBA.a - toRGBA.a) * pct));
+        var bgColorStr = "rgba(" + red + "," + green + "," + blue + "," + alpha +")";
+        console.log(bgColorStr);
+        element.css("background-color", bgColorStr);
+    };
+    colorTween.start();
+
 }
 
 function metric_scale(host, row, col, fromScale, toScale) {
@@ -130,12 +162,13 @@ $(document).ready(function() {
     dashboard_add_metric_row("127.0.0.1");
     dashboard_add_metric_row("127.0.0.1");
     dashboard_metric("127.0.0.1", 1, 3, "test.label", [0, 1, 12, 15, 20, 9, 0, 1, 12, 15, 20, 9, 5]);
-    metric_color("127.0.0.1", 1, 3, 0,50,25,0.6);
+    metric_color("127.0.0.1", 1, 3, {"r":0, "g":50, "b":25, "a":0.6});
     metric_alpha("127.0.0.1", 1, 3, 0.8);
     metric_scale("127.0.0.1", 1, 3, 1, 1.2);
     dashboard_metric("127.0.0.1", 0, 11, "test2.label", [0, 1, 12, 15, 20, 9, 0, 1, 12, 15, 20, 9, 5]);
     
     setTimeout('metric_scale("127.0.0.1", 1, 3, 1.2, 1);', 3000);
+    setTimeout('metric_color("127.0.0.1", 1, 3, {"r":255, "g":0, "b":0, "a":1.0});', 3001);
     
     console.log(dashboard);
 });
