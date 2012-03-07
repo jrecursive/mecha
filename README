@@ -53,38 +53,38 @@ http://localhost:7283/admin/metrics/
 
 * join
 
-http://localhost:10103/mecha/join?left.type=spatial-select&left.params.bucket=geo&left.params.field=loc_ll&left.params.lat=36.2&left.params.lon=10.14&left.params.radius=10&left.join-field=feature_code_s&right.type=select&right.params.bucket=feature_codes&right.join-field=admin2_s&project=geo.key&project=geo.name_s&project=feature_codes.short_name_s
+http://localhost:7283/join?left.type=spatial-select&left.params.bucket=geo&left.params.field=loc_ll&left.params.lat=36.2&left.params.lon=10.14&left.params.radius=10&left.join-field=feature_code_s&right.type=select&right.params.bucket=feature_codes&right.join-field=admin2_s&project=geo.key&project=geo.name_s&project=feature_codes.short_name_s
 
 * facet
 
-http://localhost:10103/mecha/facet?bucket=geo&field=country_s
+http://localhost:7283/mecha/facet?bucket=geo&field=country_s
 
 * spatial-select
 
-http://localhost:10103/mecha/spatial-select?bucket=geo&field=loc_ll&lat=36.2&lon=10.15&radius=5
+http://localhost:7283/mecha/spatial-select?bucket=geo&field=loc_ll&lat=36.2&lon=10.15&radius=5
 
 * select
 
-http://localhost:10103/mecha/select?bucket=geo&filter=feature_code_s:HLL&count=10
+http://localhost:7283/mecha/select?bucket=geo&filter=feature_code_s:HLL&count=10
 
 * derive-schema
 
-http://localhost:10103/mecha/derive-schema?bucket=geo&max-samples=10
+http://localhost:7283/mecha/derive-schema?bucket=geo&max-samples=10
 
 * select
 
-http://localhost:10103/mecha/select?bucket=feature_codes&filter=admin2_s:TUND
+http://localhost:7283/mecha/select?bucket=feature_codes&filter=admin2_s:TUND
 
 * count
 
-http://localhost:10103/mecha/count?bucket=geo
+http://localhost:7283/mecha/count?bucket=geo
 
 * commit
 
-http://localhost:10103/mecha/commit
+http://localhost:7283/mecha/commit
 
 * generate an error (watch on dashboard)
 
-http://localhost:10103/mecha/ponies
+http://localhost:7283/mecha/ponies
 
 
