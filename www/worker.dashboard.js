@@ -35,6 +35,7 @@ self.addEventListener('message', function(e) {
         
         for(idx in names) {
             var name = names[idx];
+            result[host][name].values.reverse();
             var metric = result[host][name];
             var cur_val = metric.values[metric.values.length-1];
             
