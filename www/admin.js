@@ -61,16 +61,18 @@ function dashboard_element(host, row, col) {
              " .surface");
 }
 
-function dashboard_metric(element, id, label, data) {
+function dashboard_metric(host, row, col, label, data) {
+    var element = dashboard_element(host, row, col);
     var metric = $("#metric-template").clone();
-    metric.attr("id", id);
-    var sparkline = $("#sparkline-template").clone();
+    metric.attr("id", "m-" + label);
+    var sparkline = $("#sparkline-template span.dynamicsparkline").clone();
     $(metric).find(".metric-label").html(label);
     $(metric).find(".metric-sparkline").append(sparkline);
     element.html("");
     element.append(metric);
     layout();
-    $("#" + id + " .dynamicsparkline").sparkline(data, {height: '2em', width: '105%'});
+    $(sparkline).sparkline(data, {height: '4em', width: '150%'});
+    layout();
 }
 
 /*
@@ -96,11 +98,8 @@ $(document).ready(function() {
     dashboard_add_metric_row("127.0.0.1");
     dashboard_add_metric_row("127.0.0.1");
     dashboard_add_metric_row("127.0.0.1");
-    var el = dashboard_element("127.0.0.1", 1, 3);
-    dashboard_metric(el, "test", "test.label", [0, 1, 12, 15, 20, 9, 0, 1, 12, 15, 20, 9, 5]);
-    
-    var el = dashboard_element("127.0.0.1", 2, 2);
-    dashboard_metric(el, "test2", "test2.label", [0, 1, 12, 15, 20, 9, 0, 1, 12, 15, 20, 9, 5]);
+    dashboard_metric("127.0.0.1", 1, 3, "test.label", [0, 1, 12, 15, 20, 9, 0, 1, 12, 15, 20, 9, 5]);
+    dashboard_metric("127.0.0.1", 0, 11, "test2.label", [0, 1, 12, 15, 20, 9, 0, 1, 12, 15, 20, 9, 5]);
     
     console.log(dashboard);
 });
@@ -113,7 +112,7 @@ function layout() {
 
 function _layout() {
     var w = $(".metric").width();
-    var h = w * (9/16);
+    var h = w * (3/4);
     $(".surface").height(h);
-    $(".dynamicsparkline canvas").css("height", h*.5).css("width", w*.8);
+    $(".dynamicsparkline canvas").css("height", h*.6).css("width", w*.8);
 }
