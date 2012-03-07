@@ -42,6 +42,10 @@
         <![endif]-->
 
         <style type="text/css">
+            body {
+                overflow:hidden;
+            }
+            
             .mecha-panel {
                 padding-top: 50px;
             }
@@ -58,30 +62,47 @@
             }
             
             .metric-label {
+                height:50%;
                 font-size: 70%;
+                vertical-align:top;
                 display:block;
             }
             
             .metric-sparkline {
-                display:inline-block;
+                height:50%;
+                vertical-align:bottom;
+                display:block;
                 margin:auto;
             }
             
             .host-label {
                 font-size:18px;
                 font-face:arial;
+                padding-left: 5px;
+                padding-top: 5px;
+                padding-bottom: 5px;
+                background-color: yellow;
             }
             
             .surface {
                 width: 100%;
                 height: 100%;
-                /* border: 1px #666 solid;*/
-                display: block;
+                border: 1px #ccc solid;
+                display: inline-block;
                 text-align: center;
-                margin: auto;
+
+                margin-top: 5px;
+                margin-bottom: 5px;
                 padding-top:5px;
                 padding-bottom:5px;
+
+                border-radius:5px;
                 background-color: rgba(255,255,255,1.0);
+                vertical-align:middle; 
+            }
+            
+            .col-0 {
+                margin-left:5px !important;
             }
             
             .dynamicsparkline {
@@ -141,18 +162,18 @@
             </div>
             <div id="metric-row-template">
                 <div class="metric-row row-fluid">
-                    <div class="span1 metric col-0"><div class="surface">0</div></div>
-                    <div class="span1 metric col-1"><div class="surface">1</div></div>
-                    <div class="span1 metric col-2"><div class="surface">2</div></div>
-                    <div class="span1 metric col-3"><div class="surface">3</div></div>
-                    <div class="span1 metric col-4"><div class="surface">4</div></div>
-                    <div class="span1 metric col-5"><div class="surface">5</div></div>
-                    <div class="span1 metric col-6"><div class="surface">6</div></div>
-                    <div class="span1 metric col-7"><div class="surface">7</div></div>
-                    <div class="span1 metric col-8"><div class="surface">8</div></div>
-                    <div class="span1 metric col-9"><div class="surface">9</div></div>
-                    <div class="span1 metric col-10"><div class="surface">10</div></div>
-                    <div class="span1 metric col-11"><div class="surface">11</div></div>
+                    <div class="span1 metric col-0"><div class="surface"></div></div>
+                    <div class="span1 metric col-1"><div class="surface"></div></div>
+                    <div class="span1 metric col-2"><div class="surface"></div></div>
+                    <div class="span1 metric col-3"><div class="surface"></div></div>
+                    <div class="span1 metric col-4"><div class="surface"></div></div>
+                    <div class="span1 metric col-5"><div class="surface"></div></div>
+                    <div class="span1 metric col-6"><div class="surface"></div></div>
+                    <div class="span1 metric col-7"><div class="surface"></div></div>
+                    <div class="span1 metric col-8"><div class="surface"></div></div>
+                    <div class="span1 metric col-9"><div class="surface"></div></div>
+                    <div class="span1 metric col-10"><div class="surface"></div></div>
+                    <div class="span1 metric col-11"><div class="surface"></div></div>
                 </div>
             </div>
             <div id="metric-template">
