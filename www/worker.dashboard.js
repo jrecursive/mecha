@@ -18,6 +18,7 @@ self.addEventListener('message', function(e) {
         var col_ct = 0;
         var names = [];
         for(name in result[host]) {
+            /*
             if(name.indexOf("riak.memory") >= 0 &&
                 name.indexOf("riak.memory.total") != 0) continue;
             if(name.indexOf("fsm.objsize") > 0) continue;
@@ -26,6 +27,7 @@ self.addEventListener('message', function(e) {
             if(name.indexOf("vnode.index") > 0) continue;
             if(name.indexOf("fsm.time") > 0) continue;
             if(name.indexOf("read_rep") > 0) continue;
+            */
             names.push(name);
         }
         names.sort();
@@ -140,6 +142,11 @@ self.addEventListener('message', function(e) {
         }
         prevdata[host] = result[host];
     }
+    /*
+    postMessage({"scope": {}, 
+                 "fun":"layout", 
+                 "args": []});    
+    */
     setTimeout('refresh();', 1000);
 }, false);
 

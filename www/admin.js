@@ -67,17 +67,20 @@ function dashboard_element(host, row, col) {
 
 function dashboard_metric(host, row, col, label, data) {
     var element = dashboard_element(host, row, col);
-    var metric = $("#metric-template").clone();
-    metric.attr("id", "m-" + label);
-    var sparkline = $("#sparkline-template span.dynamicsparkline").clone();
+    if ($(element).find("#metric-template").length == 0) {
+        var metric = $("#metric-template").clone();
+        metric.attr("id", "m-" + label);
+        var sparkline = $("#sparkline-template span.dynamicsparkline").clone();
+        $(metric).find(".metric-sparkline").append(sparkline);
+    } else {
+        var metric = $(element).find("#metric-template");
+        var sparkline = $(metric).find("span.dynamicsparkline");
+    }
 
     $(metric).find(".metric-label").html(label);
-    $(metric).find(".metric-sparkline").append(sparkline);
     element.html("");
     element.append(metric);
-    layout();
     $(sparkline).sparkline(data);
-    layout();
 }
 
 function metric_color(host, row, col, toRGBA) {
@@ -139,7 +142,7 @@ function dashboard_setup() {
 }
 
 function dashboard_refresh() {
-    $.getJSON('/proc/metrics?entries=25&all=true', function(data) {
+    $.getJSON('/proc/metrics?entries=30&all=true', function(data) {
         dashboard_worker.postMessage(data);
     });
 }
@@ -200,7 +203,8 @@ $(document).ready(function() {
 $(window).resize(layout);
 
 function layout() {
-    setTimeout("_layout();", 10);
+    //setTimeout("_layout();", 10);
+    _layout();
 }
 
 function _layout() {
