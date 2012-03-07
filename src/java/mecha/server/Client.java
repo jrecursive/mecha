@@ -6,6 +6,7 @@ import java.util.concurrent.*;
 import java.util.logging.*;
 
 import org.jboss.netty.channel.ChannelHandlerContext;
+import org.jboss.netty.handler.codec.http.websocketx.*;
 
 import mecha.Mecha;
 import mecha.util.*;
@@ -218,7 +219,13 @@ public class Client implements ChannelConsumer {
     
     public void send(String message) throws Exception {
         rates.add("mecha.server.client.global.messages");
-        connection.get().getChannel().write(message + "\n");
+        if (connection.get().getAttachment() != null &
+            ((String)connection.get().getAttachment()).equals("websocket")) {
+            connection.get().getChannel().write(
+                new TextWebSocketFrame(message));
+        } else {
+            connection.get().getChannel().write(message + "\n");
+        }
     }
     
     public void send(byte[] message) throws Exception {

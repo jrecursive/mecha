@@ -119,6 +119,18 @@ public class Monitoring {
             createMetric(name, DEFAULT_RATE_WINDOW_SIZE);
         }
         metrics.get(name).addValue(val);
+
+        /*
+         * $metric.<name>
+        */
+        
+        String channel = "$metric." + name;
+        
+        if (Mecha.getChannels().getChannel(channel) != null) {
+            Mecha.getChannels()
+                 .getChannel(channel)
+                 .send(metrics.get(name).asJSON(1, false));
+        }
         /*
         JSONObject doc = new JSONObject();
         doc.put("value_d", val);

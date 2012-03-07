@@ -56,6 +56,10 @@ public class Metric {
     }
     
     public JSONObject asJSON(int recentValueCount) throws Exception {
+        return asJSON(recentValueCount, true);
+    }
+    
+    public JSONObject asJSON(int recentValueCount, boolean summary) throws Exception {
         JSONObject obj = new JSONObject();
         JSONArray values = new JSONArray();
         long sz = stats.getN();
@@ -64,18 +68,26 @@ public class Metric {
             if (idx < 0) break;
             values.put(stats.getElement(idx));
         }
+        /*
+        for(int i=0; i<recentValueCount; i++) {
+            if (i > (sz-1)) break;
+            values.put(stats.getElement(i));
+        }
+        */
         obj.put("values", values);
-        obj.put("min", stats.getMin());
-        obj.put("max", stats.getMax());
-        obj.put("mean", stats.getMean());
-        obj.put("100th", stats.getPercentile(99));
-        obj.put("99th", stats.getPercentile(99));
-        obj.put("95th", stats.getPercentile(99));
-        obj.put("variance", stats.getVariance());
-        obj.put("stddev", stats.getStandardDeviation());
-        obj.put("kurtosis", stats.getKurtosis());
-        obj.put("skewness", stats.getSkewness());
-        obj.put("sumsq", stats.getSumsq());
+        if (summary) {
+            obj.put("min", stats.getMin());
+            obj.put("max", stats.getMax());
+            obj.put("mean", stats.getMean());
+            obj.put("100th", stats.getPercentile(99));
+            obj.put("99th", stats.getPercentile(99));
+            obj.put("95th", stats.getPercentile(99));
+            obj.put("variance", stats.getVariance());
+            obj.put("stddev", stats.getStandardDeviation());
+            obj.put("kurtosis", stats.getKurtosis());
+            obj.put("skewness", stats.getSkewness());
+            obj.put("sumsq", stats.getSumsq());
+        }
         return obj;
     }
     

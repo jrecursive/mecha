@@ -29,6 +29,7 @@ public class MechaServerHandler extends SimpleChannelUpstreamHandler {
     
     @Override
     public void channelConnected(ChannelHandlerContext ctx, ChannelStateEvent e) throws Exception {
+        ctx.setAttachment("socket");
         Mecha.getServer().onOpen(ctx);
     }
     

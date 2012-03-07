@@ -63,21 +63,8 @@ public class SystemLog {
                             try {
                                 String channel;
                                 String bucket = "" + doc.getFieldValue("bucket");
-                                
-                                /*
-                                 * $metric.<name>
-                                */
-                                if (bucket.equals("metric")) {
-                                    channel = "$" + 
-                                        bucket + "." +
-                                        doc.getFieldValue("name");
-                                        
-                                /*
-                                 * $log, $error
-                                */
-                                } else {
-                                    channel = "$" + bucket;
-                                }
+                                                                        
+                                channel = "$" + bucket;
                                 
                                 if (Mecha.getChannels().channelExists(channel)) {
                                     JSONObject obj = new JSONObject();

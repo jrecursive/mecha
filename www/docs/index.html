@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title>Mecha - Documentation</title>
+                
+        <!-- jquery, jquery plugins -->
+        <script src="../js/jquery-1.7.1.min.js"></script>
+        <script src="../js/jquery.sparkline.min.js"></script>
+        <script src="../js/jquery.json-2.3.min.js"></script>
+        
+        <!-- effects -->
+        <script src="../js/tweenjs/Tween.js"></script>
+        <script src="../js/tweenjs/Ease.js"></script>
+        <script src="../js/tweenjs/Timeline.js"></script>
+        
+        <!-- date parsing -->
+        <script src="../js/moment.min.js"></script>
+        
+        <!-- twitter bootstrap -->
+        <script src="../bootstrap/js/bootstrap-transition.js"></script>
+        <script src="../bootstrap/js/bootstrap-alert.js"></script>
+        <script src="../bootstrap/js/bootstrap-modal.js"></script>
+        <script src="../bootstrap/js/bootstrap-dropdown.js"></script>
+        <script src="../bootstrap/js/bootstrap-scrollspy.js"></script>
+        <script src="../bootstrap/js/bootstrap-tab.js"></script>
+        <script src="../bootstrap/js/bootstrap-tooltip.js"></script>
+        <script src="../bootstrap/js/bootstrap-popover.js"></script>
+        <script src="../bootstrap/js/bootstrap-button.js"></script>
+        <script src="../bootstrap/js/bootstrap-collapse.js"></script>
+        <script src="../bootstrap/js/bootstrap-carousel.js"></script>
+        <script src="../bootstrap/js/bootstrap-typeahead.js"></script>
+                
+        <link href="../bootstrap/css/bootstrap.css" rel="stylesheet">
+        
+        <!-- HTML5 shim, for IE6-8 support of HTML5 elements -->
+        <!--[if lt IE 9]>
+          <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+        <![endif]-->
+
+        <style type="text/css">
+            /* custom styles */
+            
+            .search-query-mod {
+                width:120px;
+            }
+        </style>
+        
+    </head>
+    <body>
+        <div class="navbar navbar-fixed-top">
+            <div class="navbar-inner">
+                <div class="container-fluid">
+                    <a class="brand" href="#">Mecha</a>
+                    <ul class="nav">
+                        <!-- getting started -->
+                        <li class="dropdown active" id="menu1">
+                            <a class="dropdown-toggle" data-toggle="dropdown" href="#menu1">
+                                Getting Started
+                                <b class="caret"></b>
+                            </a>                                
+                            <ul class="dropdown-menu">
+                                <li class="nav-header">Simple Installation</li>
+                                <li><a href="#">Overview</a></li>
+                                <li><a href="#">Requirements</a></li>
+                                <li><a href="#">Installation</a></li>
+                                <li><a href="#">Tutorial</a></li>
+                                <li><a href="#">FAQ</a></li>
+                                <li class="divider"></li>
+                                
+                                <li class="nav-header">Distribution &amp; Clustering</li>
+                                <li><a href="#">Introduction to Mecha Clustering</a></li>
+                                <li><a href="#">Basic Cluster Setup &amp; Administration</a></li>
+                            </ul>
+                        </li>
+                        
+                        <!-- administration -->
+                        <li class="dropdown" id="menu3">
+                            <a class="dropdown-toggle" data-toggle="dropdown" href="#menu3">
+                                Administration
+                                <b class="caret"></b>
+                            </a>                                
+                            <ul class="dropdown-menu">                                
+                                <li class="nav-header">Configuration</li>
+                                <li><a href="#">Overview</a></li>
+                                <li><a href="#">Riak Integration</a></li>
+                                <li><a href="#">Embedded Solr Cores</a></li>
+                                <li><a href="#">Access Endpoints</a></li>
+                                <li><a href="#">Bucket Drivers</a></li>
+                                <li class="divider"></li>
+                                
+                                <li class="nav-header">Operations</li>
+                                <li><a href="#">Startup &amp; Shutdown</a></li>
+                                <li><a href="#">Shell Automation</a></li>
+                                
+                                <li class="nav-header">Tools</li>
+                                <li><a href="#">Dashboard</a></li>
+                                <li><a href="#">Metrics</a></li>
+                                <li><a href="#">Logging</a></li>
+                                <li><a href="#">mecha-cli</a></li>
+                                <li class="divider"></li>
+                                
+                                <li class="nav-header">Data Endpoints</li>
+                                <li><a href="#">Metrics</a></li>
+                                <li><a href="#">Indexed Logging</a></li>
+                                <li><a href="#">Indexed Errors &amp; Tracing</a></li>
+                                <li><a href="#">Streaming Logs, Errors &amp; Metrics</a></li>
+                                
+                                <!--
+                                <li><a href="#">Dataflow Visualization</a></li>
+                                <li><a href="#">Workbench</a></li>
+                                -->
+                                
+                            </ul>
+                        </li>
+
+                        <!-- development -->
+                        <li class="dropdown" id="menu4">
+                            <a class="dropdown-toggle" data-toggle="dropdown" href="#menu4">
+                                Developer Guide
+                                <b class="caret"></b>
+                            </a>                                
+                            <ul class="dropdown-menu">
+                                
+                                <li class="nav-header">Overview</li>
+                                <li><a href="#">Core Concepts</a></li>
+                                <li><a href="#">Data Model</a></li>
+                                <li><a href="#">Data Types</a></li>
+                                <li><a href="#">Modeling Tips &amp; Tricks</a></li>
+                                <li><a href="#">Data Loading Best Practices</a></li>
+                                <li class="divider"></li>
+                                
+                                <li class="nav-header">Access Methods</li>
+                                <li><a href="#">HTTP</a></li>
+                                <li><a href="#">WebSockets</a></li>
+                                <li><a href="#">Query Socket</a></li>
+                                <li class="divider"></li>
+                                
+                                <li class="nav-header">Retrieval</li>
+                                <li><a href="#">Key-Value Operations</a></li>
+                                <li><a href="#">Index Query Operations</a></li>
+                                <li class="divider"></li>
+                                
+                                <li class="nav-header">Pre- &amp; Post- Processing</li>
+                                <li><a href="#">Introduction</a></li>
+                                <li><a href="#">Local &amp; Global Blocks</a></li>
+                                <li><a href="#">Built-in Variables &amp; Libraries</a></li>
+                                <li><a href="#">Examples</a></li>
+                            </ul>
+                        </li>
+
+                        <!-- query reference -->
+                        <li class="dropdown" id="menu5">
+                            <a class="dropdown-toggle" data-toggle="dropdown" href="#menu5">
+                                Query Reference
+                                <b class="caret"></b>
+                            </a>                                
+                            <ul class="dropdown-menu">
+                                <li class="nav-header">Retrieval</li>
+                                <li><a href="#">select</a></li>
+                                <li><a href="#">spatial-select</a></li>
+                                <li class="divider"></li>
+                                
+                                <li class="nav-header">Analysis</li>
+                                <li><a href="#">count</a></li>
+                                <li><a href="#">facet</a></li>
+                                <li><a href="#">global-count</a></li>
+                                <li><a href="#">derive-schema</a></li>
+                                <li><a href="#">cardinality</a></li>
+                                <li class="divider"></li>
+                                
+                                <li class="nav-header">Management</li>
+                                <li><a href="#">drop-bucket</a></li>
+                                <li><a href="#">commit</a></li>
+                                <li class="divider"></li>
+                                
+                                <li class="nav-header">Relational</li>
+                                <li><a href="#">join</a></li>
+                                <li class="divider"></li>
+                                
+                                <li class="nav-header">Debugging &amp; Tracing</li>
+                                <li><a href="#">HTTP Modifiers</a></li>
+                                <li><a href="#">dump-vars</a></li>
+                            </ul>
+                        </li>
+
+                        <!-- internals -->
+                        <li class="dropdown" id="menu6">
+                            <a class="dropdown-toggle" data-toggle="dropdown" href="#menu6">
+                                Internals
+                                <b class="caret"></b>
+                            </a>
+                            <ul class="dropdown-menu">
+                                <li class="nav-header">Mecha VM</li>
+                                <li><a href="#">Mecha Process Networks</a></li>
+                                <li><a href="#">Sources, Processors, and Sinks</a></li>
+                                <li><a href="#">Lifecycle &amp; Execution</a></li>
+                                <li class="divider"></li>
+                                
+                                <li class="nav-header">MVM Built-in Functions</li>
+                                <li><a href="#">Introduction</a></li>
+                                
+                                <li class="nav-header">Parallelism &amp; Planning</li>
+                                <li><a href="#">Distribution Primitives</a></li>
+                                
+                                <li class="nav-header">Source Operators</li>
+                                <li><a href="#">Solr Retrieval</a></li>
+                                <li><a href="#">Object Retrieval</a></li>
+                                
+                                <li class="nav-header">Stream Processors</li>
+                                <li><a href="#">Projection</a></li>
+                                <li><a href="#">Eat &amp; Limit</a></li>
+                                <li><a href="#">Buffers, Splitters, Repeaters</a></li>
+                                <li><a href="#">Relational Operators</a></li>
+                                <li><a href="#">Programmable Processors</a></li>
+
+                                <li class="nav-header">Sinks</li>
+                                <li><a href="#">Client Sinks</a></li>
+                                <li class="divider"></li>
+                                
+                                <li class="nav-header">Macros &amp; Endpoints</li>
+                                <li><a href="#">Bootstrap &amp; Macro Definitions</a></li>
+                                <li><a href="#">Defining HTTP endpoints at Runtime</a></li>
+                                
+                            </ul>
+                        </li>
+                    </ul>
+                    <form class="navbar-search pull-right">
+                        <input type="text" class="search-query search-query-mod" placeholder="Search">
+                    </form>
+                </div>
+            </div>
+        </div>
+    </body>    
+</html>

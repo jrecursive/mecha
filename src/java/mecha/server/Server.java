@@ -140,6 +140,8 @@ public class Server {
              * If we're just starting up or shutting down, disconnect clients
              *  no matter what.
             */
+            
+            
             if (!serverActive.get()) {
                 connection.getChannel().close();
             }
@@ -147,7 +149,9 @@ public class Server {
             Client cl = clientMap.get(connection);
             
             if (cl == null) {
-                send(connection, "ERR :no client");
+                /*
+                 * This should never happen.
+                */
                 connection.getChannel().close();
                 return;
             }
@@ -168,7 +172,7 @@ public class Server {
                     }
                     cl.setWithinBlock(false);
                     cl.setWithinGlobalBlock(false);
-                    send(connection, OK_RESPONSE + HashUtils.sha1(cl.getBlockName()));
+                    cl.send(OK_RESPONSE + HashUtils.sha1(cl.getBlockName()));
                     cl.setBlockName(null);
                     cl.clearBlock();
                 } else {
@@ -187,9 +191,11 @@ public class Server {
                 String pass = parts[1];
                 if (password.equals(pass)) {
                     cl.setAuthorized(true);
-                    send(connection, "OK");
+                    cl.send("OK");
                     return;
                 } else {
+                    log.info("invalid password '" +
+                        pass + "'");
                     connection.getChannel().close();
                 }
             }
@@ -312,9 +318,9 @@ public class Server {
             }
             
             if (response == null) {
-                send(connection, OK_RESPONSE + HashUtils.sha1(request));
+                cl.send(OK_RESPONSE + HashUtils.sha1(request));
             } else {
-                send(connection, response);
+                cl.send(response);
             }
             
         } catch (Exception ex) {

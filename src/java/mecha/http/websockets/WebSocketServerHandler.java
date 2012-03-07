@@ -1,5 +1,9 @@
 package mecha.http.websockets;
 
+import java.util.*;
+import java.util.concurrent.*;
+import java.util.logging.*;
+
 import static org.jboss.netty.handler.codec.http.HttpHeaders.*;
 import static org.jboss.netty.handler.codec.http.HttpHeaders.Names.*;
 import static org.jboss.netty.handler.codec.http.HttpMethod.*;
@@ -13,14 +17,33 @@ import org.jboss.netty.handler.codec.http.websocketx.*;
 import org.jboss.netty.logging.*;
 import org.jboss.netty.util.*;
 
+import mecha.Mecha;
+
 public class WebSocketServerHandler extends SimpleChannelUpstreamHandler {
     private static final InternalLogger logger = 
         InternalLoggerFactory.getInstance(WebSocketServerHandler.class);
+    private static final Logger log = Logger.getLogger(
+            WebSocketServerHandler.class.getName());
 
     final private static String WEBSOCKET_PATH = "/mecha";
-
+    
     private WebSocketServerHandshaker handshaker;
+    
+    @Override
+    public void handleUpstream(ChannelHandlerContext ctx, ChannelEvent e) throws Exception {
+        super.handleUpstream(ctx, e);
+    }
+    
+    @Override
+    public void channelConnected(ChannelHandlerContext ctx, ChannelStateEvent e) throws Exception {
+        Mecha.getServer().onOpen(ctx);
+    }
 
+    @Override
+    public void channelDisconnected(ChannelHandlerContext ctx, ChannelStateEvent e) throws Exception {
+        Mecha.getServer().onClose(ctx);
+    }
+    
     @Override
     public void messageReceived(ChannelHandlerContext ctx, MessageEvent e) throws Exception {
         Object msg = e.getMessage();
@@ -63,6 +86,8 @@ public class WebSocketServerHandler extends SimpleChannelUpstreamHandler {
 
     private void handleWebSocketFrame(ChannelHandlerContext ctx, WebSocketFrame frame) {
         
+        ctx.setAttachment("websocket");
+        
         // Check for closing frame
         if (frame instanceof CloseWebSocketFrame) {
             this.handshaker.close(ctx.getChannel(), (CloseWebSocketFrame) frame);
@@ -78,14 +103,16 @@ public class WebSocketServerHandler extends SimpleChannelUpstreamHandler {
         
         // REQUEST ***
         String request = ((TextWebSocketFrame) frame).getText();
+        Mecha.getServer().onMessage(ctx, request);
         
+        /*
         if (logger.isDebugEnabled()) {
             logger.debug(String.format("Channel %s received %s", ctx.getChannel().getId(), request));
         }
         
         // RESPONSE ***
         ctx.getChannel().write(new TextWebSocketFrame(request.toUpperCase()));
-        
+        */
     }
     
     private void sendHttpResponse(ChannelHandlerContext ctx, HttpRequest req, HttpResponse res) {
@@ -102,8 +129,20 @@ public class WebSocketServerHandler extends SimpleChannelUpstreamHandler {
     }
 
     @Override
-    public void exceptionCaught(ChannelHandlerContext ctx, ExceptionEvent e) throws Exception {
-        e.getCause().printStackTrace();
+    public void exceptionCaught(ChannelHandlerContext ctx, ExceptionEvent e) {
+        /*
+         * Any exception at this point should just kill the channel
+         *  which will cause a cascade of cleanup activities; almost
+         *  all non-static functionality (e.g., user, data driven)
+         *  relies on a connection -- if there is a problem, it should
+         *  all be dumped ASAP.
+        */
+        /*
+        log.log(
+                Level.WARNING,
+                "Unexpected exception from downstream.",
+                e.getCause());
+        */
         e.getChannel().close();
     }
     

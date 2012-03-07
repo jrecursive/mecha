@@ -7,11 +7,11 @@ function getMetrics() {
     var html = "<table class='table table-bordered table-condensed'>";
     $.getJSON('/proc/metrics?entries=30&all=true', function(data) {
         metrics = data.result;
-        names = new Array();
-        dnames = new Array();
         var td_max = 7;
         var td_c = 0;
         for(var host in data.result) {
+            names = new Array();
+            dnames = new Array();
             if (!log_triggered) {
                 getLog(host);
             }
@@ -42,7 +42,7 @@ function getMetrics() {
             for (var i=0; i<names.length; i++) {
                 var name = names[i];
                 var dname = dnames[i];
-                data.result[host][name].values.reverse();
+                //data.result[host][name].values.reverse();
                 var metric = data.result[host][name];
                 cur_val = metric.values[metric.values.length-1];
                 //if (cur_val == 0) continue;
@@ -80,7 +80,7 @@ function getMetrics() {
                 
                 html += "<td style='vertical-align:middle; background:" + bgcol + "; " +
                         "width:" + Math.ceil(100/(td_max+1)) + "%'>" + 
-                        "<center><a class='lbl' style='color:black;' href='#' rel='tooltip' title='" + name + ": " + metric.values[metric.values.length-1] + "'>" + dname + "</a><br>";
+                        "<center><a class='lbl' style='color:black;' href='#' rel='tooltip' title='" + name + ": " + metric.values[metric.values.length-1] + "'>" + name + "</a><br>";
                 html += "<span style='display:inline;' class='dynamicsparkline'>";
                 for(var j=0; j<metric.values.length; j++) {
                     var value = metric.values[j];

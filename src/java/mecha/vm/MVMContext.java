@@ -211,7 +211,11 @@ public class MVMContext {
         /*
          * Send message.
         */
-        getClient().getChannel().send(msg);
+        if (msg != null &&
+            getClient() != null &&
+            getClient().getChannel() != null) {
+            getClient().getChannel().send(msg);
+        }
     }
     
     /*

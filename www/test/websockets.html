@@ -12,10 +12,10 @@
           <script src="//html5shim.googlecode.com/svn/trunk/html5.js"></script>
         <![endif]-->
         
-        <script type="text/javascript" src="../js/jquery-1.7.1.min.js"></script>
-        <script type="text/javascript" src="../js/jquery.sparkline.min.js"></script>
-        <script type="text/javascript" src="../js/jquery.websockets.js"></script>
-        <script src="http://jquery-json.googlecode.com/files/jquery.json-2.2.min.js"></script>
+        <script src="../js/jquery-1.7.1.min.js"></script>
+        <script src="../js/jquery.sparkline.min.js"></script>
+        <script src="../js/jquery.json-2.3.min.js"></script>
+        <script src="../js/prettyprint.js"></script>
         
         <script src="../bootstrap/js/bootstrap-transition.js"></script>
         <script src="../bootstrap/js/bootstrap-alert.js"></script>
@@ -31,21 +31,47 @@
         <script src="../bootstrap/js/bootstrap-typeahead.js"></script>
         <script src="../js/moment.min.js"></script>
         <script type="text/javascript">
-        
+            
             function log(msg) {
                 $("#log").html("<pre>" + $("#log").text() + msg + "\n</pre>");
+                //$("#log").append(prettyPrint(msg));
+                var element = document.getElementById("log");
+                var currentHeight = element.scrollHeight;
+                if(lastHeight != currentHeight){
+                    element.scrollTop = currentHeight;
+                    lastHeight = currentHeight;
+                }
             }
             
+            var lastHeight = 0;
             $(document).ready(function() {
+                $("#log").height($(window).height() - 100);
                 log("connecting...");
+                
+                element = document.getElementById("log");
+                lastHeight = element.scrollHeight;
                 
                 var socket = new WebSocket("ws://localhost:7284/mecha");  
                 socket.onopen = function(){  
                      log('Socket Status: '+socket.readyState+' (open)');  
                 }  
           
-                socket.onmessage = function(msg){  
-                     log('Received: '+msg.data);  
+                socket.onmessage = function(msg0){
+                    msg = msg0.data;
+                    if (msg.charAt(0) == '{') {
+                        var obj = $.evalJSON(msg);
+                        //log(obj.o);
+                        
+                        if (obj.c.indexOf("socket-") == 0) {
+                            log(">> " + $.toJSON(obj.o));
+                        } else {
+                            log(obj.c + ": " + $.toJSON(obj.o));
+                        }
+                        
+                    } else {
+                        log('Received: '+msg);
+                        //log({"text": msg});
+                    }
                 }  
           
                 socket.onclose = function(){  
@@ -107,7 +133,7 @@
             <!-- body -->
             <div class="span12">
                 <input id="message" type="text"/>
-                <span id="log"></span>
+                <div style='height:300px; width:99%; display:block; overflow:auto;' id="log"></div>
             </div>
           </div>
         </div>
