@@ -31,6 +31,8 @@
         <script src="js/moment.min.js"></script>
         <script type="text/javascript">
             
+            var cmdhistory = [];
+            var historyidx = 0;
             var config = {};
             function log(msg) {
                 while(msg.indexOf(",\"")>=0) {
@@ -42,7 +44,6 @@
                     $(".console-pre").text(text);
                 }
                 $(".console-pre").append(msg + "\n");
-                //.html("<pre class=''>" + $("#log").text() + msg + "\n</pre>");
                 scroll_console();
             }
             
@@ -54,7 +55,6 @@
                     element.scrollTop = currentHeight;
                     lastHeight = currentHeight;
                 }
-                //$(".console-pre").height($(document).height()-150);
             }
 
             
@@ -78,7 +78,6 @@
                 var w = $(window).width()-40;
                 var h = $(window).height()-100;
                 $("#log").width(w).height(h-20);
-                //$(".console-pre").height($(document).height());
                 $("#cmdline").width(w-50);
                 $(".input-box").width(w-40);
                 lastHeight=0;
@@ -87,7 +86,6 @@
             
             function console_connect() {
                 var pw = config.password;
-                //$("#log").height($(window).height() - 100);
                 log("connecting...");
                 
                 element = document.getElementById("log");
@@ -103,7 +101,6 @@
                     msg = msg0.data;
                     if (msg.charAt(0) == '{') {
                         var obj = $.evalJSON(msg);
-                        //log(obj.o);
                         if (!obj) {
                             return;
                         } else if (!obj.c) {
@@ -126,6 +123,7 @@
                         
                         
                     } else {
+                        // these messages will be irrelevant "OK", etc.
                         //log(msg);
                     }
                 }  
@@ -135,9 +133,58 @@
                 }             
           
 
-                $('#cmdline').change(function(){
-                    socket.send(this.value);
+                function runcmd(cmd) {
+                    socket.send(cmd);
+                    cmdhistory.push(cmd);
                     this.value = '';
+                    historyidx=0;
+                }
+
+                /*
+                $('#cmdline').change(function(){
+                    runcmd(this.value);
+                });
+                */
+                
+                $("#cmdline").keypress(function(e) {
+                    if (e.which == 13) { // enter
+                        e.preventDefault();
+                        runcmd($("#cmdline").val());
+                        $("#cmdline").val("");
+                    }
+                });
+                                
+                $("#cmdline").keydown(function(e) {
+                    if (e.which == 40) { // down arrow
+                        e.preventDefault();
+                        historyidx--;
+                        var history_len = cmdhistory.length;
+                        var h_idx = history_len - historyidx;
+                        if (h_idx < 0) return;
+                        if (h_idx > history_len-1) {
+                            $("#cmdline").val("");
+                            historyidx=0;
+                        }
+                        else {
+                            var h_cmd = cmdhistory[h_idx];
+                            $("#cmdline").val(h_cmd);
+                            //historyidx++;
+                        }                        
+                        
+                    } else if (e.which == 38) { // up arrow
+                        e.preventDefault();
+                        historyidx++;
+                        var history_len = cmdhistory.length;
+                        var h_idx = history_len - historyidx;
+                        if (h_idx < 0) return;
+                        else {
+                            var h_cmd = cmdhistory[h_idx];
+                            $("#cmdline").val(h_cmd);
+                        }
+                    } else if (e.which == 117 &&
+                               e.ctrlKey) {
+                        $("#cmdline").val("");
+                    }
                 });
                 
                 log("ok, type");
