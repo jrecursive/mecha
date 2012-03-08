@@ -1,0 +1,38 @@
+
+<h1>Getting Started</h1>
+<h2>Requirements</h2>
+
+<p>
+x y z.
+</p>
+
+<p>
+This is paragraph text.  This is paragraph text.  This is paragraph text.  This is paragraph text.  This is paragraph text.  This is paragraph text.  This is paragraph text.  This is paragraph text.  This is paragraph text.  This is paragraph text.  This is paragraph text.  This is paragraph text.  This is paragraph text.  This is paragraph text.  This is paragraph text.  This is paragraph text.  This is paragraph text.  This is paragraph text.  This is paragraph text.  This is paragraph text.  This is paragraph text.  This is paragraph text.  This is paragraph text.  This is paragraph text.  This is paragraph text.  This is paragraph text.  This is paragraph text.  This is paragraph text.  This is paragraph text.  This is paragraph text.  This is paragraph text.  This is paragraph text.  This is paragraph text.  This is paragraph text.  
+</p>
+
+<p>
+This has <code>inline code</code>.
+</p>
+
+<p>
+<pre>
+This is code with pre.
+</pre>
+</p>
+
+<p>
+
+<pre class="prettyprint">
+a = (with-coverage partition-marker:"&lt;&lt;p&gt;&gt;" host-marker:"&lt;&lt;h&gt;&gt;" bucket:zipcodes do:(warp host:&lt;&lt;h&gt;&gt; do:(solr-select params:(q:"partition:&lt;&lt;p&gt;&gt; AND bucket:zipcodes") count-only:true)))
+b = (value-count-reducer)
+c = (client-sink)
+a -> b
+b -> c
+a ! (start)
+</pre>
+
+</p>
+
+<script type="text/javascript">
+prettyPrint();
+</script>

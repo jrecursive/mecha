@@ -9,11 +9,6 @@
         <script src="../js/jquery.sparkline.min.js"></script>
         <script src="../js/jquery.json-2.3.min.js"></script>
         
-        <!-- effects -->
-        <script src="../js/tweenjs/Tween.js"></script>
-        <script src="../js/tweenjs/Ease.js"></script>
-        <script src="../js/tweenjs/Timeline.js"></script>
-        
         <!-- date parsing -->
         <script src="../js/moment.min.js"></script>
         
@@ -30,8 +25,13 @@
         <script src="../bootstrap/js/bootstrap-collapse.js"></script>
         <script src="../bootstrap/js/bootstrap-carousel.js"></script>
         <script src="../bootstrap/js/bootstrap-typeahead.js"></script>
-                
+        
         <link href="../bootstrap/css/bootstrap.css" rel="stylesheet">
+        
+        <!-- google prettify -->
+        <link href="../js/prettify/prettify.css" type="text/css" rel="stylesheet" />
+        <script src="../js/prettify/prettify.js"></script>
+        <script src="../js/prettify/lang-lisp.js"></script>
         
         <!-- HTML5 shim, for IE6-8 support of HTML5 elements -->
         <!--[if lt IE 9]>
@@ -44,25 +44,29 @@
             .search-query-mod {
                 width:120px;
             }
+            
+            body {
+                padding-top: 60px; /* 60px to make the container go all the way to the bottom of the topbar */
+            }
+            
         </style>
+        
+        <script src="docs.js"></script>
         
     </head>
     <body>
         <div class="navbar navbar-fixed-top">
             <div class="navbar-inner">
                 <div class="container-fluid">
-                    <a class="brand" href="#">Mecha</a>
+                    <a class="brand" href="../docs/">Mecha</a>
                     <ul class="nav">
                         <!-- getting started -->
                         <li class="dropdown active" id="menu1">
-                            <a class="dropdown-toggle" data-toggle="dropdown" href="#menu1">
-                                Getting Started
-                                <b class="caret"></b>
-                            </a>                                
+                            <a class="dropdown-toggle" data-toggle="dropdown" href="#menu1">Getting Started<b class="caret"></b></a>                                
                             <ul class="dropdown-menu">
                                 <li class="nav-header">Simple Installation</li>
-                                <li><a href="#">Overview</a></li>
-                                <li><a href="#">Requirements</a></li>
+                                <li><a href="overview.html">Overview</a></li>
+                                <li><a href="requirements.html">Requirements</a></li>
                                 <li><a href="#">Installation</a></li>
                                 <li><a href="#">Tutorial</a></li>
                                 <li><a href="#">FAQ</a></li>
@@ -76,10 +80,7 @@
                         
                         <!-- administration -->
                         <li class="dropdown" id="menu3">
-                            <a class="dropdown-toggle" data-toggle="dropdown" href="#menu3">
-                                Administration
-                                <b class="caret"></b>
-                            </a>                                
+                            <a class="dropdown-toggle" data-toggle="dropdown" href="#menu3">Administration<b class="caret"></b></a>                                
                             <ul class="dropdown-menu">                                
                                 <li class="nav-header">Configuration</li>
                                 <li><a href="#">Overview</a></li>
@@ -116,10 +117,7 @@
 
                         <!-- development -->
                         <li class="dropdown" id="menu4">
-                            <a class="dropdown-toggle" data-toggle="dropdown" href="#menu4">
-                                Developer Guide
-                                <b class="caret"></b>
-                            </a>                                
+                            <a class="dropdown-toggle" data-toggle="dropdown" href="#menu4">Developer Guide<b class="caret"></b></a>                                
                             <ul class="dropdown-menu">
                                 
                                 <li class="nav-header">Overview</li>
@@ -151,10 +149,7 @@
 
                         <!-- query reference -->
                         <li class="dropdown" id="menu5">
-                            <a class="dropdown-toggle" data-toggle="dropdown" href="#menu5">
-                                Query Reference
-                                <b class="caret"></b>
-                            </a>                                
+                            <a class="dropdown-toggle" data-toggle="dropdown" href="#menu5">Query Reference<b class="caret"></b></a>                                
                             <ul class="dropdown-menu">
                                 <li class="nav-header">Retrieval</li>
                                 <li><a href="#">select</a></li>
@@ -186,10 +181,7 @@
 
                         <!-- internals -->
                         <li class="dropdown" id="menu6">
-                            <a class="dropdown-toggle" data-toggle="dropdown" href="#menu6">
-                                Internals
-                                <b class="caret"></b>
-                            </a>
+                            <a class="dropdown-toggle" data-toggle="dropdown" href="#menu6">Internals<b class="caret"></b></a>
                             <ul class="dropdown-menu">
                                 <li class="nav-header">Mecha VM</li>
                                 <li><a href="#">Mecha Process Networks</a></li>
@@ -225,11 +217,23 @@
                             </ul>
                         </li>
                     </ul>
+                    <!--
                     <form class="navbar-search pull-right">
                         <input type="text" class="search-query search-query-mod" placeholder="Search">
                     </form>
+                    -->
                 </div>
             </div>
         </div>
+        
+        <div class="container-fluid">
+            <div class="row-fluid">
+                <div class="span12">
+                    <span id="crumbs"></span>
+                    <div id="content"></div>
+                </div>
+            </div>
+        </div>
+        
     </body>    
 </html>

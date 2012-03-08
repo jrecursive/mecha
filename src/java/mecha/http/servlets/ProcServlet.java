@@ -120,6 +120,7 @@ public class ProcServlet extends HttpServlet {
     */
     private JSONObject doMetricsRequest(String[] parts, JSONObject params) throws Exception {
         int entries;
+        boolean summary = false;
         if (params.has("entries")) {
             entries = Integer.parseInt("" + params.get("entries"));
         } else {
@@ -129,16 +130,26 @@ public class ProcServlet extends HttpServlet {
             params.<String>get("all").equals("true")) {
             return doClusterMetricsRequest(params, entries);
         }
-        return Mecha.getMonitoring().asJSON(entries);
+        if (params.has("summary") &&
+            params.<String>get("summary").equals("true")) {
+            summary = true;
+        }
+        return Mecha.getMonitoring().asJSON(entries, summary);
     }
     
     private JSONObject doClusterMetricsRequest(JSONObject params, int entries) throws Exception {
+        boolean summary = false;
+        if (params.has("summary") &&
+            params.<String>get("summary").equals("true")) {
+            summary = true;
+        }
         Set<String> hosts = Mecha.getRiakRPC().getClusterHosts();
         JSONObject result = new JSONObject();
         for(String host : hosts) {
             String url = "http://" + host + ":" + 
                 Mecha.getConfig().get("http-port") +
-                "/proc/metrics?entries=" + entries;
+                "/proc/metrics?entries=" + entries + 
+                "&summary=" + summary;
             try {
                 JSONObject obj = 
                     new JSONObject(HTTPUtils.fetch(url));

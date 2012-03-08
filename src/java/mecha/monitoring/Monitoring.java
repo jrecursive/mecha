@@ -35,7 +35,7 @@ public class Monitoring {
      * This equates to the number of seconds of history to
      *  keep for each metric (rolling).
     */
-    final private static int DEFAULT_RATE_WINDOW_SIZE = 3600;
+    final private static int DEFAULT_RATE_WINDOW_SIZE = 300;
     
     final private Set<WeakReference<Rates>> rateMonitorables;
     final private Map<String, Metric> metrics;
@@ -213,9 +213,13 @@ public class Monitoring {
     }
     
     public JSONObject asJSON(int entries) throws Exception {
+        return asJSON(entries, false);
+    }
+    
+    public JSONObject asJSON(int entries, boolean summary) throws Exception {
         JSONObject obj = new JSONObject(); 
         for(String name : metrics.keySet()) {
-            obj.put(name, metrics.get(name).asJSON(entries));
+            obj.put(name, metrics.get(name).asJSON(entries, summary));
         }
         return obj;
     }
