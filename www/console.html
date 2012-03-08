@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title>mecha - websockets test</title>
+        
+        <link href="bootstrap/css/bootstrap.css" rel="stylesheet">
+        
+        <!-- Le HTML5 shim, for IE6-8 support of HTML5 elements -->
+        <!--[if lt IE 9]>
+          <script src="//html5shim.googlecode.com/svn/trunk/html5.js"></script>
+        <![endif]-->
+        
+        <script src="js/jquery-1.7.1.min.js"></script>
+        <script src="js/jquery.sparkline.min.js"></script>
+        <script src="js/jquery.json-2.3.min.js"></script>
+        <script src="js/prettyprint.js"></script>
+        
+        <script src="bootstrap/js/bootstrap-transition.js"></script>
+        <script src="bootstrap/js/bootstrap-alert.js"></script>
+        <script src="bootstrap/js/bootstrap-modal.js"></script>
+        <script src="bootstrap/js/bootstrap-dropdown.js"></script>
+        <script src="bootstrap/js/bootstrap-scrollspy.js"></script>
+        <script src="bootstrap/js/bootstrap-tab.js"></script>
+        <script src="bootstrap/js/bootstrap-tooltip.js"></script>
+        <script src="bootstrap/js/bootstrap-popover.js"></script>
+        <script src="bootstrap/js/bootstrap-button.js"></script>
+        <script src="bootstrap/js/bootstrap-collapse.js"></script>
+        <script src="bootstrap/js/bootstrap-carousel.js"></script>
+        <script src="bootstrap/js/bootstrap-typeahead.js"></script>
+        <script src="js/moment.min.js"></script>
+        <script type="text/javascript">
+            
+            var config = {};
+            function log(msg) {
+                while(msg.indexOf(",\"")>=0) {
+                    msg = msg.replace(",\"", ",\n\t\"");
+                }
+                if ($(".console-pre").text().length > 50000) {
+                    var text = $(".console-pre").text().substr(
+                        Math.floor($(".console-pre").text().length/2));
+                    $(".console-pre").text(text);
+                }
+                $(".console-pre").append(msg + "\n");
+                //.html("<pre class=''>" + $("#log").text() + msg + "\n</pre>");
+                scroll_console();
+            }
+            
+            var lastHeight;
+            function scroll_console() {
+                var element = document.getElementById("log");
+                var currentHeight = element.scrollHeight;
+                if(lastHeight != currentHeight){
+                    element.scrollTop = currentHeight;
+                    lastHeight = currentHeight;
+                }
+                //$(".console-pre").height($(document).height()-150);
+            }
+
+            
+            var lastHeight = 0;
+            $(document).ready(function() {
+                // tweak bootstrap
+                $("#cmdline").focus();
+                $(".console").css("margin-left", "0px");
+                
+                $.getJSON('/proc/config', function(data) {
+                    config = data.result;
+                    //console.log(data);
+                    console_connect();
+                });
+                $(window).resize(console_layout);
+                lastHeight=0;
+                console_layout();
+            });
+            
+            function console_layout() {
+                var w = $(window).width()-40;
+                var h = $(window).height()-100;
+                $("#log").width(w).height(h-20);
+                //$(".console-pre").height($(document).height());
+                $("#cmdline").width(w-50);
+                $(".input-box").width(w-40);
+                lastHeight=0;
+                scroll_console();
+            }
+            
+            function console_connect() {
+                var pw = config.password;
+                //$("#log").height($(window).height() - 100);
+                log("connecting...");
+                
+                element = document.getElementById("log");
+                lastHeight = element.scrollHeight;
+                
+                var socket = new WebSocket("ws://localhost:7284/mecha");  
+                socket.onopen = function(){  
+                     log('Socket Status: '+socket.readyState+' (open)');  
+                     socket.send("auth " + pw);
+                }  
+          
+                socket.onmessage = function(msg0){
+                    msg = msg0.data;
+                    if (msg.charAt(0) == '{') {
+                        var obj = $.evalJSON(msg);
+                        //log(obj.o);
+                        if (!obj) {
+                            return;
+                        } else if (!obj.c) {
+                            if (obj.error) {
+                                log("error: " + obj.error);
+                                return;
+                            }
+                            return;
+                        }
+                        if (obj.o["$"] &&
+                            obj.o["$"] == "done") {
+                            log("----------------------------------------------------------");
+                            return;
+                        }
+                        if (obj.c.indexOf("socket-") == 0) {
+                            log(">> " + $.toJSON(obj.o));
+                        } else {
+                            log(obj.c + ": " + $.toJSON(obj.o));
+                        }
+                        
+                        
+                    } else {
+                        //log(msg);
+                    }
+                }  
+          
+                socket.onclose = function(){  
+                     log('Socket Status: '+socket.readyState+' (Closed)');  
+                }             
+          
+
+                $('#cmdline').change(function(){
+                    socket.send(this.value);
+                    this.value = '';
+                });
+                
+                log("ok, type");
+            };
+        
+        </script>
+        
+        <style type="text/css">
+            body {
+                margin:0px;
+                padding:0px;
+                overflow:hidden;
+            }
+            
+            * {
+                font-face: arial;
+                font-size: 12px;
+            }
+            
+            .lbl {
+                font-size: 10px;
+                display:inline;
+            }
+            
+            table {
+            }
+            
+            td {
+                align:center;
+            }
+            
+            tr {
+                height:50px;
+                overflow:hidden;
+            }
+            
+            .hdr {
+                font-size:10px;
+                position:relative;
+            }
+            
+            .dynamicsparkline {
+            }
+            
+            .value {
+                font-size:10px;
+            }
+            
+            .input-box {
+                position:absolute;
+                bottom:-10px;
+                left:20px;
+                width:100%;
+            }
+            
+            #cmdline {
+                position:relative;
+                top:5px;
+            }
+            
+            .console {
+                position:relative;
+                top:20px;
+            }
+            
+            .console-pre {
+                
+            }
+            
+            pre {
+                padding: 0px !important;
+                line-height:14px !important;
+                border: 0px !important;
+                background-color: white !important;
+                border-radius: 0px !important;
+                margin: 0px !important;
+                
+            }
+            
+        </style>
+    </head>
+    <body>
+
+        <div class="container-fluid">
+            <div class="row-fluid">
+                
+                <div class="input-box span12 well">
+                    <input id="cmdline" type="text"/>
+                </div>
+                
+                <div class="span12 console">
+                    <div style='height:300px; width:100%; display:block; overflow:auto;' id="log">
+                        <pre class="console-pre"></pre>
+                    </div>
+                </div>
+            
+            </div>
+        </div>
+        
+    </body>
+</html>
