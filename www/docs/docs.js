@@ -15,6 +15,13 @@ function loadcontent(section, article) {
         prettyPrint();
     });
     $('#crumbs').html(crumbs(section, article));
+    $('a.dropdown-toggle').each(function() {
+        if ($(this).text() == section) {
+            $(this).parent().addClass("active");
+        } else {
+            $(this).parent().removeClass("active");
+        }
+    });
 };
 
 /*
@@ -105,7 +112,6 @@ function introspectpages() {
 /* 
  * Mmmmm.  Documentation.
 */
-var hash = "";
 $(document).ready(function() {
     introspectpages();
     do_hash(window.location.hash);
@@ -135,6 +141,6 @@ function do_hash(hash) {
             loadcontent(obj.section, obj.article);
         }
     } else {
-        loadcontent('Getting Started', 'Overview');
+        window.location.hash = "#path-Getting Started-Overview";
     }
 }
