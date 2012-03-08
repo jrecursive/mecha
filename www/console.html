@@ -35,6 +35,7 @@
             var historyidx = 0;
             var config = {};
             function log(msg) {
+                msg = msg.replace("{\"", "{\t\"");
                 while(msg.indexOf(",\"")>=0) {
                     msg = msg.replace(",\"", ",\n\t\"");
                 }
@@ -243,6 +244,7 @@
             #cmdline {
                 position:relative;
                 top:5px;
+                font-size:18px;
             }
             
             .console {
