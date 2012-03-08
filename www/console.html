@@ -39,13 +39,12 @@
                 while(msg.indexOf(",\"")>=0) {
                     msg = msg.replace(",\"", ",\n\t\"");
                 }
-                if ($(".console-pre").text().length > 50000) {
+                if ($(".console-pre").text().length > 30000) {
                     var text = $(".console-pre").text().substr(
                         Math.floor($(".console-pre").text().length/2));
                     $(".console-pre").text(text);
                 }
                 $(".console-pre").append(msg + "\n");
-                scroll_console();
             }
             
             var lastHeight;
@@ -94,7 +93,7 @@
                 
                 var socket = new WebSocket("ws://localhost:7284/mecha");  
                 socket.onopen = function(){  
-                     log('Socket Status: '+socket.readyState+' (open)');  
+                     log('connected.');  
                      socket.send("auth " + pw);
                 }  
           
@@ -115,7 +114,11 @@
                             obj.o["$"] == "done") {
                             log("----------------------------------------------------------");
                             return;
+                        } else if (obj.o["$"] &&
+                            obj.o["$"] == "cancel") {
+                            return;
                         }
+
                         if (obj.c.indexOf("socket-") == 0) {
                             log(">> " + $.toJSON(obj.o));
                         } else {
@@ -188,7 +191,7 @@
                     }
                 });
                 
-                log("ok, type");
+                setInterval('scroll_console();', 1000);
             };
         
         </script>

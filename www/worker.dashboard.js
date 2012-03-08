@@ -140,7 +140,7 @@ self.addEventListener('message', function(e) {
         }
         prevdata[host] = result[host];
     }
-    setTimeout('refresh();', 1000);
+    setTimeout('refresh();', 500);
 }, false);
 
 function refresh() {
@@ -148,67 +148,3 @@ function refresh() {
                  "fun":"dashboard_refresh", 
                  "args": []});
 }
-// 
-
-/*
-var metric = data.result[host][name];
-                cur_val = metric.values[metric.values.length-1];
-                //if (cur_val == 0) continue;
-                if (prevdata[host] !== null &&
-                    prevdata[host] !== undefined) {
-                    try {
-                        pre_val = prevdata[host][name].values[prevdata[host][name].values.length-1];
-                        if (pre_val == 0 &&
-                            cur_val > 0) {
-                            bgcol = "rgba(0, 255, 0, .1)";
-                        } else {
-                            
-                            if (cur_val == pre_val) {
-                                bgcol = "rgb(255,255,255)";
-                            } else if (cur_val > pre_val) {
-                                var cv = 1 - (pre_val / cur_val);
-                                bgcol = "rgba(255,0,0," + cv + ")";
-                            } else if (cur_val < pre_val) {
-                                var cv = (cur_val / pre_val) * 0.15;
-                                bgcol = "rgba(0,186,255," + cv +")";
-                            }
-                            console.log(bgcol);
-                        }
-                    } catch (ex) {
-                        bgcol = "white";
-                    }
-                } else {
-                    bgcol = "white";
-                }
-                
-                if (!data.result[host][name]) {
-                    html += "<td>n/a</td>";
-                    continue;
-                }
-                
-                html += "<td style='vertical-align:middle; background:" + bgcol + "; " +
-                        "width:" + Math.ceil(100/(td_max+1)) + "%'>" + 
-                        "<center><a class='lbl' style='color:black;' href='#' rel='tooltip' title='" + name + ": " + metric.values[metric.values.length-1] + "'>" + name + "</a><br>";
-                html += "<span style='display:inline;' class='dynamicsparkline'>";
-                for(var j=0; j<metric.values.length; j++) {
-                    var value = metric.values[j];
-                    html += value;
-                    if (j < metric.values.length-1) html += ",";
-                }
-                html += "</span></center> ";
-                html += "</td>";
-                td_c++;
-                if (td_c == td_max) {
-                    td_c = 0;
-                    html += "</tr><tr><td>&nbsp;</td>";
-                }
-            }
-            if (td_c < td_max+1) {
-                for(i=td_c; i<td_max; i++) {
-                    html += "<td>&nbsp;</td>";
-                }
-            }
-            html += "</tr>\n";
-            prevdata[host] = data.result[host];
-        }
-*/

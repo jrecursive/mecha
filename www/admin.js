@@ -98,6 +98,8 @@ function metric_color(host, row, col, toRGBA) {
 
 function metric_scale(host, row, col, fromScale, toScale) {
     var element = dashboard_element(host, row, col);
+    zv = Math.floor(100 * toScale);
+    $(element).css("z-index", zv);
     var scaleTween = 
         new Tween(new Object(),
                   'xyz',
@@ -205,14 +207,18 @@ $(document).ready(function() {
 $(window).resize(layout);
 
 function layout() {
-    //setTimeout("_layout();", 10);
+    _console_layout();
     _layout();
+}
+
+function _console_layout() {
+    var h = $(window).height()-60;
+    $(".console-iframe").height(h);
 }
 
 function _layout() {
     var w = $(".metric").width();
     var h = w * (3/4) * .9;
     $(".surface").height(h);
-    $(".metric-rows .metric").css("margin-left", "10px");
-    //$(".dynamicsparkline canvas").css("height", h*.6).css("width", w*.8);
+    //$(".metric-rows .metric").css("margin-left", "10px");
 }
