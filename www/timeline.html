@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title>Mecha - Log Timeline</title>
+        <link href="bootstrap/css/bootstrap.css" rel="stylesheet">
+        
+        <!-- Le HTML5 shim, for IE6-8 support of HTML5 elements -->
+        <!--[if lt IE 9]>
+          <script src="//html5shim.googlecode.com/svn/trunk/html5.js"></script>
+        <![endif]-->
+        
+        <script src="js/jquery-1.7.1.min.js"></script>
+        <script src="js/jquery.sparkline.min.js"></script>
+        <script src="js/jquery.json-2.3.min.js"></script>
+        <script src="js/prettyprint.js"></script>
+        <script src="bootstrap/js/bootstrap-transition.js"></script>
+        <script src="bootstrap/js/bootstrap-alert.js"></script>
+        <script src="bootstrap/js/bootstrap-modal.js"></script>
+        <script src="bootstrap/js/bootstrap-dropdown.js"></script>
+        <script src="bootstrap/js/bootstrap-scrollspy.js"></script>
+        <script src="bootstrap/js/bootstrap-tab.js"></script>
+        <script src="bootstrap/js/bootstrap-tooltip.js"></script>
+        <script src="bootstrap/js/bootstrap-popover.js"></script>
+        <script src="bootstrap/js/bootstrap-button.js"></script>
+        <script src="bootstrap/js/bootstrap-collapse.js"></script>
+        <script src="bootstrap/js/bootstrap-carousel.js"></script>
+        <script src="bootstrap/js/bootstrap-typeahead.js"></script>
+        <script src="js/moment.min.js"></script>
+        <script src="js/md5.js"></script>
+        <script type="text/javascript">
+            var config = {};
+            
+            timeline = {};
+            time_indices = {};
+            var gl_limit = 150;
+            
+            $(document).ready(function() {
+                $.getJSON('/proc/config', function(data) {
+                    config = data.result;
+                    refresh_timeline();
+                });
+            });
+            
+            function refresh_timeline() {
+                // mecha
+                timeline = {};
+                refresh_mecha();
+            }
+            
+            function refresh_mecha() {
+                var u = "/proc/cluster/do?u=/mecha/local-system-select%3Flimit=" + gl_limit + "%26filter=bucket:log%2520name:mecha%252A%2520%252Dis_error_b:true%26sort=last_modified%2520desc";
+                $.getJSON(u, function(data) {
+                    var result = data.result;
+                    for(host in result) {
+                        var data = result[host].result;
+                        for(idx in data) {
+                            var entry = data[idx];
+                            if (entry.message == "") continue;
+                            entry.message = entry.last_modified + ": " +
+                                            entry.message;
+                            var row_id = entry['last_modified'];
+                            timeline_entry(row_id, "mecha", entry);
+                        }
+                    }
+                    refresh_riak();
+                })
+                .error(function() {
+                    console.log("xhr failure, retrying timeline refresh..");
+                    setTimeout("refresh_timeline();", 1000);
+                });
+            }
+
+            function refresh_riak() {
+                var u = "/proc/cluster/do?u=/mecha/local-system-select%3Flimit=" + gl_limit + "%26filter=bucket:log%2520name:riak.log%2520%252Dis_error_b:true%26sort=last_modified%2520desc";
+                $.getJSON(u, function(data) {
+                    var result = data.result;
+                    for(host in result) {
+                        var data = result[host].result;
+                        var msg_type = "riak.log";
+                        var entry_type = "riak";
+                        var p_msg_type = "";
+                        for(idx in data) {
+                            var entry = data[idx];
+                            if (entry.message == "") continue; // TODO: fix up at server
+                            if (entry.message.indexOf("==>") == 0) {
+                                var parts = entry.message.split(" ");
+                                var msg_type = parts[1];
+                                if (msg_type.indexOf("error") >= 0 ||
+                                    msg_type.indexOf("crash") >= 0) {
+                                    entry_type = "error";
+                                } else {
+                                    entry_type = "riak";
+                                }
+                                continue;
+                            }
+                            var row_id = entry['last_modified'];
+                            entry.name = msg_type;
+                            if (msg_type == p_msg_type) {
+                                entry.name = "";
+                            } else {
+                                p_msg_type = msg_type;
+                            }
+                            timeline_entry(row_id, entry_type, entry);
+                        }
+                    }
+                    refresh_errors();
+                })
+                .error(function() {
+                    console.log("xhr failure, retrying timeline refresh..");
+                    setTimeout("refresh_timeline();", 1000);
+                });
+            }
+
+            function refresh_errors() {
+                var u = "/proc/cluster/do?u=/mecha/local-system-select%3Flimit=" + gl_limit + "%26filter=bucket:log%2520is_error_b:true%26sort=last_modified%2520desc";
+                $.getJSON(u, function(data) {
+                    var result = data.result;
+                    for(host in result) {
+                        var data = result[host].result;
+                        for(idx in data) {
+                            var entry = data[idx];
+                            if (entry.message == "") continue;
+                            entry.message = entry.last_modified + ": " +
+                                            entry.message;
+                            var row_id = entry['last_modified'];
+                            timeline_entry(row_id, "error", entry);
+                        }
+                    }
+                    render_timeline();
+                })
+                .error(function() {
+                    console.log("xhr failure, retrying timeline refresh..");
+                    setTimeout("refresh_timeline();", 1000);
+                });
+            }
+            
+            function timeline_entry(ts, entry_type, entry) {
+                row_id = moment(ts, "YYYY-MM-DDTHH:mm:ss").fromNow();
+                time_indices[ts] = row_id;
+                if (!timeline[row_id]) {
+                    timeline[row_id] = {};
+                    timeline[row_id]['mecha'] = [];
+                    timeline[row_id]['riak'] = [];
+                    timeline[row_id]['error'] = [];                    
+                }
+                timeline[row_id][entry_type].push(entry);
+            }
+            
+            function render_timeline() {
+                ts_sorted = [];
+                moment_order = [];
+                for(ts in time_indices) {
+                    ts_sorted.push(ts);
+                }
+                ts_sorted.sort().reverse();
+                var p_moment = "";
+                for(ts_idx in ts_sorted) {
+                    var ts = ts_sorted[ts_idx];
+                    var ts_moment = time_indices[ts];
+                    if (ts_moment != p_moment) {
+                        p_moment = ts_moment;
+                        moment_order.push(ts_moment);
+                    }
+                }
+                
+                $("#timeline").html("");
+                var tbl = $("#timeline-table").clone();
+                $("#timeline").append(tbl);
+                
+                for(idx in moment_order) {
+                    var moment = moment_order[idx];
+                    var moment_id = hex_md5(moment);
+                    var row = $("#timeline-row").clone();
+                    $(row).attr("id", moment_id)
+                    $(row).addClass("timeline-row");
+                    $(row).find(".moment").html(moment);
+                    
+                    var moment_entries = timeline[moment];
+                    for(entry_type in moment_entries) {
+                        for (idx in moment_entries[entry_type]) {
+                            var entry = moment_entries[entry_type][idx];
+                            var msg = $("#log-entry").clone();
+                            $(msg).addClass("log-entry");
+                            if (entry.name.indexOf("mecha.") == 0) {
+                                msg.addClass("mecha-log-entry");
+                            } else {
+                                msg.addClass("riak-log-entry");
+                            }
+                            $(msg).find(".name").html(entry.name);
+                            $(msg).find(".message").html(entry.message);
+                            $(row).find("." + entry_type).append(msg);
+                        }
+                    }
+                    
+                    $("#timeline-rows").append(row);
+                }
+                setTimeout("refresh_timeline();", 5000);
+            }
+            
+        </script>
+        
+        <style type="text/css">
+            body {
+                margin:0px;
+                padding:0px;
+            }
+            
+            * {
+                font-face: arial;
+                font-size: 12px;
+            }
+            
+            .lbl {
+                font-size: 10px;
+                display:inline;
+            }
+            
+            table {
+            }
+            
+            td {
+                align:center;
+            }
+            
+            tr {
+                height:50px;
+                overflow:hidden;
+            }
+            
+            .hdr {
+                font-size:10px;
+                position:relative;
+            }
+            
+            .dynamicsparkline {
+            }
+            
+            .value {
+                font-size:10px;
+            }
+            
+            .input-box {
+                position:absolute;
+                bottom:-10px;
+                left:20px;
+                width:100%;
+            }
+            
+            #cmdline {
+                position:relative;
+                top:5px;
+                font-size:18px;
+            }
+            
+            .console {
+                position:relative;
+                top:20px;
+            }
+            
+            .console-pre {
+                
+            }
+            
+            pre {
+                padding: 0px !important;
+                line-height:14px !important;
+                border: 0px !important;
+                background-color: white !important;
+                border-radius: 0px !important;
+                margin: 0px !important;
+                
+            }
+            
+            .timebox {
+                width:120px;
+            }
+            
+            .databox {
+                width:30%;
+            }
+            
+            .mecha-log-entry .name {
+                background-color: lightgreen;
+            }
+            
+            .riak-log-entry .name {
+                background-color: lightblue;
+            }
+                        
+            .riak-hr {
+                margin:0px !important;
+            }
+            
+        </style>
+    </head>
+    <body>
+        <div class="container-fluid">
+            <div class="row-fluid">
+                <div class="span12">
+                    <div id="timeline">
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div style="display:none;">
+            <span id="log-entry">
+                <div class="name">name<br/></div>
+                <pre class="message">message</pre>
+            </span>
+            <tr id="timeline-row">
+                <td class="timebox moment"></td>
+                <td class="databox mecha"></td>
+                <td class="databox riak"></td>
+                <td class="databox error"></td>
+            </tr>
+            <span id="timeline-table">
+                <table class="table table-striped">
+                    <thead>
+                      <tr>
+                        <th class="timebox"></th>
+                        <th class="databox">Mecha</th>
+                        <th class="databox">Riak</th>
+                        <th class="databox">Errors</th>
+                      </tr>
+                    </thead>
+                    <tbody id="timeline-rows">
+                      <tr id="timeline-row">
+                        <td class="timebox moment"></td>
+                        <td class="databox mecha"></td>
+                        <td class="databox riak"></td>
+                        <td class="databox error"></td>
+                      </tr>
+                    </tbody>
+                </table>
+            </span>
+        </div>
+
+        
+    </body>
+</html>
+
+<!--
+    <table class="table table-striped">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>First Name</th>
+            <th>Last Name</th>
+            <th>Language</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>1</td>
+            <td>Mark</td>
+            <td>Otto</td>
+            <td>CSS</td>
+          </tr>
+          <tr>
+            <td>2</td>
+            <td>Jacob</td>
+            <td>Thornton</td>
+            <td>Javascript</td>
+          </tr>
+          <tr>
+            <td>3</td>
+            <td>Stu</td>
+            <td>Dent</td>
+            <td>HTML</td>
+          </tr>
+        </tbody>
+      </table>
+-->
