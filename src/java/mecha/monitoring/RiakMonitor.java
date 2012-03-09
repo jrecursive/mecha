@@ -149,6 +149,7 @@ public class RiakMonitor {
         } catch (java.io.IOException ex) {
             Mecha.getMonitoring().log("mecha.monitoring.riak-monitor",
                                       "warning: unable to contact riak via /stats");
+            Mecha.riakDown();
             return;
         }
         

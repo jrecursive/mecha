@@ -143,6 +143,10 @@ function dashboard_setup() {
 function dashboard_refresh() {
     $.getJSON('/proc/metrics?entries=30&all=true', function(data) {
         dashboard_worker.postMessage(data);
+    })
+    .error(function() {
+        console.log("xhr failure, retrying dashboard refresh..");
+        setTimeout("dashboard_refresh();", 1000);
     });
 }
 
