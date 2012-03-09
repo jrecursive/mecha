@@ -3,7 +3,6 @@
         <div class="span12">
 
 <h2>Overview</h2>
-
 <br/>
 <p>
 This is paragraph text.  This is paragraph text.  This is paragraph text.  This is paragraph text.  This is paragraph text.  This is paragraph text.  This is paragraph text.  This is paragraph text.  This is paragraph text.  This is paragraph text.  This is paragraph text.  This is paragraph text.  This is paragraph text.  This is paragraph text.  This is paragraph text.  This is paragraph text.  This is paragraph text.  This is paragraph text.  This is paragraph text.  This is paragraph text.  This is paragraph text.  This is paragraph text.  This is paragraph text.  This is paragraph text.  This is paragraph text.  This is paragraph text.  This is paragraph text.  This is paragraph text.  This is paragraph text.  This is paragraph text.  This is paragraph text.  This is paragraph text.  This is paragraph text.  This is paragraph text.  
@@ -31,25 +30,25 @@ This is code with pre.
 script example:
 
 <br/><br/>
-    <ul id="script-tabs" class="nav nav-pills">
-        <li class="active"><a href="#script-http" data-toggle="pill">HTTP</a></li>
-        <li><a href="#script-mvm" data-toggle="pill">MVM</a></li>
+    <ul id="script-tabs" class="nav nav-tabs">
+        <li class="active"><a href="#script-http" data-toggle="tab">HTTP</a></li>
+        <li><a href="#script-mvm" data-toggle="tab">MVM</a></li>
     </ul>
     <div id="myTabContent" class="tab-content">
         <div class="tab-pane active" id="script-http">
-            <p>
-                <b>/mecha/select</b>
-            </p>
+<pre>
+/mecha/select
+</pre>
         </div>
         <div class="tab-pane" id="script-mvm">
-            <pre class="prettyprint">
+<pre class="prettyprint">
 a = (with-coverage partition-marker:"&lt;&lt;p&gt;&gt;" host-marker:"&lt;&lt;h&gt;&gt;" bucket:zipcodes do:(warp host:&lt;&lt;h&gt;&gt; do:(solr-select params:(q:"partition:&lt;&lt;p&gt;&gt; AND bucket:zipcodes") count-only:true)))
 b = (value-count-reducer)
 c = (client-sink)
 a -> b
 b -> c
 a ! (start)
-            </pre>
+</pre>
         </div>
     </div>
 

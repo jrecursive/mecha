@@ -101,6 +101,7 @@ function introspectpages() {
             });
             pages[section][article] = {};
             pages[section][article]["url"] = url;
+            console.log(url);
             hashes["#path-" + section + "-" + article] = 
                 { "section": section, 
                   "article": article,
