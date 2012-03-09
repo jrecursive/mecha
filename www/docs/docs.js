@@ -14,7 +14,7 @@ function loadcontent(section, article) {
         renderLinks();
         prettyPrint();
     });
-    $('#crumbs').html(crumbs(section, article));
+    crumbs(section, article);
     $('a.dropdown-toggle').each(function() {
         if ($(this).text() == section) {
             $(this).parent().addClass("active");
@@ -29,14 +29,16 @@ function loadcontent(section, article) {
 */
 function crumbs(section, article) {
     $(".article-crumb").show();
-    return '<ul class="breadcrumb"><li><a href="../docs/">' +
+    $('#crumbs').html(
+           '<ul class="breadcrumb"><li><a href="../docs/">' +
            'Mecha Documentation' + 
            '</a> <span class="divider">/</span></li><li><a class="section-link" href="#">' +
            section +
            '</a><span class="article-crumb"><span class="divider">/</span></span></li>' + 
            '<span class="article-crumb"><li class="active">' +
            article +
-           '</li></span></ul>';
+           '</li></span></ul>'
+    );
 }
 
 /*
@@ -58,6 +60,7 @@ function renderLinks() {
 }
 
 function do_toc(section) {
+    crumbs(section, "");
     $(".article-crumb").hide();
     $("#content").load("util/section-tpl.html", function() {
         $(".section-name").text(section);
