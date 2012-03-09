@@ -1,4 +1,3 @@
-
 var panels = [];
 var dashboard_worker, console_worker, log_worker;
 
@@ -14,10 +13,6 @@ function panel(p) {
     }
     layout();
 }
-
-/*
- * dashboard
-*/
 
 var dashboard = {    
     /*
@@ -36,7 +31,7 @@ function dashboard_add_host_row(host) {
     var hostRow = $("#host-row-template").clone();
     hostRow.attr("id", "host-" + host1);
     $(hostRow).find(".host-label").html(host);
-    $("#Dashboard").append(hostRow);
+    $("#Metrics").append(hostRow);
     dashboard.hosts[host] = { "rows":0, "hash": host1 };
     layout();
 }
@@ -164,48 +159,6 @@ function d_ensure_rows(host, rows) {
     }
 }
 
-
-/*
- * console
-*/
-
-/*
- * log
-*/
-
-$(document).ready(function() {
-    $("a.nav-tab").each(function(_idx) {
-        var tabName = $(this).text();
-        panels.push(tabName);
-        $(this).click(function() {
-            $(".nav-tab").parent().removeClass("active");
-            $(this).parent().addClass("active");
-            panel(tabName)
-        });
-    });
-    panel('Dashboard');
-    /*
-    dashboard_add_host_row("127.0.0.1");
-    dashboard_add_metric_row("127.0.0.1");
-    dashboard_add_metric_row("127.0.0.1");
-    dashboard_add_metric_row("127.0.0.1");
-    dashboard_metric("127.0.0.1", 1, 3, "test.label", [0, 1, 12, 15, 20, 9, 0, 1, 12, 15, 20, 9, 5]);
-    metric_color("127.0.0.1", 1, 3, {"r":0, "g":50, "b":25, "a":0.6});
-    metric_alpha("127.0.0.1", 1, 3, 0.8);
-    metric_scale("127.0.0.1", 1, 3, 1, 1.2);
-    dashboard_metric("127.0.0.1", 0, 11, "test2.label", [0, 1, 12, 15, 20, 9, 0, 1, 12, 15, 20, 9, 5]);
-    
-    setTimeout('metric_scale("127.0.0.1", 1, 3, 1.2, 1);', 3000);
-    setTimeout('metric_color("127.0.0.1", 1, 3, {"r":255, "g":0, "b":0, "a":1.0});', 3001);
-    
-    console.log(dashboard);
-    */
-    
-    dashboard_setup();
-});
-
-$(window).resize(layout);
-
 function layout() {
     _console_layout();
     _layout();
@@ -222,3 +175,33 @@ function _layout() {
     $(".surface").height(h);
     //$(".metric-rows .metric").css("margin-left", "10px");
 }
+
+$(document).ready(function() {
+    $("a.nav-tab").each(function(_idx) {
+        var tabName = $(this).text();
+        panels.push(tabName);
+        $(this).click(function() {
+            $(".nav-tab").parent().removeClass("active");
+            $(this).parent().addClass("active");
+            panel(tabName)
+        });
+    });
+    panel('Dashboard');
+    dashboard_setup();
+    $(window).resize(layout);
+});
+
+/* 
+ * overview / home page
+*/
+
+/*
+ * /proc/config
+ * /proc/cluster/do?u=
+ * /proc/node/last-commit
+ * /mecha/global-select?type=bucket
+ * /mecha/global-select?type=partition
+ * 
+*/
+
+function 

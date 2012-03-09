@@ -36,7 +36,17 @@ public class SolrEventHandlers implements SolrEventListener {
     
     public void postCommit() {
         try {
-            Mecha.getMDB().commit();
+            try {
+                Mecha.getMDB().commit();
+            } catch (Exception ex) {
+                ex.printStackTrace();
+                log.info("MDB commit failed! Rolling back index core commit!");
+                // TODO: solr rollback
+                throw ex;
+            }
+            
+            Mecha.lastCommit = System.currentTimeMillis() / 1000;
+            
             Mecha.getMonitoring().log("mecha.db.solr-event-handlers.post-commit", 
                                       "solr post commit hook", log);
             Mecha.getEventLogManager().recycle();

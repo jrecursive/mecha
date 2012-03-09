@@ -50,6 +50,7 @@ public class Mecha {
     final private EventLogManager eventLogManager;
     final private Monitoring monitoring;
     static private boolean shuttingDown = false;
+    static public long lastCommit = 0;
     
     /*
      * startup & init

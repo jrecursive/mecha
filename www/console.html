@@ -2,8 +2,7 @@
 <html>
     <head>
         <meta charset="utf-8">
-        <title>mecha - websockets test</title>
-        
+        <title>Mecha - Console</title>
         <link href="bootstrap/css/bootstrap.css" rel="stylesheet">
         
         <!-- Le HTML5 shim, for IE6-8 support of HTML5 elements -->
@@ -15,7 +14,6 @@
         <script src="js/jquery.sparkline.min.js"></script>
         <script src="js/jquery.json-2.3.min.js"></script>
         <script src="js/prettyprint.js"></script>
-        
         <script src="bootstrap/js/bootstrap-transition.js"></script>
         <script src="bootstrap/js/bootstrap-alert.js"></script>
         <script src="bootstrap/js/bootstrap-modal.js"></script>
@@ -30,10 +28,11 @@
         <script src="bootstrap/js/bootstrap-typeahead.js"></script>
         <script src="js/moment.min.js"></script>
         <script type="text/javascript">
-            
             var cmdhistory = [];
             var historyidx = 0;
             var config = {};
+            var lastHeight = 0;
+            
             function log(msg) {
                 msg = msg.replace("{\"", "{\t\"");
                 while(msg.indexOf(",\"")>=0) {
@@ -47,7 +46,6 @@
                 $(".console-pre").append(msg + "\n");
             }
             
-            var lastHeight;
             function scroll_console() {
                 var element = document.getElementById("log");
                 var currentHeight = element.scrollHeight;
@@ -56,9 +54,7 @@
                     lastHeight = currentHeight;
                 }
             }
-
             
-            var lastHeight = 0;
             $(document).ready(function() {
                 // tweak bootstrap
                 $("#cmdline").focus();
@@ -128,12 +124,12 @@
                         
                     } else {
                         // these messages will be irrelevant "OK", etc.
-                        //log(msg);
+                        // log(">> " + msg);
                     }
                 }  
           
                 socket.onclose = function(){  
-                     log('Socket Status: '+socket.readyState+' (Closed)');  
+                     log('Disconnected.');  
                 }             
           
 
@@ -144,12 +140,6 @@
                     historyidx=0;
                 }
 
-                /*
-                $('#cmdline').change(function(){
-                    runcmd(this.value);
-                });
-                */
-                
                 $("#cmdline").keypress(function(e) {
                     if (e.which == 13) { // enter
                         e.preventDefault();
@@ -272,22 +262,17 @@
         </style>
     </head>
     <body>
-
         <div class="container-fluid">
             <div class="row-fluid">
-                
                 <div class="input-box span12 well">
                     <input id="cmdline" type="text"/>
                 </div>
-                
                 <div class="span12 console">
                     <div style='height:300px; width:100%; display:block; overflow:auto;' id="log">
                         <pre class="console-pre"></pre>
                     </div>
                 </div>
-            
             </div>
         </div>
-        
     </body>
 </html>

@@ -77,16 +77,23 @@ public class ProcServlet extends HttpServlet {
                 result = doTopRequest(parts, params);
               
             /*
-             * /proc/cluster
+             * /proc/node
             */  
-            } else if (subsystem.equals("cluster")) {
-                result = doClusterRequest(parts, params);
+            } else if (subsystem.equals("node")) {
+                result = doNodeRequest(parts, params);
             
             /* 
              * /proc/config
             */
             } else if (subsystem.equals("config")) {
                 result = doConfigRequest(parts, params);
+                
+            
+            /*
+             * /proc/cluster
+            */
+            } else if (subsystem.equals("cluster")) {
+                result = doClusterRequest(parts, params);
             
             /*
              * unknown request
@@ -172,10 +179,52 @@ public class ProcServlet extends HttpServlet {
     /*
      * /proc/cluster
     */
-    private JSONObject doClusterRequest(String[] parts, JSONObject params) throws Exception {
+    private JSONObject doNodeRequest(String[] parts, JSONObject params) throws Exception {
         JSONObject result = new JSONObject();
+        if ((params.has("last-commit") &&
+             params.<String>get("last-commit").equals("true")) ||
+            (parts.length > 1 &&
+             parts[1].equals("last-commit"))) {
+                result.put("last-commit", Mecha.lastCommit);
+        }
         return result;
     }
+    
+    /*
+     * a "do this everywhere & consolidate replies" utility
+    */
+    private JSONObject doClusterRequest(String[] parts, JSONObject params) throws Exception {
+        JSONObject result = new JSONObject();
+        if (parts.length > 1 &&
+             parts[1].equals("do")) {
+            String urlFragment = params.<String>get("u");
+            if (!urlFragment.startsWith("/")) {
+                urlFragment = "/" + urlFragment;
+            }
+            result = doCluster(urlFragment);
+        }
+        return result;
+    }
+
+    private JSONObject doCluster(String urlFragment) throws Exception {
+        Set<String> hosts = Mecha.getRiakRPC().getClusterHosts();
+        JSONObject result = new JSONObject();
+        for(String host : hosts) {
+            String url = "http://" + host + ":" + 
+                Mecha.getConfig().get("http-port") +
+                urlFragment;
+            try {
+                JSONObject obj = 
+                    new JSONObject(HTTPUtils.fetch(url));
+                result.put(host, obj);
+            } catch(Exception ex) {
+                result.put(host, "Error: " + ex.toString());
+                ex.printStackTrace();
+            }
+        }
+        return result;
+    }
+    
     
     /*
      * /proc/proc/<ctx-ref>           MVMContext dump-vars
