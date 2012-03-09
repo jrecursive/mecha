@@ -181,12 +181,41 @@ public class ProcServlet extends HttpServlet {
     */
     private JSONObject doNodeRequest(String[] parts, JSONObject params) throws Exception {
         JSONObject result = new JSONObject();
-        if ((params.has("last-commit") &&
-             params.<String>get("last-commit").equals("true")) ||
-            (parts.length > 1 &&
-             parts[1].equals("last-commit"))) {
-                result.put("last-commit", Mecha.lastCommit);
+        
+        /*
+         * last-commit
+        */
+        if (parts.length > 1 &&
+            parts[1].equals("last-commit")) {
+            result.put("last-commit", Mecha.lastCommit);
         }
+        
+        /*
+         * do, e.g.,
+         *
+         * http://localhost:7283/proc/node/do/127.0.0.1/?u=/proc/config
+         *  or
+         * http://localhost:7283/proc/node/do/?host=127.0.0.1&u=/proc/config
+         *
+         * TODO: I don't like these requests, they all need consistency; this 
+         *  is turning into a junk drawer.
+         *
+        */
+        if (parts.length > 1 &&
+            parts[1].equals("do")) {
+            String host;
+            if (parts.length > 2) {
+                host = parts[2];
+            } else {
+                host = params.<String>get("host");
+            }
+            String urlFragment = params.<String>get("u");
+            if (!urlFragment.startsWith("/")) {
+                urlFragment = "/" + urlFragment;
+            }
+            result = doNode(host, urlFragment);
+        }
+        
         return result;
     }
     
@@ -195,8 +224,15 @@ public class ProcServlet extends HttpServlet {
     */
     private JSONObject doClusterRequest(String[] parts, JSONObject params) throws Exception {
         JSONObject result = new JSONObject();
+        
+        /*
+         * do, e.g.,
+         *
+         * http://localhost:7283/proc/cluster/do?u=/proc/config
+         *
+        */
         if (parts.length > 1 &&
-             parts[1].equals("do")) {
+            parts[1].equals("do")) {
             String urlFragment = params.<String>get("u");
             if (!urlFragment.startsWith("/")) {
                 urlFragment = "/" + urlFragment;
@@ -225,6 +261,26 @@ public class ProcServlet extends HttpServlet {
         return result;
     }
     
+    private JSONObject doNode(String host, String urlFragment) throws Exception {
+        JSONObject result = new JSONObject();
+        Set<String> hosts = Mecha.getRiakRPC().getClusterHosts();
+        if (!hosts.contains(host)) {
+            result.put("error", "no such host");
+            return result;
+        }
+        String url = "http://" + host + ":" + 
+            Mecha.getConfig().get("http-port") +
+            urlFragment;
+        try {
+            JSONObject obj = 
+                new JSONObject(HTTPUtils.fetch(url));
+            result.put(host, obj);
+        } catch(Exception ex) {
+            result.put("exception", ex.toString());
+            ex.printStackTrace();
+        }
+        return result;
+    }
     
     /*
      * /proc/proc/<ctx-ref>           MVMContext dump-vars
