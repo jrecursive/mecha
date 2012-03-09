@@ -16,6 +16,7 @@
     "riak-nodename": "riak@127.0.0.1",
     "riak-cookie": "riak",
     "riak-http-port": 18098,
+    "riak-https-port": 18099,
     
     ##
     ## once riak-partitions is set DO NOT CHANGE!
@@ -27,18 +28,18 @@
     ##  ordinarily type "bin/riak start", etc.
     ##
     
-    "riak-home": "./build/riak-1.1.1rc1/rel/riak",
+    "riak-app-config-template": "./build/templates/app.config.template",
+    "riak-vm-config-template": "./build/templates/vm.args.template",
     
     ##
     ## the following paths are all based upon
-    ##  the riak-home setting above.
+    ##  the riak-home setting.
     ##
+    
+    "riak-home": "./build/riak-1.1.1rc1/rel/riak",
     
     "riak-script": "bin/riak",
     "riak-admin-script": "bin/riak-admin",
-    
-    "riak-app-config-template": "etc/app.config.template",
-    "riak-vm-config-template": "etc/vm.args.template",
     
     "riak-app-config": "etc/app.config",
     "riak-vm-config": "etc/vm.args",

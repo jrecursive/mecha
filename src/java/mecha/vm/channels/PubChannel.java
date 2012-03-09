@@ -57,7 +57,11 @@ public class PubChannel {
     
     public void send(String message) throws Exception {
         for(ChannelConsumer cc : members) {
-            cc.onMessage(name, message);
+            try {
+                cc.onMessage(name, message);
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
         }
     }
     

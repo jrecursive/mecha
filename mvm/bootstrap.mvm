@@ -248,7 +248,7 @@ ${guid}-reducer -> ${sink}
 #end global-count
 
 //
-// system-facet is used for monitoring
+// system-select is used for monitoring
 //
 // required: host, filter, sort, limit
 // optional: fields
@@ -258,6 +258,18 @@ ${guid}-reducer -> ${sink}
 ${root} = (warp host:${args.host} do:(solr-select params:(q:"${args.filter}" sort:"${args.sort}" rows:${args.limit} fl:"${args.fields}") core:system))
 ${root} -> ${sink}
 #end system-select
+
+//
+// local-system-select is used for monitoring
+//
+// required: host, filter, sort, limit
+// optional: fields
+
+#define-global local-system-select
+#if (!$args.fields) #set ($args.fields = "*") #end
+${root} = (solr-select params:(q:"${args.filter}" sort:"${args.sort}" rows:${args.limit} fl:"${args.fields}") core:system)
+${root} -> ${sink}
+#end local-system-select
 
 //
 // system-facet is used for monitoring
@@ -274,6 +286,22 @@ ${root} -> ${sink}
 ${root} = (warp host:${args.host} do:(solr-select params:(facet:true facet.limit:-1 facet.field:${args.field} facet.mincount:1 $prefix_arg facet.sort:${args.sort} rows:0 q:"${args.filter}" fl:"${args.fields}") core:system))
 ${root} -> ${sink}
 #end system-facet
+
+//
+// local-system-facet is used for monitoring
+//
+// required: host, field, sort, filter
+// optional: prefix
+//
+
+#define-global local-system-facet
+#if ($args.prefix) #set ($prefix_arg = "facet.prefix:${args.prefix}")
+#else #set ($prefix_arg = "") #end
+#if (!$args.fields) #set ($args.fields = "*") #end
+#set ($args.filter = $util.escapeQuotes($args.filter))
+${root} = (solr-select params:(facet:true facet.limit:-1 facet.field:${args.field} facet.mincount:1 $prefix_arg facet.sort:${args.sort} rows:0 q:"${args.filter}" fl:"${args.fields}") core:system)
+${root} -> ${sink}
+#end local-system-facet
 
 //
 // "real-time" global cluster metrics, errors & logging

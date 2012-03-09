@@ -25,6 +25,8 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.commons.lang.*;
+
 import mecha.Mecha;
 import mecha.vm.*;
 import mecha.client.*;
@@ -233,7 +235,7 @@ public class ProcServlet extends HttpServlet {
         */
         if (parts.length > 1 &&
             parts[1].equals("do")) {
-            String urlFragment = params.<String>get("u");
+            String urlFragment = params.<String>get("u"); // StringEscapeUtils.unescapeHtml(
             if (!urlFragment.startsWith("/")) {
                 urlFragment = "/" + urlFragment;
             }

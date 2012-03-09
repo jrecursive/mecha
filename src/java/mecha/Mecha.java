@@ -223,9 +223,9 @@ public class Mecha {
         try {
             String riakHome = config.<String>get("riak-home");
             String appTemplateFn = 
-                riakHome + "/" + config.<String>get("riak-app-config-template");
+                config.<String>get("riak-app-config-template");
             String vmTemplateFn = 
-                riakHome + "/" + config.<String>get("riak-vm-config-template");
+                config.<String>get("riak-vm-config-template");
             String appConfigFn = 
                 riakHome + "/" + config.<String>get("riak-app-config");
             String vmConfigFn = 
