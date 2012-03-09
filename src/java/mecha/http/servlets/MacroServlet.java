@@ -86,6 +86,10 @@ public class MacroServlet extends HttpServlet {
             final MechaClientHandler mechaClientHandler = new MechaClientHandler() {
                 public void onSystemMessage(JSONObject msg) throws Exception {
                     log.info("<system> " + msg.toString(2));
+                    if (msg.has("$") &&
+                        msg.<String>get("$").equals("error")) {
+                        onError(new Exception(msg.getJSONObject("error").<String>get("short_message_t")));
+                    }
                 }
                 
                 public void onOpen() throws Exception {
@@ -164,10 +168,11 @@ public class MacroServlet extends HttpServlet {
                 long t_st = System.currentTimeMillis();
                 done.acquire();
                 long t_elapsed = System.currentTimeMillis() - t_st;
-                Mecha.getMonitoring()
-                     .metric("mecha.http.macro." + macroName, 
-                             (double) t_elapsed);
-                if (remoteExceptions.size() > 0) {
+                if (remoteExceptions.size() == 0) {
+                    Mecha.getMonitoring()
+                         .metric("mecha.http.macro." + macroName, 
+                                 (double) t_elapsed);
+                } else {
                     JSONArray exceptions = new JSONArray(remoteExceptions);
                     JSONObject logData = new JSONObject();
                     logData.put("params_obj_s", params);

@@ -154,8 +154,13 @@ public class Monitoring {
     
     /*
      * Index a log entry.
+     *
+     * Returns a JSON object; for convenience -- usually
+     *  when you're reporting an error you're going to want
+     *  to let the client or up/down stream components know.
+     *
     */
-    public void error(String name, Throwable t) {
+    public JSONObject error(String name, Throwable t) {
         try {
             String message = t.getMessage();
             String shortMessage = t.toString();
@@ -182,6 +187,10 @@ public class Monitoring {
             }
             
             rates.add("mecha.global.exceptions");
+            log.info("----------");
+            Thread.dumpStack();
+            log.info("----------");
+            return logMsg;
         } catch (Exception ex) {
             /*
              * I truly hope this catch block does not become
@@ -189,6 +198,7 @@ public class Monitoring {
             */ 
             ex.printStackTrace();
         }
+        return null;
     }
     
     public void log(String name, String message, Logger logger) {

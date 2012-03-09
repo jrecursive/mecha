@@ -122,7 +122,7 @@ public class MechaClient extends MechaClientHandler {
                             handler.onControlEvent(channel, obj);    
                         } else if (obj.has("$") &&
                             obj.getString("$").equals("cancel")) {
-                            handler.onDoneEvent(channel, obj);    
+                            handler.onDoneEvent(channel, obj);
                         } else {
                             handler.onDataMessage(channel, obj);
                         }

@@ -28,10 +28,12 @@
         <script src="bootstrap/js/bootstrap-typeahead.js"></script>
         <script src="js/moment.min.js"></script>
         <script type="text/javascript">
+            var socket;
             var cmdhistory = [];
             var historyidx = 0;
             var config = {};
             var lastHeight = 0;
+            var waitingForSocketRefresh = false;
             
             function log(msg) {
                 msg = msg.replace("{\"", "{\t\"");
@@ -87,13 +89,16 @@
                 element = document.getElementById("log");
                 lastHeight = element.scrollHeight;
                 
-                var socket = 
+                socket = 
                     new WebSocket("ws://" + config['http-addr'] + ":" + 
                         config['websocket-port'] + "/mecha");
                 
                 socket.onopen = function(){  
-                     log('connected.');  
-                     socket.send("auth " + pw);
+                    if (waitingForSocketRefresh === true) {
+                        document.location.href = "console.html?" + Math.random();
+                    }
+                    log('connected.');  
+                    socket.send("auth " + pw);
                 }  
           
                 socket.onmessage = function(msg0){
@@ -133,7 +138,8 @@
           
                 socket.onclose = function(){  
                      log('Disconnected.  Retrying in 5 seconds...');
-                     setTimeout("console_connect()", 5000);
+                     waitingForSocketRefresh = true;
+                     setTimeout("console_connect();", 5000);
                 }             
           
 

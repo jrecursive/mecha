@@ -148,6 +148,7 @@ public class Server {
     }
     
     public void onMessage(ChannelHandlerContext connection, String request) {
+        Client cl = clientMap.get(connection);
         try {
             rates.add("mecha.server.messages-inbound");
             /*
@@ -159,8 +160,6 @@ public class Server {
             if (!serverActive.get()) {
                 connection.getChannel().close();
             }
-            
-            Client cl = clientMap.get(connection);
             
             if (cl == null) {
                 /*
@@ -338,8 +337,21 @@ public class Server {
             }
             
         } catch (Exception ex) {
-            Mecha.getMonitoring().error("mecha.server", ex);
-            ex.printStackTrace();
+            try {
+                JSONObject exceptionMsg = Mecha.getMonitoring().error("mecha.server", ex);
+                ex.printStackTrace();
+                JSONObject errMsg = new JSONObject();
+                errMsg.put("$", "error");
+                errMsg.put("error", exceptionMsg);
+                cl.send(errMsg.toString());
+            } catch (Exception ex1) {
+                ex1.printStackTrace();
+                // Something is very wrong if we end up here.  A simple
+                //  possibility is the client disconnected and we can no
+                //  longer send -- that's okay, it will be picked up by
+                //  the onClose, etc. methods & cleaned up.  Here we'll
+                //  just punt the exception to standard out.
+            }
         }
     }
     
