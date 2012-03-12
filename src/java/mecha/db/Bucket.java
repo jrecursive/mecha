@@ -99,7 +99,6 @@ public class Bucket {
              *
             */
             JSONObject jo1 = values.getJSONObject(values.length()-1);
-            JSONObject jo = new JSONObject(jo1.getString("data"));
 
             /*
              *
@@ -113,6 +112,8 @@ public class Bucket {
                     return;
                 }
             }
+
+            JSONObject jo = new JSONObject(jo1.getString("data"));
             
             /*
              * Because the object is not deleted, write to object store.
@@ -179,7 +180,7 @@ public class Bucket {
         log.info(partition + ": delete: " + (new String(key)));
         try {
             rates.add("mecha.db.bucket.global.delete");
-            server.deleteByQuery("id:" + makeid(key));
+            server.deleteById(makeid(key));
             db.delete(key);
         } catch (Exception ex) {
             Mecha.getMonitoring().error("mecha.db.mdb", ex);

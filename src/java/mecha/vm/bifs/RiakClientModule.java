@@ -96,10 +96,13 @@ public class RiakClientModule extends MVMModule {
             // (or provide a different client that sets up long standing connections?)
             ensureRiakClient();
             final String bucketName = getConfig().<String>get("bucket");
+            log.info("bucketName = '" + bucketName + "'");
             final String key = getConfig().<String>get("key");
+            log.info("key = '" + key + "'");
             final JSONObject putObj = getConfig().getJSONObject("object");
+            log.info("putObj = " + putObj.toString(2));
             final Bucket bucket = riakClient.createBucket(bucketName).execute();
-            bucket.store(key, putObj.toString()).dw(1).execute();
+            bucket.store(key, putObj.toString()).execute();
             broadcastDone();
         }
     }
