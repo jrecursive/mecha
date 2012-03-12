@@ -180,7 +180,9 @@ public class Bucket {
         log.info(partition + ": delete: " + (new String(key)));
         try {
             rates.add("mecha.db.bucket.global.delete");
-            server.deleteById(makeid(key));
+            server.deleteByQuery(
+                "bucket:\"" + bucketStr + "\" AND " +
+                "key:\"" + (new String(key)) + "\"");
             db.delete(key);
         } catch (Exception ex) {
             Mecha.getMonitoring().error("mecha.db.mdb", ex);
