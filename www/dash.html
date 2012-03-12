@@ -1,47 +1,110 @@
-<div class="container-fluid">
-    <div class="row-fluid">
-        <div class="span2">
-                host
-        </div>
-        <div class="span1">
-            <div class="dash-node-right dash-well-mod">
-                status
-            </div>
-        </div>
-        <div class="span2">
-            <div class="dash-node-right dash-well-mod">
-                metrics
-            </div>
-        </div>
-        <div class="span4">
-            <div class="dash-node-right dash-well-mod">
-                The other 999 columns here.
-            </div>
-        </div>
-        <div class="span3">
-            <div class="dash-node-right dash-well-mod">
-                The other 999 columns here.
-            </div>
-        </div>
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title>Mecha - Console</title>
+        <link href="bootstrap/css/bootstrap.css" rel="stylesheet">
+        
+        <!-- Le HTML5 shim, for IE6-8 support of HTML5 elements -->
+        <!--[if lt IE 9]>
+          <script src="//html5shim.googlecode.com/svn/trunk/html5.js"></script>
+        <![endif]-->
+        
+        <script src="js/jquery-1.7.1.min.js"></script>
+        <script src="js/jquery.sparkline.min.js"></script>
+        <script src="js/jquery.json-2.3.min.js"></script>
+        <script src="js/prettyprint.js"></script>
+        <script src="bootstrap/js/bootstrap-transition.js"></script>
+        <script src="bootstrap/js/bootstrap-alert.js"></script>
+        <script src="bootstrap/js/bootstrap-modal.js"></script>
+        <script src="bootstrap/js/bootstrap-dropdown.js"></script>
+        <script src="bootstrap/js/bootstrap-scrollspy.js"></script>
+        <script src="bootstrap/js/bootstrap-tab.js"></script>
+        <script src="bootstrap/js/bootstrap-tooltip.js"></script>
+        <script src="bootstrap/js/bootstrap-popover.js"></script>
+        <script src="bootstrap/js/bootstrap-button.js"></script>
+        <script src="bootstrap/js/bootstrap-collapse.js"></script>
+        <script src="bootstrap/js/bootstrap-carousel.js"></script>
+        <script src="bootstrap/js/bootstrap-typeahead.js"></script>
+        <script src="js/moment.min.js"></script>
+        
+        <script type="text/javascript">
+            var config = {};
 
-    </div>
-</div>
-<div class="accordion" id="accordion2">
-    <div class="accordion-group">
-        <div class="accordion-heading">
-            <div class="container-fluid">
-                <div class="row-fluid">
-                    <div class="span2">
-                        <a class="accordion-toggle" data-toggle="collapse" data-parent="#accordion2" href="#collapseOne">127.0.0.1</a>
-                    </div>
-                    <div class="span1">
+            $(document).ready(function() {
+                $.getJSON('/proc/config', function(data) {
+                    config = data.result;
+                    refresh();
+                });
+            });
+            
+            function refresh() {
+                var u = "http://" +
+                         config['http-addr'] + ":" +
+                         config['riak-http-port'] + 
+                            "/admin/cluster/list";
+                console.log(u);
+                /*
+                $.ajax({
+                    url: u,
+                    dataType: 'jsonp text json',
+                    data: {},
+                    username: "mecha",
+                    password: "mecha",
+                    crossDomain: true,
+                    success: function(data) {
+                        console.log(data);
+                    }
+                }).success(function(d) {
+                    console.log("succezz");
+                    console.log(d);
+                }).error(function(a,b,c) {
+                    console.log("errorz");
+                    console.log(a);
+                    console.log(b);
+                    console.log(c);
+                });
+                */
+                    
+                /*            
+                var script = document.createElement('script');
+                script.id = 'riak-admin-shiv';
+                script.src = u;
+                script.type = 'text/plain';
+                script.onload = function() {
+                    var obj = $.parseJSON($("#riak-admin-shiv").text());
+                    console.log(obj);
+                };
+                document.body.appendChild(script);
+                */
+                
+                // render
+            }
+        </script>
+        
+        
+        <style type="text/css">
+        
+            .host-link {
+                padding-left: 0px !important;
+            }
+        
+        </style>
+    </head>
+    <body>
+        <div class="container-fluid">
+            <div class="row-fluid">
+                <div class="span2">
+                        host
+                </div>
+                <div class="span1">
                     <div class="dash-node-right dash-well-mod">
-                        OK
+                        status
                     </div>
                 </div>
                 <div class="span2">
                     <div class="dash-node-right dash-well-mod">
-                        The other 999 columns here.
+                        metrics
                     </div>
                 </div>
                 <div class="span4">
@@ -54,58 +117,97 @@
                         The other 999 columns here.
                     </div>
                 </div>
+        
             </div>
         </div>
-    </div>
-    
-    
-    <div id="collapseOne" class="accordion-body collapse">
-                <div class="accordion-inner">
-                  Anim pariatur cliche reprehenderit, enim eiusmod high life accusamus terry richardson ad squid. 3 wolf moon officia aute, non cupidatat skateboard dolor brunch. Food truck quinoa nesciunt laborum eiusmod. Brunch 3 wolf moon tempor, sunt aliqua put a bird on it squid single-origin coffee nulla assumenda shoreditch et. Nihil anim keffiyeh helvetica, craft beer labore wes anderson cred nesciunt sapiente ea proident. Ad vegan excepteur butcher vice lomo. Leggings occaecat craft beer farm-to-table, raw denim aesthetic synth nesciunt you probably haven't heard of them accusamus labore sustainable VHS.
-                </div>
-              </div>
-            </div>
+        <div class="accordion" id="accordion2">
             <div class="accordion-group">
-              <div class="accordion-heading">
-                <div class="container-fluid">
-                    <div class="row-fluid">
+                <div class="accordion-heading">
+                    <div class="container-fluid">
+                        <div class="row-fluid">
+                            <div class="span2">
+                                <a class="accordion-toggle host-link" data-toggle="collapse" data-parent="#accordion2" href="#collapseOne">127.0.0.1</a>
+                            </div>
+                            <div class="span1">
+                            <div class="dash-node-right dash-well-mod">
+                                OK
+                            </div>
+                        </div>
                         <div class="span2">
-                                <a class="accordion-toggle" data-toggle="collapse" data-parent="#accordion2" href="#collapseTwo">127.0.0.1</a>
+                            <div class="dash-node-right dash-well-mod">
+                                The other 999 columns here.
+                            </div>
                         </div>
-                        <div class="span3">
-                            <div class="well dash-node-right dash-well-mod">
+                        <div class="span4">
+                            <div class="dash-node-right dash-well-mod">
                                 The other 999 columns here.
                             </div>
                         </div>
                         <div class="span3">
-                            <div class="well dash-node-right dash-well-mod">
-                                The other 999 columns here.
-                            </div>
-                        </div>
-                        <div class="span3">
-                            <div class="well dash-node-right dash-well-mod">
+                            <div class="dash-node-right dash-well-mod">
                                 The other 999 columns here.
                             </div>
                         </div>
                     </div>
                 </div>
-              </div>
-              <div id="collapseTwo" class="accordion-body collapse">
-                <div class="accordion-inner">
-                  Anim pariatur cliche reprehenderit, enim eiusmod high life accusamus terry richardson ad squid. 3 wolf moon officia aute, non cupidatat skateboard dolor brunch. Food truck quinoa nesciunt laborum eiusmod. Brunch 3 wolf moon tempor, sunt aliqua put a bird on it squid single-origin coffee nulla assumenda shoreditch et. Nihil anim keffiyeh helvetica, craft beer labore wes anderson cred nesciunt sapiente ea proident. Ad vegan excepteur butcher vice lomo. Leggings occaecat craft beer farm-to-table, raw denim aesthetic synth nesciunt you probably haven't heard of them accusamus labore sustainable VHS.
-                </div>
-              </div>
             </div>
-            <div class="accordion-group">
-              <div class="accordion-heading">
-                <a class="accordion-toggle" data-toggle="collapse" data-parent="#accordion2" href="#collapseThree">
-                  Collapsible Group Item #3
-                </a>
-              </div>
-              <div id="collapseThree" class="accordion-body collapse">
-                <div class="accordion-inner">
-                  Anim pariatur cliche reprehenderit, enim eiusmod high life accusamus terry richardson ad squid. 3 wolf moon officia aute, non cupidatat skateboard dolor brunch. Food truck quinoa nesciunt laborum eiusmod. Brunch 3 wolf moon tempor, sunt aliqua put a bird on it squid single-origin coffee nulla assumenda shoreditch et. Nihil anim keffiyeh helvetica, craft beer labore wes anderson cred nesciunt sapiente ea proident. Ad vegan excepteur butcher vice lomo. Leggings occaecat craft beer farm-to-table, raw denim aesthetic synth nesciunt you probably haven't heard of them accusamus labore sustainable VHS.
-                </div>
-              </div>
-            </div>
-          </div>
+            
+            
+            <div id="collapseOne" class="accordion-body collapse">
+                        <div class="accordion-inner">
+                          Anim pariatur cliche reprehenderit, enim eiusmod high life accusamus terry richardson ad squid. 3 wolf moon officia aute, non cupidatat skateboard dolor brunch. Food truck quinoa nesciunt laborum eiusmod. Brunch 3 wolf moon tempor, sunt aliqua put a bird on it squid single-origin coffee nulla assumenda shoreditch et. Nihil anim keffiyeh helvetica, craft beer labore wes anderson cred nesciunt sapiente ea proident. Ad vegan excepteur butcher vice lomo. Leggings occaecat craft beer farm-to-table, raw denim aesthetic synth nesciunt you probably haven't heard of them accusamus labore sustainable VHS.
+                        </div>
+                      </div>
+                    </div>
+                    <div class="accordion-group">
+                      <div class="accordion-heading">
+                        <div class="container-fluid">
+                            <div class="row-fluid">
+                                <div class="span2">
+                                        <a class="accordion-toggle host-link" data-toggle="collapse" data-parent="#accordion2" href="#collapseTwo">127.0.0.1</a>
+                                </div>
+                                <div class="span3">
+                                    <div class="well dash-node-right dash-well-mod">
+                                        The other 999 columns here.
+                                    </div>
+                                </div>
+                                <div class="span3">
+                                    <div class="well dash-node-right dash-well-mod">
+                                        The other 999 columns here.
+                                    </div>
+                                </div>
+                                <div class="span3">
+                                    <div class="well dash-node-right dash-well-mod">
+                                        The other 999 columns here.
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                      </div>
+                      <div id="collapseTwo" class="accordion-body collapse">
+                        <div class="accordion-inner">
+                          Anim pariatur cliche reprehenderit, enim eiusmod high life accusamus terry richardson ad squid. 3 wolf moon officia aute, non cupidatat skateboard dolor brunch. Food truck quinoa nesciunt laborum eiusmod. Brunch 3 wolf moon tempor, sunt aliqua put a bird on it squid single-origin coffee nulla assumenda shoreditch et. Nihil anim keffiyeh helvetica, craft beer labore wes anderson cred nesciunt sapiente ea proident. Ad vegan excepteur butcher vice lomo. Leggings occaecat craft beer farm-to-table, raw denim aesthetic synth nesciunt you probably haven't heard of them accusamus labore sustainable VHS.
+                        </div>
+                      </div>
+                    </div>
+                    <div class="accordion-group">
+                      <div class="accordion-heading">
+                        <a class="accordion-toggle" data-toggle="collapse" data-parent="#accordion2" href="#collapseThree">
+                          Collapsible Group Item #3
+                        </a>
+                      </div>
+                      <div id="collapseThree" class="accordion-body collapse">
+                        <div class="accordion-inner">
+                          Anim pariatur cliche reprehenderit, enim eiusmod high life accusamus terry richardson ad squid. 3 wolf moon officia aute, non cupidatat skateboard dolor brunch. Food truck quinoa nesciunt laborum eiusmod. Brunch 3 wolf moon tempor, sunt aliqua put a bird on it squid single-origin coffee nulla assumenda shoreditch et. Nihil anim keffiyeh helvetica, craft beer labore wes anderson cred nesciunt sapiente ea proident. Ad vegan excepteur butcher vice lomo. Leggings occaecat craft beer farm-to-table, raw denim aesthetic synth nesciunt you probably haven't heard of them accusamus labore sustainable VHS.
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+<!-- xx -->
+
+</div> <!-- span12 -->
+</div> <!-- row -->
+
+</div>
+</div>
+</div>

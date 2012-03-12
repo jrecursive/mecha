@@ -20,113 +20,127 @@ import java.io.*;
 import java.net.*;
 import java.util.logging.*;
 
+import mecha.Mecha;
 import mecha.json.*;
-
 import mecha.vm.*;
+import mecha.util.*;
+
+import com.basho.riak.client.*;
+import com.basho.riak.client.bucket.*;
+import com.basho.riak.client.response.*;
 
 public class RiakClientModule extends MVMModule {
     final private static Logger log = 
         Logger.getLogger(RiakClientModule.class.getName());
     
+    IRiakClient riakClient;
+    
     public RiakClientModule() throws Exception {
         super();
+        final String riakHost = Mecha.getConfig().<String>get("http-addr");
+        final int riakPort = Mecha.getConfig().getInt("riak-protobuf-port");
+        riakClient = RiakFactory.pbcClient(riakHost, riakPort);
     }
     
     public void moduleLoad() throws Exception {
-        log.info("moduleLoad()");   
+        ensureRiakClient();
     }
     
     public void moduleUnload() throws Exception {
         log.info("moduleUnload()");
     }
     
+    private void ensureRiakClient() throws Exception {
+        while (true) {
+            try {
+                riakClient.ping();
+                return;
+            } catch (RiakException ex) {
+                if (Mecha.riakDown.get()) {
+                    log.info("* riakDown flag true, waiting 1 second for riak link reconnection");
+                    Thread.sleep(1000);
+                }
+                final String riakHost = Mecha.getConfig().<String>get("http-addr");
+                final int riakPort = Mecha.getConfig().getInt("riak-protobuf-port");
+                riakClient = RiakFactory.pbcClient(riakHost, riakPort);
+            }
+        }
+    }
+    
     public class Get extends MVMFunction {
         public Get(String refId, MVMContext ctx, JSONObject config) throws Exception {
             super(refId, ctx, config);
-            log.info("constructor: " + config.toString(2));
-        }
-        
-        public void onControlMessage(JSONObject msg) throws Exception {
-            log.info("Control message: " + msg.toString(2));
-        }
-
-        public void onDataMessage(JSONObject msg) throws Exception {
-            log.info("Data message: " + msg.toString(2));
         }
         
         public void onStartEvent(JSONObject msg) throws Exception {
-            log.info("onStartEvent: " + msg.toString(2));
-            
-            /*
-             * .. xxx message passing test code
-            */
-            JSONObject newMsg = new JSONObject();
-            newMsg.put("welcome", "to the new database");
-            broadcastDataMessage(newMsg);
-        }
-        
-        public void onCancelEvent(JSONObject msg) throws Exception {
-            log.info("onCancelEvent: " + msg.toString(2));
-        }
-        
-        public void onDoneEvent(JSONObject msg) throws Exception {
-            log.info("onDoneEvent: " + msg.toString(2));
+            // TODO: decouple riak availability from riak client operational level
+            // (or provide a different client that sets up long standing connections?)
+            ensureRiakClient();
+            final String bucketName = getConfig().<String>get("bucket");
+            final String key = getConfig().<String>get("key");
+            final Bucket bucket = riakClient.createBucket(bucketName).execute();
+            final IRiakObject obj = bucket.fetch(key).execute();
+            broadcastDataMessage(new JSONObject(obj.getValueAsString()));
+            broadcastDone();
         }
     }
     
     public class Put extends MVMFunction {
+            
         public Put(String refId, MVMContext ctx, JSONObject config) throws Exception {
             super(refId, ctx, config);
-            log.info("constructor: " + config.toString(2));
-        }
-        
-        public void onControlMessage(JSONObject msg) throws Exception {
-            log.info("Control message: " + msg.toString(2));
-        }
-
-        public void onDataMessage(JSONObject msg) throws Exception {
-            log.info("Data message: " + msg.toString(2));
         }
         
         public void onStartEvent(JSONObject msg) throws Exception {
-            log.info("onStartEvent: " + msg.toString(2));
+            // TODO: decouple riak availability from riak client operational level
+            // (or provide a different client that sets up long standing connections?)
+            ensureRiakClient();
+            final String bucketName = getConfig().<String>get("bucket");
+            final String key = getConfig().<String>get("key");
+            final JSONObject putObj = getConfig().getJSONObject("object");
+            final Bucket bucket = riakClient.createBucket(bucketName).execute();
+            bucket.store(key, putObj.toString()).dw(1).execute();
+            broadcastDone();
         }
-        
-        public void onCancelEvent(JSONObject msg) throws Exception {
-            log.info("onCancelEvent: " + msg.toString(2));
-        }
-        
-        public void onDoneEvent(JSONObject msg) throws Exception {
-            log.info("onDoneEvent: " + msg.toString(2));
-        }
-
     }
     
     public class Delete extends MVMFunction {
         public Delete(String refId, MVMContext ctx, JSONObject config) throws Exception {
             super(refId, ctx, config);
-            log.info("constructor: " + config.toString(2));
-        }
-        
-        public void onControlMessage(JSONObject msg) throws Exception {
-            log.info("Control message: " + msg.toString(2));
-        }
-
-        public void onDataMessage(JSONObject msg) throws Exception {
-            log.info("Data message: " + msg.toString(2));
         }
         
         public void onStartEvent(JSONObject msg) throws Exception {
-            log.info("onStartEvent: " + msg.toString(2));
+            // TODO: decouple riak availability from riak client operational level
+            // (or provide a different client that sets up long standing connections?)
+            ensureRiakClient();
+            final String bucketName = getConfig().<String>get("bucket");
+            final String key = getConfig().<String>get("key");
+            final Bucket bucket = riakClient.createBucket(bucketName).execute();
+            bucket.delete(key).execute();
+            broadcastDone();
         }
-        
-        public void onCancelEvent(JSONObject msg) throws Exception {
-            log.info("onCancelEvent: " + msg.toString(2));
-        }
-        
-        public void onDoneEvent(JSONObject msg) throws Exception {
-            log.info("onDoneEvent: " + msg.toString(2));
-        }
-
     }
+    
+    
+    public class BucketProps extends MVMFunction {
+        public BucketProps(String refId, MVMContext ctx, JSONObject config) throws Exception {
+            super(refId, ctx, config);
+        }
+        
+        public void onStartEvent(JSONObject msg) throws Exception {
+            final String riakHost = Mecha.getConfig().<String>get("http-addr");
+            final int riakPort = Mecha.getConfig().getInt("riak-http-port");
+            final String bucketName = getConfig().<String>get("bucket");
+            JSONObject props = 
+                new JSONObject(HTTPUtils.fetch(
+                    "http://" + 
+                    riakHost + ":" + 
+                    riakPort + "/riak/" +
+                    URLEncoder.encode(bucketName)));
+            broadcastDataMessage(props);
+            broadcastDone();
+        }
+    }
+
+    
 }

@@ -18,6 +18,7 @@ import java.io.*;
 import java.util.*;
 import java.util.logging.*;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.*;
 
 import mecha.json.*;
 import mecha.util.*;
@@ -51,6 +52,8 @@ public class Mecha {
     final private Monitoring monitoring;
     static private boolean shuttingDown = false;
     static public long lastCommit = 0;
+    final static public AtomicBoolean riakDown =
+        new AtomicBoolean(true);
     
     /*
      * startup & init
@@ -356,6 +359,7 @@ public class Mecha {
             try {
                 response = riakManager.riakCommand("ping");
                 if (response.indexOf("not responding to pings") != -1) {
+                    riakDown.set(true);
                     response = riakManager.riakCommand("start");
                     if (response.indexOf("Node is already running!") != -1) {
                         log.info("Node already running?  Retrying ping in 1 second.");
@@ -370,6 +374,7 @@ public class Mecha {
                         continue;
                     }
                 } else if (response.indexOf("pong") != -1) {
+                    riakDown.set(false);
                     log.info("riak responded!");
                     return;
                 }

@@ -3,6 +3,12 @@
 [
  %% Riak Core config
  {riak_core, [
+ 
+              {default_bucket_props, [
+                  {last_write_wins, true},
+                  {r, 1}
+              ]},
+ 
               %% Default location of ringstate
               {ring_state_dir, "./data/ring"},
               
@@ -54,7 +60,7 @@
 
             %% pb_port is the TCP port that the Riak Protocol Buffers interface
             %% will bind to
-            {pb_port, 8087 },
+            {pb_port, <<mecha:riak-protobuf-port>> },
 
             %% pb_backlog is the maximum length to which the queue of pending
             %% connections may grow. If set, it must be an integer >= 0.

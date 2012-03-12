@@ -153,6 +153,13 @@
                 $("#cmdline").keypress(function(e) {
                     if (e.which == 13) { // enter
                         e.preventDefault();
+                        console.log($("#cmdline").val());
+                        if ($("#cmdline").val() == "/clear") {
+                            console.log("hi");
+                            $("#console-pre").text("hi");
+                            $("#cmdline").val("");
+                            return;
+                        }
                         runcmd($("#cmdline").val());
                         $("#cmdline").val("");
                     }

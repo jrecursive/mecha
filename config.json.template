@@ -17,6 +17,7 @@
     "riak-cookie": "riak",
     "riak-http-port": 18098,
     "riak-https-port": 18099,
+    "riak-protobuf-port": 18100,
     
     ##
     ## once riak-partitions is set DO NOT CHANGE!

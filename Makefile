@@ -11,4 +11,6 @@ clean:
 	build/clean-riak.sh
 	ant clean
 
-
+reset:
+	rm -rf ./data
+	rm -rf ./build/riak-1.1.1rc1/rel/riak/data

@@ -3,7 +3,7 @@
 // register mecha.vm.bifs.* system verbs
 // 
 
-register namespace:$ module-class:mecha.vm.bifs.RiakClientModule verbs:(get:Get put:Put delete:Delete)
+register namespace:$ module-class:mecha.vm.bifs.RiakClientModule verbs:(get:Get put:Put delete:Delete bucket-props:BucketProps)
 register namespace:$ module-class:mecha.vm.bifs.ChannelModule verbs:(subscribe:Subscribe unsubscribe:Unsubscribe publish:Publish)
 register namespace:$ module-class:mecha.vm.bifs.ClientModule verbs:(client-sink:ClientSink channel-sink:ChannelSink start-all-sources:StartAllSources macro-sink:MacroSink)
 register namespace:$ module-class:mecha.vm.bifs.SolrModule verbs:(solr-select:Select solr-select-iterator:SelectIterator value-count-reducer:ValueCountReducer covered-index-select:CoveredIndexSelect cardinality-reducer:CardinalityReducer)
