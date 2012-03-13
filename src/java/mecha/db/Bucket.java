@@ -44,6 +44,7 @@ public class Bucket {
     final private String dataDir;
     final private String bucketDriverClassName;
     final private BucketDriver db;
+    final private SolrServer solrServer;
     
     // solr
     final private SolrServer server;
@@ -67,13 +68,15 @@ public class Bucket {
         Class[] argTypes = { String.class, String.class, String.class };
         Object[] args = { partition, bucketStr, dataDir };
         db = (BucketDriver) driverClassObj.getConstructor(argTypes).newInstance(args);
+        solrServer = Mecha.getSolrManager().getCore("index").getServer();
         
         log.info("[" + bucketDriverClassName + "] " + 
             "Bucket: " + partition + ": " + bucketStr + ": " + dataDir);
     }
     
     private void queueForIndexing(SolrInputDocument doc) throws Exception {
-        solrDocQueue.put(doc);
+        //solrDocQueue.put(doc);
+        solrServer.add(doc);
     }
     
     public void stop() throws Exception {

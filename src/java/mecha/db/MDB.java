@@ -68,9 +68,9 @@ public class MDB {
                              .metric("mecha.db.mdb.documents-indexed", 
                                      docs.size());
                     } else {
-                        Mecha.getMonitoring()
-                             .metric("mecha.db.mdb.documents-indexed", 0);
-                        Thread.sleep(1000);
+                        //Mecha.getMonitoring()
+                        //     .metric("mecha.db.mdb.documents-indexed", 0);
+                        Thread.sleep(10);
                     }
                 } catch (Exception ex) {
                     Mecha.getMonitoring().error("mecha.db.mdb", ex);
@@ -88,7 +88,8 @@ public class MDB {
         
         documentQueueIndexerThread = 
             new Thread(new DocumentQueueIndexer());
-        documentQueueIndexerThread.start();
+        //NOTE: now directly wired.  kept here for future testing.
+        //documentQueueIndexerThread.start();
         
         Mecha.getMonitoring().addMonitoredRates(rates);
         log.info("started");

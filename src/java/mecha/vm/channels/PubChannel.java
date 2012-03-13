@@ -66,8 +66,10 @@ public class PubChannel {
     }
     
     public void send(JSONObject message) throws Exception {
-        for(ChannelConsumer cc : members) {
-            cc.onMessage(name, message);
+        synchronized(members) {
+            for(ChannelConsumer cc : members) {
+                cc.onMessage(name, message);
+            }
         }
     }
 
