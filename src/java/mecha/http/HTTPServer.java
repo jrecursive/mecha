@@ -58,6 +58,7 @@ public class HTTPServer {
         
         context.addServlet(new ServletHolder(new MacroServlet()),"/mecha/*");
         context.addServlet(new ServletHolder(new ProcServlet()),"/proc/*");
+        context.addServlet(new ServletHolder(new ProxyServlet()),"/proxy/*");
         
         log.info("* starting websocket server");
         webSocketServer = new WebSocketServer();

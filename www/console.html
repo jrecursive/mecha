@@ -153,10 +153,20 @@
                 $("#cmdline").keypress(function(e) {
                     if (e.which == 13) { // enter
                         e.preventDefault();
-                        console.log($("#cmdline").val());
-                        if ($("#cmdline").val() == "/clear") {
-                            console.log("hi");
-                            $("#console-pre").text("hi");
+                        //console.log($("#cmdline").val());
+                        var cmd = $("#cmdline").val();
+                        if (cmd == "/clear") {
+                            $("#log").text("");
+                            $("#cmdline").val("");
+                            return;
+                        }
+                        if (cmd == "/new") {
+                            window.open ("console.html","_new");
+                            $("#cmdline").val("");
+                            return;
+                        }
+                        if (cmd == "/timeline") {
+                            window.open ("timeline.html","_new");
                             $("#cmdline").val("");
                             return;
                         }
@@ -198,7 +208,7 @@
                     }
                 });
                 
-                setInterval('scroll_console();', 1000);
+                setInterval('scroll_console();', 700);
             };
         
         </script>
@@ -254,7 +264,7 @@
             #cmdline {
                 position:relative;
                 top:5px;
-                font-size:18px;
+                font-size:16px;
             }
             
             .console {
@@ -263,7 +273,7 @@
             }
             
             .console-pre {
-                
+                font-size:14px;
             }
             
             pre {
@@ -275,7 +285,7 @@
                 margin: 0px !important;
                 
             }
-            
+                        
         </style>
     </head>
     <body>
