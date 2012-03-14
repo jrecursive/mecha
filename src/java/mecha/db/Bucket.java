@@ -111,6 +111,9 @@ public class Bucket {
             if (jo1.has("metadata") &&
                 jo1.getJSONObject("metadata").has("X-Riak-Deleted")) {
                 if (jo1.getJSONObject("metadata").getString("X-Riak-Deleted").equals("true")) {
+                    /*
+                     * TODO: force cluster-wide delete?
+                    */
                     delete(key);
                     return;
                 }

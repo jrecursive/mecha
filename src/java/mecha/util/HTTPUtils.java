@@ -19,6 +19,18 @@ import java.net.*;
 import java.io.*;
 
 public class HTTPUtils {
+    
+    static class RiakAdminAuthenticator extends Authenticator {
+        public PasswordAuthentication getPasswordAuthentication() {
+            System.out.println("Authenticating: " + getRequestingScheme());
+            return (new PasswordAuthentication("mecha", "mecha".toCharArray()));
+        }
+    }
+    
+    static {
+        Authenticator.setDefault(new RiakAdminAuthenticator());
+    }
+
     public static Map<String, List<String>> getURLHeaders(String u) throws Exception {
         URL url = new URL(u);
         HttpURLConnection.setFollowRedirects(true);

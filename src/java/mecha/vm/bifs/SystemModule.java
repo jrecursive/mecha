@@ -54,6 +54,14 @@ public class SystemModule extends MVMModule {
         public void onStartEvent(JSONObject msg) throws Exception {
             long t_st = System.currentTimeMillis();
             Mecha.getSolrManager().getIndexServer().commit(true,true);
+            try {
+                Mecha.getMDB().commit();
+            } catch (Exception ex) {
+                ex.printStackTrace();
+                log.info("MDB commit failed! Rolling back index core commit!");
+                // TODO: solr rollback
+                throw ex;
+            }
             long t_elapsed = System.currentTimeMillis() - t_st;
             JSONObject response = new JSONObject();
             response.put("host", Mecha.getHost());

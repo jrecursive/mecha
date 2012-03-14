@@ -27,10 +27,43 @@
         <script src="bootstrap/js/bootstrap-carousel.js"></script>
         <script src="bootstrap/js/bootstrap-typeahead.js"></script>
         <script src="js/moment.min.js"></script>
+        <script src="js/md5.js"></script>
         
         <script type="text/javascript">
+            var metric_map = {
+                "riak.pbc.active": "rpbc",
+                "riak.cpu.avg15": "cpu15",
+                "riak.node.puts": "rputs",
+                "riak.node.gets": "rgets",
+                "jvm.free-memory": "jvmfree",
+                "jvm.used-memory": "jvmused",
+                "mecha.db.bucket.global.get": "glget",
+                "mecha.server.connections": "mcon",
+                "mecha.server.active-connections": "acon",
+                "mecha.vm.channels.active": "achan",
+                "mecha.mvm.data-msg": "datamsg",
+                "mecha.mvm.global.functions.task-count": "tc",
+                "mecha.mvm.global.functions": "fc",
+                "mecha.mvm.global.functions.queue-depth": "qd",
+                "mecha.mvm.global.functions.active": "fa",
+                "mecha.mvm.global.functions.complete": "fc",
+                "mecha.vm.bifs.solr-module.system.select.query.ms": "selms",
+                "mecha.vm.bifs.solr-module.index.select-iterator.query.ms": "selims"
+            };
+            
+            var b2mb = 
+                function(val) {
+                    return (val / 1000.00 / 1000.00).toFixed(2) + "&nbsp;MB";
+                }
+            
+            var metric_funs = {
+                "jvmfree": b2mb,
+                "jvmused": b2mb
+            }
+        
             var config = {};
-
+            var cluster;
+            
             $(document).ready(function() {
                 $.getJSON('/proc/config', function(data) {
                     config = data.result;
@@ -41,173 +74,226 @@
             function refresh() {
                 var u = "http://" +
                          config['http-addr'] + ":" +
-                         config['riak-http-port'] + 
-                            "/admin/cluster/list";
-                console.log(u);
-                /*
-                $.ajax({
-                    url: u,
-                    dataType: 'jsonp text json',
-                    data: {},
-                    username: "mecha",
-                    password: "mecha",
-                    crossDomain: true,
-                    success: function(data) {
-                        console.log(data);
-                    }
-                }).success(function(d) {
-                    console.log("succezz");
-                    console.log(d);
-                }).error(function(a,b,c) {
-                    console.log("errorz");
-                    console.log(a);
-                    console.log(b);
-                    console.log(c);
-                });
-                */
+                         config['http-port'] + 
+                            "/proc/riak/do?u=/admin/cluster/list";
+
+                $.getJSON(u, function(data) {
+                    cluster = data.result.response;
                     
-                /*            
-                var script = document.createElement('script');
-                script.id = 'riak-admin-shiv';
-                script.src = u;
-                script.type = 'text/plain';
-                script.onload = function() {
-                    var obj = $.parseJSON($("#riak-admin-shiv").text());
-                    console.log(obj);
-                };
-                document.body.appendChild(script);
-                */
+                    var cluster_table =
+                        $("#cluster-table").clone();
+                    cluster_table.attr("id", "xyzzy");
+                    $("#content").css("display", "none");
+                    $("#content").html(cluster_table);
+                    
+                    for(idx in cluster) {
+                        var node = cluster[idx];
+                        node.ring_pct *= 100.00;
+                        node.pending_pct *= 100.00;
+                        
+                        var node_row = $("#cluster-row").clone();
+                        
+                        var parts = node.name.split("@");
+                        var host = parts[1];
+                        
+                        var erlang_mem_pct = (node.mem_erlang / node.mem_total * 100.00).toFixed(2);
+                        var erlang_mem_mbytes = ((node.mem_total * erlang_mem_pct) / 1000.00 / 1000.00 / 100.00).toFixed(2);
+                        
+                        var total_mem_used_pct = (node.mem_used / node.mem_total * 100.00).toFixed(2);
+                        var total_mem_used_mbytes = ((node.mem_total * total_mem_used_pct) / 1000.00 / 1000.00 / 100.00).toFixed(2);
+                        
+                        var total_mem = (node.mem_total / 1000 / 1000 / 1000).toFixed(2);
+                        
+                        // handoff detection
+                        if (node.ring_pct > node.pending_pct) {
+                            node_row.find(".handoff").html("<b>outbound</b>");
+                        } else if (node.ring_pct < node.pending_pct) {
+                            node_row.find(".handoff").html("<b>inbound</b>");
+                        } else {
+                            node_row.find(".handoff").html("stable");
+                        }
+                        
+                        
+                        node_row.attr("id", "h-" + hex_md5(host));
+                        node_row.find(".host").html(host);
+                        node_row.find(".status").html(node.status);
+                        //node_row.find(".ring_pct").html(node.ring_pct);
+                        //node_row.find(".pending_pct").html(node.pending_pct);
+                        //node_row.find(".reachable").html(node.reachable===true?"true":"false");
+                        node_row.find(".mem_erlang").html(erlang_mem_pct + "%" + " " + erlang_mem_mbytes + " MB");
+                        node_row.find(".mem_used").html(total_mem_used_pct + "%" + " " + total_mem_used_mbytes + " MB");
+                        //node_row.find(".mem_total").html( total_mem + " GB");
+                        node_row.find(".warnings").html("");
+                        cluster_table.find("#cluster-rows").append(node_row);
+                    }
+                    
+                    /*
+                     * overview
+                    */
+                    var u = "http://" +
+                         config['http-addr'] + ":" +
+                         config['http-port'] + 
+                            "/proc/riak/do?u=/admin/overview";
+                    $.getJSON(u, function(data) {
+                        overview = data.result.response;
+                        for(idx in overview.unreachable_nodes) {
+                            var node = overview.unreachable_nodes[idx];
+                            var parts = node.split("@");
+                            var host = parts[1];
+                            $("#h-" + host + " .warnings").append("<b>unreachable!</b><br>");
+                        }
+                        for(idx in overview.down_nodes) {
+                            var node = overview.down_nodes[idx];
+                            var parts = node.split("@");
+                            var host = parts[1];
+                            $("#h-" + host + " .warnings").append("<b>down!</b><br>");
+                        }
+                        for(idx in overview.low_mem_nodes) {
+                            var node = overview.low_mem_nodes[idx];
+                            var parts = node.split("@");
+                            var host = parts[1];
+                            $("#h-" + host + " .warnings").append("<b>low memory</b><br>");
+                        }
+                    });
+                    
+                    /*
+                     * metrics
+                    */
+                    var u = "http://" +
+                         config['http-addr'] + ":" +
+                         config['http-port'] + 
+                            "/proc/metrics?entries=1&all=true";
+                    $.getJSON(u, function(data) {
+                        var r = data.result;
+                        for(host in r) {
+                            var metrics = r[host];
+                            for (metric in metrics) {
+                                if (metric_map[metric]) {
+                                    var metric_class = metric_map[metric];
+                                    var metric_val = metrics[metric].values[0];
+                                    if (metric_funs[metric_class]) {
+                                        metric_val = metric_funs[metric_class](metric_val);
+                                    }
+                                    $("#h-" + hex_md5(host) + " .m_" + metric_class).html(metric_val);
+                                }
+                            }
+                        }
+                        $("#content").css("display", "");
+                    });
+                });
                 
-                // render
+                setTimeout("refresh();", 3000);
             }
         </script>
         
         
         <style type="text/css">
-        
-            .host-link {
-                padding-left: 0px !important;
+
+            /*
+             *
+            */
+            table {
+                font-family: courier new;
+                font-size: 14px;
+                width:100%;
             }
-        
+            
+            td {
+                width:5%;
+            }
+                    
         </style>
     </head>
     <body>
         <div class="container-fluid">
             <div class="row-fluid">
-                <div class="span2">
-                        host
+                <div class="span12">
+                    <span id="content">
+                    </span>
                 </div>
-                <div class="span1">
-                    <div class="dash-node-right dash-well-mod">
-                        status
-                    </div>
-                </div>
-                <div class="span2">
-                    <div class="dash-node-right dash-well-mod">
-                        metrics
-                    </div>
-                </div>
-                <div class="span4">
-                    <div class="dash-node-right dash-well-mod">
-                        The other 999 columns here.
-                    </div>
-                </div>
-                <div class="span3">
-                    <div class="dash-node-right dash-well-mod">
-                        The other 999 columns here.
-                    </div>
-                </div>
-        
-            </div>
+            </div> <!-- row -->
         </div>
-        <div class="accordion" id="accordion2">
-            <div class="accordion-group">
-                <div class="accordion-heading">
-                    <div class="container-fluid">
-                        <div class="row-fluid">
-                            <div class="span2">
-                                <a class="accordion-toggle host-link" data-toggle="collapse" data-parent="#accordion2" href="#collapseOne">127.0.0.1</a>
-                            </div>
-                            <div class="span1">
-                            <div class="dash-node-right dash-well-mod">
-                                OK
-                            </div>
-                        </div>
-                        <div class="span2">
-                            <div class="dash-node-right dash-well-mod">
-                                The other 999 columns here.
-                            </div>
-                        </div>
-                        <div class="span4">
-                            <div class="dash-node-right dash-well-mod">
-                                The other 999 columns here.
-                            </div>
-                        </div>
-                        <div class="span3">
-                            <div class="dash-node-right dash-well-mod">
-                                The other 999 columns here.
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            
-            <div id="collapseOne" class="accordion-body collapse">
-                        <div class="accordion-inner">
-                          Anim pariatur cliche reprehenderit, enim eiusmod high life accusamus terry richardson ad squid. 3 wolf moon officia aute, non cupidatat skateboard dolor brunch. Food truck quinoa nesciunt laborum eiusmod. Brunch 3 wolf moon tempor, sunt aliqua put a bird on it squid single-origin coffee nulla assumenda shoreditch et. Nihil anim keffiyeh helvetica, craft beer labore wes anderson cred nesciunt sapiente ea proident. Ad vegan excepteur butcher vice lomo. Leggings occaecat craft beer farm-to-table, raw denim aesthetic synth nesciunt you probably haven't heard of them accusamus labore sustainable VHS.
-                        </div>
-                      </div>
-                    </div>
-                    <div class="accordion-group">
-                      <div class="accordion-heading">
-                        <div class="container-fluid">
-                            <div class="row-fluid">
-                                <div class="span2">
-                                        <a class="accordion-toggle host-link" data-toggle="collapse" data-parent="#accordion2" href="#collapseTwo">127.0.0.1</a>
-                                </div>
-                                <div class="span3">
-                                    <div class="well dash-node-right dash-well-mod">
-                                        The other 999 columns here.
-                                    </div>
-                                </div>
-                                <div class="span3">
-                                    <div class="well dash-node-right dash-well-mod">
-                                        The other 999 columns here.
-                                    </div>
-                                </div>
-                                <div class="span3">
-                                    <div class="well dash-node-right dash-well-mod">
-                                        The other 999 columns here.
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                      </div>
-                      <div id="collapseTwo" class="accordion-body collapse">
-                        <div class="accordion-inner">
-                          Anim pariatur cliche reprehenderit, enim eiusmod high life accusamus terry richardson ad squid. 3 wolf moon officia aute, non cupidatat skateboard dolor brunch. Food truck quinoa nesciunt laborum eiusmod. Brunch 3 wolf moon tempor, sunt aliqua put a bird on it squid single-origin coffee nulla assumenda shoreditch et. Nihil anim keffiyeh helvetica, craft beer labore wes anderson cred nesciunt sapiente ea proident. Ad vegan excepteur butcher vice lomo. Leggings occaecat craft beer farm-to-table, raw denim aesthetic synth nesciunt you probably haven't heard of them accusamus labore sustainable VHS.
-                        </div>
-                      </div>
-                    </div>
-                    <div class="accordion-group">
-                      <div class="accordion-heading">
-                        <a class="accordion-toggle" data-toggle="collapse" data-parent="#accordion2" href="#collapseThree">
-                          Collapsible Group Item #3
-                        </a>
-                      </div>
-                      <div id="collapseThree" class="accordion-body collapse">
-                        <div class="accordion-inner">
-                          Anim pariatur cliche reprehenderit, enim eiusmod high life accusamus terry richardson ad squid. 3 wolf moon officia aute, non cupidatat skateboard dolor brunch. Food truck quinoa nesciunt laborum eiusmod. Brunch 3 wolf moon tempor, sunt aliqua put a bird on it squid single-origin coffee nulla assumenda shoreditch et. Nihil anim keffiyeh helvetica, craft beer labore wes anderson cred nesciunt sapiente ea proident. Ad vegan excepteur butcher vice lomo. Leggings occaecat craft beer farm-to-table, raw denim aesthetic synth nesciunt you probably haven't heard of them accusamus labore sustainable VHS.
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-<!-- xx -->
+        
+        <div style="display:none;">
+            <span id="log-entry">
+                <div class="name">name<br/></div>
+                <pre class="message">message</pre>
+            </span>
+            <span id="cluster-table">
+                <table class="table table-striped">
+                    <thead>
+                      <tr id="cluster-row">
+                        
+                        <!-- /admin/cluster/list/ -->
+                        <td class="databox cluster-data host">host</td>
+                        <td class="databox cluster-data status">status</td>
+                        <!-- <td class="databox cluster-data ring_pct">ring_pct</td>
+                        <td class="databox cluster-data pending_pct">pending_pct</td> -->
+                        <!-- <td class="databox cluster-data reachable">reachable</td> -->
+                        <td class="databox cluster-data mem_erlang">mem_erlang</td>
+                        <td class="databox cluster-data mem_used">mem_used</td>
+                        <!-- <td class="databox cluster-data mem_total">mem_total</td> -->
+                        
+                        <!-- metrics -->
+                        <!--
+                            RPBC    riak.pbc.active
+                            CPU15   riak.cpu.avg15
+                            RPUTS   riak.node.puts
+                            RGETS   riak.node.gets
+                            
+                            JVMFREE jvm.free-memory
+                            JVMUSED jvm.used-memory
+                            GLGET   mecha.db.bucket.global.get
+                            MCON    mecha.server.connections
+                            ACON    mecha.server.active-connections
+                            ACHAN   mecha.vm.channels.active
+                            DATAMSG mecha.mvm.data-msg
 
-</div> <!-- span12 -->
-</div> <!-- row -->
+                            TC      mecha.mvm.global.functions.task-count
+                            FC      mecha.mvm.global.functions
+                            QD      mecha.mvm.global.functions.queue-depth
+                            FA      mecha.mvm.global.functions.active
+                            FUNC    mecha.mvm.global.functions.complete
+                            
+                            SELECT   mecha.http.macro.select
+                            SELMS    mecha.vm.bifs.solr-module.system.select.query.ms
+                            SELIMS   mecha.vm.bifs.solr-module.index.select-iterator.query.ms
 
-</div>
-</div>
-</div>
+                        -->
+                        
+                        <td class="databox cluster-data metric m_rpbc">RPBC</td>
+                        <td class="databox cluster-data metric m_cpu15">CPU15</td>
+                        <td class="databox cluster-data metric m_rputs">RPUTS</td>
+                        <td class="databox cluster-data metric m_rgets">RGETS</td>
+                        
+                        <td class="databox cluster-data metric m_jvmfree">JVMFREE</td>
+                        <td class="databox cluster-data metric m_jvmused">JVMUSED</td>
+                        <!-- <td class="databox cluster-data metric m_glget">GLGET</td> -->
+                        <td class="databox cluster-data metric m_mcon">MCON</td>
+                        <!-- <td class="databox cluster-data metric m_acon">ACON</td> -->
+                        <td class="databox cluster-data metric m_achan">ACHAN</td>
+                        <td class="databox cluster-data metric m_datamsg">DATAMSG</td>
+                        
+                        <td class="databox cluster-data metric m_tc">TC</td>
+                        <td class="databox cluster-data metric m_fc">FC</td>
+                        <td class="databox cluster-data metric m_qd">QD</td>
+                        <td class="databox cluster-data metric m_fa">FA</td>
+                        
+                        <td class="databox cluster-data metric m_selms">SELMS</td>
+                        <td class="databox cluster-data metric m_selims">SELIMS</td>
+                        
+                        <!-- /admin/overview -->
+                        <td class="databox cluster-data handoff">handoff</td>
+                        <td class="databox cluster-data warnings">warnings</td>
+                        
+                      </tr>
+                    </thead>
+                    <tbody id="cluster-rows">
+                    </tbody>
+                </table>
+            </span>
+        </div>
+
+        
+    </body>
+</html>

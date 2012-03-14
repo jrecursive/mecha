@@ -40,6 +40,10 @@ public class RiakMonitor {
         "executing_mappers"
     };
     
+    /*
+     * TODO: monitor each of the riak logs separately
+    */
+    
     public RiakMonitor() throws Exception {
         List<String> riakLogMonitorProcessArgs = 
             new ArrayList<String>();

@@ -95,7 +95,7 @@ public class MDB {
         log.info("started");
     }
     
-    public void commit() throws Exception {
+    public synchronized void commit() throws Exception {
         Mecha.getMonitoring().log("mecha.db.mdb", "starting object store commit");
         for(Map.Entry<String, Map<String, Bucket>> entry : partitionBuckets.entrySet()) {
             for(Map.Entry <String, Bucket> bucketEntry : entry.getValue().entrySet()) {
@@ -253,7 +253,7 @@ public class MDB {
         log.info("globalDropBucket: bucket: " + bucket + ": starting...");
         int count = 0;
         synchronized(partitionBuckets) {
-            for(String partitionKey : partitionBuckets.keySet()) {
+            for(String partitionKey : new HashMap<String, Map<String,Bucket>>(partitionBuckets).keySet()) {
                 dropBucket(partitionKey, bucket.getBytes());
                 log.info("globalDropBucket: partition: " + partitionKey + 
                     "bucket: " + bucket);
@@ -262,7 +262,7 @@ public class MDB {
             if (count > 0) {
                 log.info("globalDropBucket: " + bucket + ": Removing from index...");
                 solrServer.deleteByQuery("bucket:" + bucket);
-                log.info("globalDropBucket: " + bucket + ": Commiting index changes...");
+                log.info("globalDropBucket: " + bucket + ": Commiting changes...");
                 solrServer.commit(true,true);
                 log.info("globalDropBucket: " + bucket + ": done!");
             }

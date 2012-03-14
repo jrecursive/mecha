@@ -98,6 +98,12 @@ public class ProcServlet extends HttpServlet {
                 result = doClusterRequest(parts, params);
             
             /*
+             * /proc/riak
+            */
+            } else if (subsystem.equals("riak")) {
+                result = doRiakRequest(parts, params);
+            
+            /*
              * unknown request
             */
             } else {
@@ -179,7 +185,7 @@ public class ProcServlet extends HttpServlet {
     }
     
     /*
-     * /proc/cluster
+     * /proc/node
     */
     private JSONObject doNodeRequest(String[] parts, JSONObject params) throws Exception {
         JSONObject result = new JSONObject();
@@ -216,6 +222,35 @@ public class ProcServlet extends HttpServlet {
                 urlFragment = "/" + urlFragment;
             }
             result = doNode(host, urlFragment);
+        }
+        
+        return result;
+    }
+    
+    /*
+     * /proc/node
+    */
+    private JSONObject doRiakRequest(String[] parts, JSONObject params) throws Exception {
+        JSONObject result = new JSONObject();
+        
+        /*
+         * do, e.g.,
+         *
+         * http://localhost:7283/proc/node/do/127.0.0.1/?u=/proc/config
+         *  or
+         * http://localhost:7283/proc/node/do/?host=127.0.0.1&u=/proc/config
+         *
+         * TODO: I don't like these requests, they all need consistency; this 
+         *  is turning into a junk drawer.
+         *
+        */
+        if (parts.length > 1 &&
+            parts[1].equals("do")) {
+            String urlFragment = params.<String>get("u");
+            if (!urlFragment.startsWith("/")) {
+                urlFragment = "/" + urlFragment;
+            }
+            result = doRiak(urlFragment);
         }
         
         return result;
@@ -272,11 +307,32 @@ public class ProcServlet extends HttpServlet {
         }
         String url = "http://" + host + ":" + 
             Mecha.getConfig().get("http-port") +
-            urlFragment;
+                urlFragment;
         try {
             JSONObject obj = 
                 new JSONObject(HTTPUtils.fetch(url));
             result.put(host, obj);
+        } catch(Exception ex) {
+            result.put("exception", ex.toString());
+            ex.printStackTrace();
+        }
+        return result;
+    }
+    
+    private JSONObject doRiak(String urlFragment) throws Exception {
+        JSONObject result = new JSONObject();
+        String url = "http://" + Mecha.getConfig().get("http-addr") + ":" + 
+            Mecha.getConfig().get("riak-http-port") +
+                urlFragment;
+        try {
+            String response = HTTPUtils.fetch(url);
+            if (response.startsWith("{")) {
+                result.put("response", new JSONObject(response));
+            } else if (response.startsWith("[")) {
+                result.put("response", new JSONArray(response));
+            } else {
+                result.put("response", response);
+            }
         } catch(Exception ex) {
             result.put("exception", ex.toString());
             ex.printStackTrace();
