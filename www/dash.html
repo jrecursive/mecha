@@ -13,7 +13,6 @@
         <script src="js/jquery-1.7.1.min.js"></script>
         <script src="js/jquery.sparkline.min.js"></script>
         <script src="js/jquery.json-2.3.min.js"></script>
-        <script src="js/prettyprint.js"></script>
         <script src="bootstrap/js/bootstrap-transition.js"></script>
         <script src="bootstrap/js/bootstrap-alert.js"></script>
         <script src="bootstrap/js/bootstrap-modal.js"></script>
@@ -154,24 +153,25 @@
                          config['http-port'] + 
                             "/proc/riak/do?u=/admin/overview";
                     $.getJSON(u, function(data) {
+                        console.log(data);
                         overview = data.result.response;
                         for(idx in overview.unreachable_nodes) {
                             var node = overview.unreachable_nodes[idx];
                             var parts = node.split("@");
                             var host = parts[1];
-                            $("#h-" + host + " .warnings").append("<b>unreachable!</b><br>");
+                            $("#h-" + hex_md5(host) + " .warnings").append("<span class='riak_warning'>unreachable!</span><br>");
                         }
                         for(idx in overview.down_nodes) {
                             var node = overview.down_nodes[idx];
                             var parts = node.split("@");
                             var host = parts[1];
-                            $("#h-" + host + " .warnings").append("<b>down!</b><br>");
+                            $("#h-" + hex_md5(host) + " .warnings").append("<span class='riak_warning'>down!</span><br>");
                         }
                         for(idx in overview.low_mem_nodes) {
                             var node = overview.low_mem_nodes[idx];
                             var parts = node.split("@");
                             var host = parts[1];
-                            $("#h-" + host + " .warnings").append("<b>low memory</b><br>");
+                            $("#h-" + hex_md5(host) + " .warnings").append("<span class='riak_warning'>low memory</span><br>");
                         }
                     });
                     
@@ -181,7 +181,7 @@
                     var u = "http://" +
                          config['server-addr'] + ":" +
                          config['http-port'] + 
-                            "/proc/metrics?entries=1&all=true";
+                            "/proc/metrics?entries=15&all=true";
                     $.getJSON(u, function(data) {
                         var r = data.result;
                         for(host in r) {
@@ -190,14 +190,25 @@
                                 if (metric_map[metric]) {
                                     var metric_class = metric_map[metric];
                                     var metric_val = metrics[metric].values[0];
+                                    metrics[metric].values.reverse();
                                     if (metric_funs[metric_class]) {
                                         metric_val = metric_funs[metric_class](metric_val);
                                     }
-                                    $("#h-" + hex_md5(host) + " .m_" + metric_class).html(metric_val);
+                                    var data_str = "";
+                                    for(idx in metrics[metric].values) {
+                                        var m_val = metrics[metric].values[idx];
+                                        data_str += m_val + ",";
+                                    }
+                                    data_str += "\n";
+                                    data_str = data_str.replace(",\n", "");
+                                    
+                                    var metric_val_html = "<span class='sparkline'>" + data_str + "</span><br>" + metric_val;
+                                    $("#h-" + hex_md5(host) + " .m_" + metric_class).html(metric_val_html);
                                 }
                             }
                         }
                         $("#content").css("display", "");
+                        $(".sparkline").sparkline();
                     });
                 });
                 
@@ -226,7 +237,18 @@
                 padding:4px !important;
                 width:5%;
             }
-                    
+            
+            .sparkline {
+                width:50px;
+                height:20px;
+                display:inline-block;
+            }
+            
+            .riak_warning {
+                background:yellow;
+                font-size: 18px;
+            }
+            
         </style>
     </head>
     <body>
