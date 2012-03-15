@@ -82,8 +82,8 @@
                     var cluster_table =
                         $("#cluster-table").clone();
                     cluster_table.attr("id", "xyzzy");
-                    $("#content").css("display", "none");
-                    $("#content").html(cluster_table);
+                    //$("#content").css("visibility", "hidden");
+                    $("#swap").html(cluster_table);
                     
                     for(idx in cluster) {
                         var node = cluster[idx];
@@ -153,7 +153,6 @@
                          config['http-port'] + 
                             "/proc/riak/do?u=/admin/overview";
                     $.getJSON(u, function(data) {
-                        console.log(data);
                         overview = data.result.response;
                         for(idx in overview.unreachable_nodes) {
                             var node = overview.unreachable_nodes[idx];
@@ -207,7 +206,7 @@
                                 }
                             }
                         }
-                        $("#content").css("display", "");
+                        $("#content").html($("#swap").html());
                         $(".sparkline").sparkline();
                     });
                 });
@@ -249,12 +248,18 @@
                 font-size: 18px;
             }
             
+            #swap {
+                display:none;
+            }
+            
         </style>
     </head>
     <body>
         <div class="container-fluid">
             <div class="row-fluid">
                 <div class="span12">
+                    <span id="swap">
+                    </span>
                     <span id="content">
                     </span>
                 </div>
