@@ -642,7 +642,6 @@ public class SolrModule extends MVMModule {
                                         broadcastDataMessage(msg);
                                     }
                                 }
-                                break;
                             }
                             
                             /*
