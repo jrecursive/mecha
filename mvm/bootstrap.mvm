@@ -10,7 +10,7 @@ register namespace:$ module-class:mecha.vm.bifs.SolrModule verbs:(solr-select:Se
 register namespace:$ module-class:mecha.vm.bifs.MDBModule verbs:(materialize-pbk-stream:MaterializePBKStream stream-partition-bucket:StreamPartitionBucket partition-bucket-iterator:PartitionBucketIterator drop-partition-bucket:DropPartitionBucket global-drop-bucket:GlobalDropBucket compute-schema:ComputeSchema)
 register namespace:$ module-class:mecha.vm.bifs.ETLModule verbs:(project:Project extract-riak-value:ExtractRiakValue)
 register namespace:$ module-class:mecha.vm.bifs.ClusterModule verbs:(with-coverage:WithCoverage with-iterated-coverage:WithIteratedCoverage with-sorted-coverage:WithSortedCoverage warp:Warp with-cluster-coverage:WithClusterCoverage)
-register namespace:$ module-class:mecha.vm.bifs.StreamModule verbs:(vector-sequencer:VectorSequencer eat:Eat limit:Limit)
+register namespace:$ module-class:mecha.vm.bifs.StreamModule verbs:(vector-sequencer:VectorSequencer eat:Eat limit:Limit bloom-dedupe:BloomDedupe)
 register namespace:$ module-class:mecha.vm.bifs.RelationalModule verbs:(sort-merge-equijoin:SortMergeEquiJoin)
 register namespace:$ module-class:mecha.vm.bifs.IteratorModule verbs:(buffered-iterator:BufferedIterator)
 register namespace:$ module-class:mecha.vm.bifs.SystemModule verbs:(commit:Commit splitter:Splitter repeater:Repeater invoke:Invoke)
@@ -158,6 +158,11 @@ ${root} = (covered-index-select sort-field:${args.sort-field} sort-order:${args.
 *#
 
 #set ($connecting_vertex = $root)
+
+${guid}-dedupe = (bloom-dedupe num-elements:1000000 max-fp-rate:0.001)
+${connecting_vertex} -> ${guid}-dedupe
+
+#set ($connecting_vertex = "${guid}-dedupe")
 
 #if ($args.start != "0")
 ${guid}-start = (eat count:${args.start})

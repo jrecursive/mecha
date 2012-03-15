@@ -146,26 +146,12 @@ public class StreamModule extends MVMModule {
             }
         }
         
-        private static ByteBuffer bytes(String s)
-        {
-            return ByteBuffer.wrap(s.getBytes(UTF_8));
+        private ByteBuffer bytes(String s) throws Exception {
+            return ByteBuffer.wrap(s.getBytes("UTF-8"));
         }
         
         public void onDoneEvent(JSONObject msg) throws Exception {
-            /*
-             * If all upstream sources have completed and a "done" 
-             *  message has filtered down to this and we are not
-             *  yet to the specified count to limit, pass
-             *  the message through, else swallow it (since we
-             *  will never meet the criteria in onDataMessage if
-             *  there is no more data coming and we have not reached
-             *  the maximum count).
-            */
-            if (count <= total) {
-                broadcastDone(msg);
-            } else {
-                doneMsg = msg;
-            }
+            broadcastDone(msg);
         }
     }
 
