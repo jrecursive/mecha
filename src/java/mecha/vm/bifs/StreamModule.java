@@ -20,6 +20,9 @@ import java.util.logging.*;
 import java.io.*;
 import java.net.*;
 import java.text.*;
+import java.nio.ByteBuffer;
+
+import org.apache.cassandra.utils.*;
 
 import mecha.Mecha;
 import mecha.json.*;
@@ -94,6 +97,58 @@ public class StreamModule extends MVMModule {
                 }
             }
             count++;
+        }
+        
+        public void onDoneEvent(JSONObject msg) throws Exception {
+            /*
+             * If all upstream sources have completed and a "done" 
+             *  message has filtered down to this and we are not
+             *  yet to the specified count to limit, pass
+             *  the message through, else swallow it (since we
+             *  will never meet the criteria in onDataMessage if
+             *  there is no more data coming and we have not reached
+             *  the maximum count).
+            */
+            if (count <= total) {
+                broadcastDone(msg);
+            } else {
+                doneMsg = msg;
+            }
+        }
+    }
+    
+    /*
+     * De-duplicate bucket+key combinations
+     *  opt: num-elements: 1000000 (default)
+     *  opt: max-fp-rate: .0001 (default)
+    */
+    public class BloomDedupe extends MVMFunction {
+        final BloomFilter filter;
+        
+        public BloomDedupe(String refId, MVMContext ctx, JSONObject config) throws Exception {
+            super(refId, ctx, config);
+            long numElements = Long.parseLong(config.<String>get("num-elements"));
+            double mfpRate = Double.parseDouble(config.<String>get("max-fp-rate"));
+            filter = BloomFilter.getFilter(numElements, mfpRate);
+        }
+        
+        public void onDataMessage(JSONObject msg) throws Exception {
+            final StringBuffer sb = new StringBuffer();
+            sb.append(msg.<String>get("bucket"));
+            sb.append("#");
+            sb.append(msg.<String>get("key"));
+            ByteBuffer buf = bytes(sb.toString());
+            if (filter.isPresent(buf)) {
+                log.info("ignored bk, isPresent: " + sb.toString());
+            } else {
+                filter.add(buf);
+                broadcastDataMessage(msg);
+            }
+        }
+        
+        private static ByteBuffer bytes(String s)
+        {
+            return ByteBuffer.wrap(s.getBytes(UTF_8));
         }
         
         public void onDoneEvent(JSONObject msg) throws Exception {
