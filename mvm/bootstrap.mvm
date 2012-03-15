@@ -126,7 +126,7 @@ ${guid}-reducer -> ${sink}
 
 #define-global select
 #if (!$args.start) #set ($args.start = "0") #end
-#if (!$args.count) #set ($args.count = "-1") #end
+#if (!$args.limit) #set ($args.limit = "-1") #end
 #if (!$args.sort-field) #set ($args.sort-field = "key") #end
 #if (!$args.sort-dir) #set ($args.sort-dir = "asc") #end
 #if (!$args.materialize) #set ($args.materialize = "true") #end
@@ -151,10 +151,10 @@ ${guid}-reducer -> ${sink}
                 solr-select-iterator
 *#
 
-${root} = (covered-index-select sort-field:${args.sort-field} sort-order:${args.sort-dir} query-marker:"<<${guid}-q>>" host-marker:"<<${guid}-h>>" bucket:${args.bucket} do:(warp host:<<${guid}-h>> do:(solr-select-iterator params:(q:"*:*" fq:"((<<${guid}-q>>) AND bucket:${args.bucket}) ${args.logical-connector} ${args.filter}" rows:${args.count} sort:"${args.sort-field} ${args.sort-dir}" fl:"${args.fields}") materialize:${args.materialize} core:${args.core})))
+${root} = (covered-index-select sort-field:${args.sort-field} sort-order:${args.sort-dir} query-marker:"<<${guid}-q>>" host-marker:"<<${guid}-h>>" bucket:${args.bucket} do:(warp host:<<${guid}-h>> do:(solr-select-iterator params:(q:"*:*" fq:"((<<${guid}-q>>) AND bucket:${args.bucket}) ${args.logical-connector} ${args.filter}" rows:${args.limit} sort:"${args.sort-field} ${args.sort-dir}" fl:"${args.fields}") materialize:${args.materialize} core:${args.core})))
 
 #*
-    Account for start & count (e.g., LIMIT <start>,<count>)
+    Account for start & count (e.g., LIMIT <start>,<limit>)
 *#
 
 #set ($connecting_vertex = $root)
@@ -165,8 +165,8 @@ ${connecting_vertex} -> ${guid}-start
 #set ($connecting_vertex = "${guid}-start")
 #end
 
-#if ($args.count != "-1")
-${guid}-limit = (limit count:${args.count})
+#if ($args.limit != "-1")
+${guid}-limit = (limit count:${args.limit})
 ${connecting_vertex} -> ${guid}-limit
 #set ($connecting_vertex = "${guid}-limit")
 #end
