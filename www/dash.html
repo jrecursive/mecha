@@ -53,7 +53,7 @@
             
             var b2mb = 
                 function(val) {
-                    return (val / 1000.00 / 1000.00).toFixed(0) + "&nbsp;MB";
+                    return (val / 1000.00 / 1000.00).toFixed(1) + "&nbsp;MB";
                 }
             
             var metric_funs = {
@@ -96,13 +96,13 @@
                         var parts = node.name.split("@");
                         var host = parts[1];
                         
-                        var erlang_mem_pct = (node.mem_erlang / node.mem_total * 100.00).toFixed(0);
-                        var erlang_mem_mbytes = ((node.mem_total * erlang_mem_pct) / 1000.00 / 1000.00 / 100.00).toFixed(0);
+                        var erlang_mem_pct = (node.mem_erlang / node.mem_total * 100.00).toFixed(1);
+                        var erlang_mem_mbytes = ((node.mem_total * erlang_mem_pct) / 1000.00 / 1000.00 / 100.00).toFixed(1);
                         
-                        var total_mem_used_pct = (node.mem_used / node.mem_total * 100.00).toFixed(0);
-                        var total_mem_used_mbytes = ((node.mem_total * total_mem_used_pct) / 1000.00 / 1000.00 / 100.00).toFixed(0);
+                        var total_mem_used_pct = (node.mem_used / node.mem_total * 100.00).toFixed(1);
+                        var total_mem_used_mbytes = ((node.mem_total * total_mem_used_pct) / 1000.00 / 1000.00 / 100.00).toFixed(1);
                         
-                        var total_mem = (node.mem_total / 1000 / 1000 / 1000).toFixed(0);
+                        var total_mem = (node.mem_total / 1000 / 1000 / 1000).toFixed(1);
                         
                         // handoff detection
                         if (node.ring_pct > node.pending_pct) {
