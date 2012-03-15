@@ -127,6 +127,25 @@
                         cluster_table.find("#cluster-rows").append(node_row);
                     }
                     
+                    var u = "http://" +
+                         config['http-addr'] + ":" +
+                         config['http-port'] + 
+                            "/proc/cluster/do?u=/proc/node/last-commit";
+                    var now_sec = (new Date()).valueOf() / 1000.00;
+                    $.getJSON(u, function(data) {
+                        var lcoms = data.result;
+                        for(host in lcoms) {
+                            var lcom = lcoms[host]['result']['last-commit'];
+                            var lcom_dif = now_sec - lcom;
+                            //lcommsg = moment(lcom).fromNow();
+                            if (lcom <= 0) lcommsg = "none";
+                            else {
+                                lcommsg = ((lcom_dif / 60).toFixed(1)) + "m";
+                            }
+                            $("#h-" + hex_md5(host) + " .lcommit").html(lcommsg);
+                        }
+                    });
+                    
                     /*
                      * overview
                     */
@@ -228,6 +247,7 @@
                         <!-- /admin/cluster/list/ -->
                         <td class="databox cluster-data host">HOST</td>
                         <td class="databox cluster-data status">STATUS</td>
+                        <td class="databox cluster-data lcommit">LCOMMIT</td>
                         <!-- <td class="databox cluster-data ring_pct">ring_pct</td>
                         <td class="databox cluster-data pending_pct">pending_pct</td> -->
                         <!-- <td class="databox cluster-data reachable">reachable</td> -->
