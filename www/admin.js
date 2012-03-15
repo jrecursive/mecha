@@ -165,7 +165,7 @@ function d_ensure_rows(host, rows) {
 
 function layout() {
     _console_layout();
-    _layout();
+    //_layout();
 }
 
 function _console_layout() {
@@ -191,7 +191,7 @@ $(document).ready(function() {
         });
     });
     panel('Dashboard');
-    dashboard_setup();
+    //dashboard_setup();
     $(window).resize(layout);
 });
 
