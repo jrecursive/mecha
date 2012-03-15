@@ -63,9 +63,18 @@ public class Mecha {
     static {
         log.info("* reading config.json");
         config = ConfigParser.parseConfig(TextFile.get("config.json"));
-        log.info("* generating riak config");
-        generateRiakConfigs(config);
-        try {
+
+        try {        
+            /*
+             * construct full riak node name from server-addr + riak-short-nodename
+            */
+            config.put("riak-nodename", 
+                config.<String>get("riak-short-nodename") + "@" +
+                config.<String>get("server-addr"));
+            log.info("* riak-nodename: " + config.<String>get("riak-nodename"));
+            
+            log.info("* generating riak config");
+            generateRiakConfigs(config);
             mechaInst = new Mecha();
             mechaInst.start();
         } catch (Exception ex) {

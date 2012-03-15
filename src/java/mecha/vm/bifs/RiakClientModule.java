@@ -37,7 +37,7 @@ public class RiakClientModule extends MVMModule {
     
     public RiakClientModule() throws Exception {
         super();
-        final String riakHost = Mecha.getConfig().<String>get("http-addr");
+        final String riakHost = Mecha.getConfig().<String>get("server-addr");
         final int riakPort = Mecha.getConfig().getInt("riak-protobuf-port");
         riakClient = RiakFactory.pbcClient(riakHost, riakPort);
     }
@@ -60,7 +60,7 @@ public class RiakClientModule extends MVMModule {
                     log.info("* riakDown flag true, waiting 1 second for riak link reconnection");
                     Thread.sleep(1000);
                 }
-                final String riakHost = Mecha.getConfig().<String>get("http-addr");
+                final String riakHost = Mecha.getConfig().<String>get("server-addr");
                 final int riakPort = Mecha.getConfig().getInt("riak-protobuf-port");
                 riakClient = RiakFactory.pbcClient(riakHost, riakPort);
             }
@@ -131,7 +131,7 @@ public class RiakClientModule extends MVMModule {
         }
         
         public void onStartEvent(JSONObject msg) throws Exception {
-            final String riakHost = Mecha.getConfig().<String>get("http-addr");
+            final String riakHost = Mecha.getConfig().<String>get("server-addr");
             final int riakPort = Mecha.getConfig().getInt("riak-http-port");
             final String bucketName = getConfig().<String>get("bucket");
             JSONObject props = 

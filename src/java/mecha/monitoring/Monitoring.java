@@ -35,7 +35,7 @@ public class Monitoring {
      * This equates to the number of seconds of history to
      *  keep for each metric (rolling).
     */
-    final private static int DEFAULT_RATE_WINDOW_SIZE = 300;
+    final private static int DEFAULT_RATE_WINDOW_SIZE = 60;
     
     final private Set<WeakReference<Rates>> rateMonitorables;
     final private Map<String, Metric> metrics;

@@ -321,7 +321,7 @@ public class ProcServlet extends HttpServlet {
     
     private JSONObject doRiak(String urlFragment) throws Exception {
         JSONObject result = new JSONObject();
-        String url = "http://" + Mecha.getConfig().get("http-addr") + ":" + 
+        String url = "http://" + Mecha.getConfig().get("server-addr") + ":" + 
             Mecha.getConfig().get("riak-http-port") +
                 urlFragment;
         try {

@@ -17,11 +17,11 @@
 
               %% http is a list of IP addresses and TCP ports that the Riak
               %% HTTP interface will bind.
-              {http, [ {"<<mecha:http-addr>>", <<mecha:riak-http-port>> } ]},
+              {http, [ {"<<mecha:server-addr>>", <<mecha:riak-http-port>> } ]},
 
               %% https is a list of IP addresses and TCP ports that the Riak
               %% HTTPS interface will bind.
-              {https, [{ "<<mecha:http-addr>>", <<mecha:riak-https-port>> }]},
+              {https, [{ "<<mecha:server-addr>>", <<mecha:riak-https-port>> }]},
 
               %% Default cert and key locations for https can be overridden
               %% with the ssl config variable, for example:

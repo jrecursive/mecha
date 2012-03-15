@@ -90,7 +90,7 @@
                 lastHeight = element.scrollHeight;
                 
                 socket = 
-                    new WebSocket("ws://" + config['http-addr'] + ":" + 
+                    new WebSocket("ws://" + config['server-addr'] + ":" + 
                         config['websocket-port'] + "/mecha");
                 
                 socket.onopen = function(){  

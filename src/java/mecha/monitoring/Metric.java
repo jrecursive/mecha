@@ -82,12 +82,6 @@ public class Metric {
             if (idx < 0) break;
             values.put(stats.getElement(idx));
         }
-        /*
-        for(int i=0; i<recentValueCount; i++) {
-            if (i > (sz-1)) break;
-            values.put(stats.getElement(i));
-        }
-        */
         obj.put("values", values);
         if (summary) {
             obj.put("min", stats.getMin());

@@ -32,7 +32,7 @@ public class WebSocketServer {
     
     public WebSocketServer() throws Exception {
         port = Mecha.getConfig().getInt("websocket-port");
-        addr = Mecha.getConfig().getString("http-addr");
+        addr = Mecha.getConfig().getString("server-addr");
     }
     
     public void start() {

@@ -1,20 +1,25 @@
 {
     ##
+    ## server-addr: interface to bind servers to (http, socket, websocket, riak)
+    ##
+    "server-addr": "127.0.0.1",
+    
+    ##
     ## socket server password
     ##
     "password": "me3ch4a",
-
+    
     ##
     ## riak_kv automation / management settings
     ##
     
     ## 
-    ## riak-nodename: full node name of local riak node
+    ## riak-short-nodename: short node name of local riak node, e.g., "riak"
     ## riak-cookie: cookie for riak cluster
     ## riak-http-port: port for riak http server to listen on
     ## 
-    "riak-nodename": "riak@127.0.0.1",
-    "riak-cookie": "riak",
+    "riak-short-nodename": "riak",
+    "riak-cookie": "riakwithmecha",
     "riak-http-port": 18098,
     "riak-https-port": 18099,
     "riak-protobuf-port": 18100,
@@ -22,7 +27,7 @@
     ##
     ## once riak-partitions is set DO NOT CHANGE!
     ##
-    "riak-partitions": 32,
+    "riak-partitions": 64,
     
     ##
     ## riak-home is the usual place where you would
@@ -80,19 +85,15 @@
     "solr-cores": [ "index", "tmp", "system" ],
     
     ##
-    ## server-addr: interface to bind socket server
     ## server-port: socket server client listen port
     ##
-    "server-addr": "127.0.0.1",
     "server-port": 7282,
     
     ##
-    ## http-addr: interface to bind http server
     ## http-port: http server listen port
     ## www-root: directory /* files are served from
     ## websocket-port: port to serve websocket connections on
     ##
-    "http-addr": "127.0.0.1",
     "http-port": 7283,
     "www-root": "./www",
     "websocket-port": 7284,

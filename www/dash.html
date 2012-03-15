@@ -73,7 +73,7 @@
             
             function refresh() {
                 var u = "http://" +
-                         config['http-addr'] + ":" +
+                         config['server-addr'] + ":" +
                          config['http-port'] + 
                             "/proc/riak/do?u=/admin/cluster/list";
 
@@ -128,7 +128,7 @@
                     }
                     
                     var u = "http://" +
-                         config['http-addr'] + ":" +
+                         config['server-addr'] + ":" +
                          config['http-port'] + 
                             "/proc/cluster/do?u=/proc/node/last-commit";
                     var now_sec = (new Date()).valueOf() / 1000.00;
@@ -150,7 +150,7 @@
                      * overview
                     */
                     var u = "http://" +
-                         config['http-addr'] + ":" +
+                         config['server-addr'] + ":" +
                          config['http-port'] + 
                             "/proc/riak/do?u=/admin/overview";
                     $.getJSON(u, function(data) {
@@ -179,7 +179,7 @@
                      * metrics
                     */
                     var u = "http://" +
-                         config['http-addr'] + ":" +
+                         config['server-addr'] + ":" +
                          config['http-port'] + 
                             "/proc/metrics?entries=1&all=true";
                     $.getJSON(u, function(data) {

@@ -42,7 +42,7 @@ public class HTTPServer {
 
     public HTTPServer() throws Exception {
         port = Mecha.getConfig().getInt("http-port");
-        addr = Mecha.getConfig().getString("http-addr");
+        addr = Mecha.getConfig().getString("server-addr");
         wwwRoot = Mecha.getConfig().getString("www-root");
         
         server = new Server(new InetSocketAddress(addr, port));
