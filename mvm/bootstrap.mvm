@@ -99,9 +99,9 @@ ${guid}-reducer -> ${sink}
 
 #if (!$args.cardinality-only) #set ($args.cardinality-only = "false") #end
 
-${root} = (with-coverage partition-marker:"<<${guid}-p>>" host-marker:"<<${guid}-h>>" bucket:${args.bucket} do:(warp host:<<${guid}-h>> do:(solr-select params:(facet:true facet.field:${args.field} facet.range:${args.range-field} facet.range.start:${args.range-start} facet.range.end:${args.range-end} facet.range.gap:${args.range-gap} facet.mincount:${args.mincount} rows:0 q:"(partition:<<${guid}-p>> AND bucket:${args.bucket}) ${args.logical-connector} ${args.filter}") partition:<<${guid}-p>>)))
+${root} = (with-coverage partition-marker:"<<${guid}-p>>" host-marker:"<<${guid}-h>>" bucket:${args.bucket} do:(warp host:<<${guid}-h>> do:(solr-select params:(facet:true facet.range:${args.range-field} facet.range.start:${args.range-start} facet.range.end:${args.range-end} facet.range.gap:${args.range-gap} facet.mincount:${args.mincount} rows:0 q:"(partition:<<${guid}-p>> AND bucket:${args.bucket}) ${args.logical-connector} ${args.filter}") partition:<<${guid}-p>>)))
 
-${guid}-reducer = (field-value-count-reducer)
+${guid}-reducer = (value-count-reducer)
 ${root} -> ${guid}-reducer
 ${guid}-reducer -> ${sink}
 #end range-facet
