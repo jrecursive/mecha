@@ -119,8 +119,6 @@ public class StreamModule extends MVMModule {
     
     /*
      * De-duplicate bucket+key combinations
-     *  opt: num-elements: 1000000 (default)
-     *  opt: max-fp-rate: .0001 (default)
     */
     public class BloomDedupe extends MVMFunction {
         final BloomFilter filter;

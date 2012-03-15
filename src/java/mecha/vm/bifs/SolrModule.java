@@ -28,6 +28,7 @@ import org.apache.solr.client.solrj.response.QueryResponse;
 import org.apache.solr.common.params.ModifiableSolrParams;
 import org.apache.solr.common.SolrDocument;
 import org.apache.solr.client.solrj.response.FacetField;
+import org.apache.solr.client.solrj.response.RangeFacet;
 
 import org.apache.commons.math.stat.StatUtils;
 
@@ -623,6 +624,28 @@ public class SolrModule extends MVMModule {
                                                          System.currentTimeMillis() - solr_t_st);
                             
                             /*
+                             * Range-facet results.
+                            */
+                            
+                            if (res.getFacetRanges() != null) {
+                                for (RangeFacet rangeFacet : res.getFacetRanges()) {
+                                    if (rangeFacet.getCounts() == null) continue;
+                                    String fieldName = 
+                                        rangeFacet.getStart() + " " +
+                                        rangeFacet.getEnd() + " " +
+                                        rangeFacet.getName();
+                                    for(RangeFacet.Count rangeFacetCount: (List<RangeFacet.Count>) rangeFacet.getCounts()) {
+                                        JSONObject msg = new JSONObject();
+                                        msg.put("field", fieldName);
+                                        msg.put("value", rangeFacetCount.getValue());
+                                        msg.put("count", rangeFacetCount.getCount());
+                                        broadcastDataMessage(msg);
+                                    }
+                                }
+                                break;
+                            }
+                            
+                            /*
                              * Facet results.
                             */
                             if (res.getFacetFields() != null) {
@@ -839,6 +862,53 @@ public class SolrModule extends MVMModule {
             broadcastDone(msg);
         }
         
+    }
+    
+    /*
+     * Process stream of faceted value points & reduce on done.
+     *  Can be used for anything that passes messages with a
+     *  "field", "value" and "count" object. each distinct
+     *  field value keeps it's own value/count tallies.
+    */
+    public class FieldValueCountReducer extends MVMFunction {
+        Map<String, Map<String, Integer>> fieldFacetMap;
+        
+        public FieldValueCountReducer(String refId, MVMContext ctx, JSONObject config) 
+            throws Exception {
+            super(refId, ctx, config);
+            fieldFacetMap = new HashMap<String, Map<String, Integer>>();
+        }
+        
+        public void onDataMessage(JSONObject msg) throws Exception {
+            Map<String, Integer> facetMap;
+            String field = msg.getString("field");
+            if (fieldFacetMap.containsKey(field)) {
+                facetMap = fieldFacetMap.get(field);
+            } else {
+                facetMap = new HashMap<String, Integer>();
+                fieldFacetMap.put(field, facetMap);
+            }
+            String term = msg.getString("value");
+            int count = msg.getInt("count");
+            if (facetMap.containsKey(term)) {
+                count += facetMap.get(term);
+            }
+            facetMap.put(term, count);
+        }
+        
+        public void onDoneEvent(JSONObject msg) throws Exception {
+            JSONObject dataMsg = new JSONObject();
+            for(String field : fieldFacetMap.keySet()) {
+                JSONObject facetObj = new JSONObject();
+                Map<String, Integer> facetMap = fieldFacetMap.get(field);
+                for(String term : facetMap.keySet()) {
+                    facetObj.put(term, facetMap.get(term));
+                }
+                dataMsg.put(field, facetObj);
+            }
+            broadcastDataMessage(dataMsg);
+            broadcastDone(msg);
+        }
     }
     
     private JSONObject materializePBK(String partition, String bucket, String key) 
