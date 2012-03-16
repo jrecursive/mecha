@@ -44,7 +44,6 @@ public class BDBJEBucketDriver implements BucketDriver {
     final private Environment env;
     final private DatabaseConfig dbConfig;
     final private Database db;
-    private Transaction txn;
     
     public BDBJEBucketDriver(String partition, 
                              String bucketStr, 
@@ -58,10 +57,11 @@ public class BDBJEBucketDriver implements BucketDriver {
         envConfig = new EnvironmentConfig();
         envConfig.setTransactional(true);
         envConfig.setAllowCreate(true);
+        envConfig.setSharedCache(true);
+        envConfig.setLockTimeout(1000, TimeUnit.MILLISECONDS);
         
         env = new Environment(envDir, envConfig);
-        txn = newTxn();
-        
+                
         dbConfig = new DatabaseConfig();
         dbConfig.setTransactional(true);
         dbConfig.setAllowCreate(true);
@@ -73,27 +73,16 @@ public class BDBJEBucketDriver implements BucketDriver {
         */
         dbConfig.setNodeMaxEntries(128);
         
-        db = env.openDatabase(txn,
+        db = env.openDatabase(null,
                               bucketStr,
                               dbConfig);
-        txn.commit();
-        txn = newTxn();
     }
     
     public void stop() throws Exception {
-        // deletes the JNI-bound object (not the db)
-        try {
-            if (txn.isValid()) {
-                log.info(bucketStr + ": committing closing transaction");
-                txn.commit();
-            }
-            log.info(bucketStr + ": commit ok");
-        } finally {
-            log.info(bucketStr + ": closing database");
-            db.close();
-            log.info(bucketStr + ": closing environment");
-            env.close();
-        }
+        log.info(bucketStr + ": closing database");
+        db.close();
+        log.info(bucketStr + ": closing environment");
+        env.close();
         log.info(bucketStr + ": stopped");
     }
     
@@ -124,9 +113,7 @@ public class BDBJEBucketDriver implements BucketDriver {
     public void put(byte[] key, byte[] value) throws Exception {
         try {
             OperationStatus status;
-            synchronized(txn) {
-                status = db.put(txn, dbentry(key), dbentry(value));
-            }
+            status = db.put(null, dbentry(key), dbentry(value));
             if (status != OperationStatus.SUCCESS) {
                 throw new RuntimeException(bucketStr + 
                     ": put: non-success status: " + status);
@@ -141,9 +128,7 @@ public class BDBJEBucketDriver implements BucketDriver {
     
     public void delete(byte[] key) throws Exception {
         log.info(partition + ": delete: " + (new String(key)));
-        synchronized(txn) {
-            db.delete(txn, dbentry(key));
-        }
+        db.delete(null, dbentry(key));
     }
     
     public boolean foreach(MDB.ForEachFunction forEachFunction) throws Exception {
@@ -197,20 +182,13 @@ public class BDBJEBucketDriver implements BucketDriver {
     }
     
     public void commit() {
-        synchronized(txn) {
-            txn.commit();
-            txn = newTxn();
-            log.info(bucketStr + ": commit: ok");
-        }
+        // this bdbje driver autocommits 
+        log.info(bucketStr + ": commit: ok");
     }
     
     /*
      * helpers...
     */
-    
-    private Transaction newTxn() {
-        return env.beginTransaction(null, null);
-    }
     
     private DatabaseEntry dbentry(byte[] bytes) throws Exception {
         return new DatabaseEntry(bytes);
