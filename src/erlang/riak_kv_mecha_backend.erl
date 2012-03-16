@@ -123,7 +123,7 @@ start(Partition, Config) ->
 -spec stop(state()) -> ok.
 stop(#state { mecha_node=_MechaNode, partition=Partition}) -> 
     io:format("stop ~p~n", [Partition]),
-    call_mecha(kv_store, stop, [Partition, ?JI_PLACEHOLDER]),
+    cast_mecha(kv_store, stop, [Partition, ?JI_PLACEHOLDER]),
     ok.
     
 %% @doc Retrieve an object from the memory backend
@@ -276,8 +276,8 @@ drop(State = #state{ mecha_node=_MechaNode, partition=Partition }) ->
 %% Ignore callbacks for other backends so multi backend works
 %% @doc Register an asynchronous callback
 -spec callback(reference(), any(), state()) -> {ok, state()}.
-callback(_State, _Ref, _Msg) ->
-    ok.
+callback(_Ref, _Msg, State) ->
+    {ok, State}.
 
 %% ===================================================================
 %% Internal functions

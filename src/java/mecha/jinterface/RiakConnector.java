@@ -174,7 +174,8 @@ public class RiakConnector extends OtpProcess {
     public OtpErlangObject stop(OtpErlangLong partition, OtpErlangAtom _placeholder) {
         try {
             mdb.stop(partition.toString());
-            return new OtpErlangAtom("ok");
+            //return new OtpErlangAtom("ok");
+            return null;
         } catch (Exception ex) {
             Mecha.getMonitoring().error("mecha.riak-connector", ex);
             ex.printStackTrace();
