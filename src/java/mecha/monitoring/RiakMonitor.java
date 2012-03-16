@@ -65,6 +65,9 @@ public class RiakMonitor {
         riakMonitorThread = new Thread(new Runnable() {
             public void run() {
                 try {
+                    log.info("sleeping 5 seconds before starting riakMonitorThread polling...");
+                    Thread.sleep(5000);
+                    log.info("starting riakMonitorThread polling...");
                     while(true) {
                         try {
                             getRiakRuntimeStats();
