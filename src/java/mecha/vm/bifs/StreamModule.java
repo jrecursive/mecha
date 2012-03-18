@@ -97,7 +97,7 @@ public class StreamModule extends MVMModule {
                 }
             }
             count++;
-            log.info("count = " + count + ": " + msg.<String>get("key"));
+            //log.info("count = " + count + ": " + msg.<String>get("key"));
         }
         
         public void onDoneEvent(JSONObject msg) throws Exception {
@@ -144,7 +144,7 @@ public class StreamModule extends MVMModule {
             sb.append(msg.<String>get("key"));
             ByteBuffer buf = bytes(sb.toString());
             if (filter.isPresent(buf)) {
-                log.info("ignored bk, isPresent: " + sb.toString());
+                //log.info("ignored bk, isPresent: " + sb.toString());
                 if (notifyVar != null) {
                     JSONObject dupeMsg = new JSONObject();
                     dupeMsg.put("$", "duplicate");

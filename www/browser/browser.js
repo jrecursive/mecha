@@ -94,6 +94,7 @@ function browse(bucket, limit) {
                     if (field.charAt(0) == "$") continue;
                     if (field == "key" ||
                         field == "bucket") continue;
+                    if (data[field] == "") continue;
                     fields[field] = 1;
                 }
             }
@@ -117,12 +118,13 @@ function browse(bucket, limit) {
             hdr_row.html(hdr_html);
             var result_body = table.find(".result-rows-body");
             var rec_count = 0;
+            var b_start = bucket_start[bucket_start.length-1];
             for(idx in rs) {
                 var data = rs[idx];
                 last_key1 = data.key;
                 console.log(data);
                 var result_html = "<tr>";
-                result_html += "<td>" + idx + "</td>";
+                result_html += "<td>" + (b_start + rec_count + 1) + "</td>";
                 for(idx in field_list) {
                     var field = field_list[idx];
                     result_html += 
@@ -138,10 +140,9 @@ function browse(bucket, limit) {
             
             $("#browse-content").html("");
             var table_html = "<div class='table-container'>" + table.html() + "</div>";
-            var b_start = bucket_start[bucket_start.length-1];
             $("#browse-blurb").html(
                 "Showing rows " + 
-                    b_start + "-" + 
+                    (b_start+1) + "-" + 
                     (b_start+rec_count) + " of " +
                     Math.floor((buckets[bucket].count/props.n_val)));
             console.log(buckets[bucket]);
@@ -232,18 +233,18 @@ $(document).ready(function() {
     $(window).resize(function() {
         layout();
     });
-    $("#older").click(function() {
+    $("#prev-btn").click(function() {
         console.log("older");
-        older();
+        prevpage();
     });
-    $("#newer").click(function() {
+    $("#next-btn").click(function() {
         console.log("newer");
-        newer();
+        nextpage();
     });
     load();
 });
 
-function older() {
+function prevpage() {
     console.log(bucket_start);
     console.log(last_key);
     bucket_start.pop();
@@ -255,7 +256,7 @@ function older() {
     browse(c_bucket, g_limit);
 }
 
-function newer() {
+function nextpage() {
     if (bucket_start[bucket_start.length-1]+g_limit > buckets[c_bucket].count) {
         return;
     }

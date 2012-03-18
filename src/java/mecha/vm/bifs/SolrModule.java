@@ -541,7 +541,7 @@ public class SolrModule extends MVMModule {
                  *  of duplicate detection & increase rowLimit by 1
                 */
                 } else if (verb.equals("duplicate")) {
-                    log.info("duplicate, adding 1");
+                    //log.info("duplicate, adding 1");
                     rowLimit.addAndGet(1L);
                     
                 /*

@@ -38,6 +38,10 @@
                 padding:5px;
             }
             
+            thead {
+                background: lightgreen;
+            }
+            
         </style>
         <script type="text/javascript" src="../js/jquery-1.7.1.min.js"></script>
         <script type="text/javascript" src="../js/jquery.sparkline.min.js"></script>
@@ -80,11 +84,11 @@
                   <div class="tab-pane active" id="browse">
                     <ul class="pager">
                       <li class="previous">
-                        <a href="#" id="older">&larr; Older</a>
+                        <a href="#" id="prev-btn">&larr; Previous</a>
                       </li>
                       <span id="browse-blurb"></span>
                       <li class="next">
-                        <a href="#" id="newer">Newer &rarr;</a>
+                        <a href="#" id="next-btn">Next &rarr;</a>
                       </li>
                     </ul>
                     <div class="tab-pane active" id="browse-content"></div>
