@@ -373,6 +373,9 @@ public abstract class MVMFunction {
     */
     public void broadcastDataMessage(JSONObject msg) throws Exception {
         msg.put("$origin", getRefId());
+        if (!msg.has("$host")) {
+            msg.put("$host", Mecha.getHost());
+        }
         if (!msg.has("$")) {
             msg = postprocessDataMessage(msg);
         }

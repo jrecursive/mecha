@@ -164,6 +164,8 @@ public class SolrModule extends MVMModule {
                 partitionQuery.append("\n");
                 String query = partitionQuery.toString().replace(" OR \n", "");
                 
+                log.info("query = " + query);
+                
                 String doVerb = config.getJSONObject("do").getString("$");
                 String proxyVar = 
                     HashUtils.sha1(Mecha.guid(CoveredIndexSelect.class)) + 
@@ -349,6 +351,8 @@ public class SolrModule extends MVMModule {
                             selectParams.put("q", "*:*");
                         }
                         
+                        log.info("fq = " + selectParams.get("fq"));
+                        
                         if (selectParams.has("start")) {
                             start = Long.parseLong("" + selectParams.get("start"));
                             selectParams.remove("start");
@@ -367,7 +371,19 @@ public class SolrModule extends MVMModule {
                                 if (start > 0 && start < batchSize) break;
                                 ModifiableSolrParams solrParams = new ModifiableSolrParams();
                                 for(String k : JSONObject.getNames(selectParams)) {
-                                    solrParams.set(k, "" + selectParams.get(k));
+                                    String paramVal = "" + selectParams.get(k);
+                                    if (k.equals("fl")) {
+                                        if (paramVal.indexOf("bucket") == -1) {
+                                            paramVal += ",bucket";
+                                        }
+                                        if (paramVal.indexOf("key") == -1) {
+                                            paramVal += ",key";
+                                        }
+                                        if (paramVal.indexOf("partition") == -1) {
+                                            paramVal += ",partition";
+                                        }
+                                    }
+                                    solrParams.set(k, paramVal);
                                 }
                                 solrParams.set("start", "" + start);
                                 solrParams.set("rows", "" + batchSize);
@@ -611,7 +627,21 @@ public class SolrModule extends MVMModule {
                         while(true) {
                             ModifiableSolrParams solrParams = new ModifiableSolrParams();
                             for(String k : JSONObject.getNames(selectParams)) {
-                                solrParams.set(k, "" + selectParams.get(k));
+                                // to be able to materialize, etc. always include
+                                //  the bucket,key field
+                                String paramVal = "" + selectParams.get(k);
+                                if (k.equals("fl")) {
+                                    if (paramVal.indexOf("bucket") == -1) {
+                                        paramVal += ",bucket";
+                                    }
+                                    if (paramVal.indexOf("key") == -1) {
+                                        paramVal += ",key";
+                                    }
+                                    if (paramVal.indexOf("partition") == -1) {
+                                        paramVal += ",partition";
+                                    }
+                                }
+                                solrParams.set(k, paramVal);
                             }
                             solrParams.set("start", "" + start);
                             solrParams.set("rows", "" + batchSize);
@@ -737,6 +767,8 @@ public class SolrModule extends MVMModule {
                                             }
                                         }
                                     }
+                                    msg.put("key", "" + doc.get("key"));
+                                    msg.put("bucket", "" + doc.get("bucket"));
                                     broadcastDataMessage(msg);
                                 }
                                 
@@ -780,6 +812,74 @@ public class SolrModule extends MVMModule {
         
         public void onCancel(JSONObject msg) throws Exception {
             iteratorThread.interrupt();
+        }
+    }
+    
+    /*
+     * sort an arbitrary list of accumulated objects by
+     *  specified field value
+    */
+    public class SortedAccumulatingReducer extends MVMFunction {
+        final private List<JSONObject> objs;
+        final private String sortField;
+        final private boolean isAscending;
+        final Comparator comparatorFun;
+        final Collator collator;
+
+        public SortedAccumulatingReducer(String refId, MVMContext ctx, JSONObject config) 
+            throws Exception {
+            super(refId, ctx, config);
+            objs = new ArrayList<JSONObject>();
+            sortField = config.<String>get("sort-field");
+            
+            // default to ascending sort
+            if (config.has("sort-dir")) {
+                if (config.<String>get("sort-dir").startsWith("asc")) {
+                    isAscending = true;
+                } else {
+                    isAscending = false;
+                }
+            } else {
+                isAscending = true;
+            }
+            
+            collator = Collator.getInstance();
+            comparatorFun = new Comparator<JSONObject>() {
+                public int compare(JSONObject obj1, JSONObject obj2) {
+                    try {
+                        String value1 = "" + obj1.get(sortField);
+                        String value2 = "" + obj2.get(sortField);
+                        if (isAscending) {
+                            return collator.compare(value1, value2);
+                        } else {
+                            return collator.compare(value2, value1);
+                        }
+                    } catch (Exception ex) {
+                        Mecha.getMonitoring().error("mecha.vm.bifs.solr-module", ex);
+                        ex.printStackTrace();
+                    }
+                    return 0;
+                }
+            };
+        }
+        
+        public void onDataMessage(JSONObject msg) throws Exception {
+            objs.add(msg);
+        }
+        
+        public void onDoneEvent(JSONObject msg) throws Exception {
+            JSONObject[] values = objs.toArray(new JSONObject[0]);
+            if (values.length > 0) {
+                Arrays.<JSONObject>sort(values, comparatorFun);
+                JSONObject dataMsg = new JSONObject();
+                JSONArray jsonArray = new JSONArray();
+                for(JSONObject obj : values) {
+                    jsonArray.put(obj);
+                }
+                dataMsg.put("data", jsonArray);
+                broadcastDataMessage(dataMsg);
+            }
+            broadcastDone(msg);
         }
     }
     

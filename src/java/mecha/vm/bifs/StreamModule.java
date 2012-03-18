@@ -152,6 +152,50 @@ public class StreamModule extends MVMModule {
             broadcastDone(msg);
         }
     }
+    
+    /*
+     * { "field-value-0": [ obj0, obj1, ... ],
+     *   "field-value-n": [ ... ], 
+     *   ...
+     * }
+     *
+    */
+    public class AccumulatingFieldReducer extends MVMFunction {
+        final private Map<String, List<JSONObject>> facetMap;
+        final private String field;
+        
+        public AccumulatingFieldReducer(String refId, MVMContext ctx, JSONObject config) 
+            throws Exception {
+            super(refId, ctx, config);
+            field = config.<String>get("field");
+            facetMap = new HashMap<String, List<JSONObject>>();
+        }
+        
+        public void onDataMessage(JSONObject msg) throws Exception {
+            String fieldValue = msg.<String>get(field);
+            if (facetMap.containsKey(fieldValue)) {
+                List<JSONObject> objs = facetMap.get(fieldValue);
+                objs.add(msg);
+            } else {
+                List<JSONObject> objs = new ArrayList<JSONObject>();
+                objs.add(msg);
+                facetMap.put(fieldValue, objs);
+            }
+        }
+        
+        public void onDoneEvent(JSONObject msg) throws Exception {
+            JSONObject dataMsg = new JSONObject();
+            for(String fieldValue : facetMap.keySet()) {
+                JSONArray ar = new JSONArray();
+                for(JSONObject obj: facetMap.get(fieldValue)) {
+                    ar.put(obj);
+                }
+                dataMsg.put(fieldValue, ar);
+            }
+            broadcastDataMessage(dataMsg);
+            broadcastDone(msg);
+        }
+    }
 
     /* 
      * Sequence a vector of results into a stream of 

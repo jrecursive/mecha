@@ -98,7 +98,7 @@ public class Bucket {
              *
              * TODO: intelligently, consistently handle siblings (or disable them entirely?)
              *
-             * CURRENT: index only the "most current" value
+             * CURRENT: index only the "last written value"
              *
             */
             JSONObject jo1 = values.getJSONObject(values.length()-1);
