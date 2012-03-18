@@ -628,7 +628,7 @@ public class SolrModule extends MVMModule {
                             ModifiableSolrParams solrParams = new ModifiableSolrParams();
                             for(String k : JSONObject.getNames(selectParams)) {
                                 // to be able to materialize, etc. always include
-                                //  the bucket,key field
+                                //  the bucket,key,partition fields
                                 String paramVal = "" + selectParams.get(k);
                                 if (k.equals("fl")) {
                                     if (paramVal.indexOf("bucket") == -1) {

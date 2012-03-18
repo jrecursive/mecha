@@ -58,6 +58,10 @@ function do_cmd(cmd, f) {
  *
  *  /mecha/bucket-props?bucket=st_terms
  *    riak bucket properties: 
+ *
+ *  /mecha/select-set?bucket=geo&materialize=true&sort-field=key&sort-dir=asc&start=0&limit=10
+ *    reliable but with "ragged ordering" iteration through a bucket
+ *   
 */
 
 
