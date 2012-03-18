@@ -1,5 +1,6 @@
 var mechaClient = new MechaClient();
 var config;
+var g_limit = 30;
 
 function do_cmd(cmd, f) {
     var c = new WebSocket("ws://" + config['server-addr'] + ":" + 
@@ -64,10 +65,11 @@ function do_cmd(cmd, f) {
  *   
 */
 
-var last_key = "*";
-var previous_bucket_start = 0;
-var bucket_start = 0;
+var last_key = ["*"];
+var bucket_start = [0];
+var c_bucket = "";
 function browse(bucket, limit) {
+    c_bucket = bucket;
     mechaClient.bucketProperties({
         "bucket": bucket
     }, function (props) {
@@ -76,10 +78,10 @@ function browse(bucket, limit) {
         var table = $("#results-table .results-table").parent().clone();
         mechaClient.select({
             "bucket": bucket,
-            "materialize": false,
+            "materialize": true,
             "sort-field": "key",
             "sort-dir": "asc",
-            "filter": "key:[" + last_key + " TO *]",
+            "filter": "key:[" + last_key[last_key.length-1] + " TO *]",
             "limit": limit
         }, function(result) {
             console.log(result);
@@ -117,7 +119,7 @@ function browse(bucket, limit) {
             var rec_count = 0;
             for(idx in rs) {
                 var data = rs[idx];
-                last_key = data.key;
+                last_key1 = data.key;
                 console.log(data);
                 var result_html = "<tr>";
                 result_html += "<td>" + idx + "</td>";
@@ -132,19 +134,20 @@ function browse(bucket, limit) {
                 result_body.append(result_html);
                 rec_count++;
             }
+            last_key.push(last_key1);
             
             $("#browse-content").html("");
             var table_html = "<div class='table-container'>" + table.html() + "</div>";
+            var b_start = bucket_start[bucket_start.length-1];
             $("#browse-blurb").html(
                 "Showing rows " + 
-                    bucket_start + "-" + 
-                    (bucket_start+rec_count) + " of " +
+                    b_start + "-" + 
+                    (b_start+rec_count) + " of " +
                     Math.floor((buckets[bucket].count/props.n_val)));
             console.log(buckets[bucket]);
             $("#browse-content").html(table_html);
             layout();
-            previous_bucket_start = bucket_start;
-            bucket_start += limit;
+            bucket_start.push(b_start+limit);
         });
     });
 }
@@ -241,19 +244,28 @@ $(document).ready(function() {
 });
 
 function older() {
-    if (previous_bucket_start == 0) {
-        return;
+    console.log(bucket_start);
+    console.log(last_key);
+    bucket_start.pop();
+    last_key.pop();
+    if (bucket_start.length > 1) {
+        bucket_start.pop();
+        last_key.pop();
     }
+    browse(c_bucket, g_limit);
 }
 
 function newer() {
-
+    if (bucket_start[bucket_start.length-1]+g_limit > buckets[c_bucket].count) {
+        return;
+    }
+    browse(c_bucket, g_limit);
 }
 
 function load_bucket(bucket) {
-    last_key = "*";
-    bucket_start = 0;
-    browse(bucket, 30);
+    last_key = ["*"];
+    bucket_start = [0];
+    browse(bucket, g_limit);
     structure(bucket);
     statistics(bucket);
 }
