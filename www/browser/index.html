@@ -23,9 +23,14 @@
                 padding: 9px 0;
             }
             
-            #browse {
+            #browse-content {
                 font-family: courier;
                 font-size: 12px;
+            }
+            
+            #browse-blurb {
+                font-family: courier;
+                font-size: 14px;
             }
             
             .table-container {
@@ -72,7 +77,18 @@
                   <li><a href="#statistics" data-toggle="tab">Statistics</a></li>
                 </ul>
                 <div class="tab-content">
-                  <div class="tab-pane active" id="browse"></div>
+                  <div class="tab-pane active" id="browse">
+                    <ul class="pager">
+                      <li class="previous">
+                        <a href="#" id="older">&larr; Older</a>
+                      </li>
+                      <span id="browse-blurb"></span>
+                      <li class="next">
+                        <a href="#" id="newer">Newer &rarr;</a>
+                      </li>
+                    </ul>
+                    <div class="tab-pane active" id="browse-content"></div>
+                  </div>
                   <div class="tab-pane" id="structure"></div>
                   <div class="tab-pane" id="statistics"></div>
                 </div>

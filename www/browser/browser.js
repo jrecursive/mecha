@@ -65,6 +65,8 @@ function do_cmd(cmd, f) {
 */
 
 var last_key = "*";
+var previous_bucket_start = 0;
+var bucket_start = 0;
 function browse(bucket, limit) {
     mechaClient.bucketProperties({
         "bucket": bucket
@@ -112,6 +114,7 @@ function browse(bucket, limit) {
             }
             hdr_row.html(hdr_html);
             var result_body = table.find(".result-rows-body");
+            var rec_count = 0;
             for(idx in rs) {
                 var data = rs[idx];
                 last_key = data.key;
@@ -127,15 +130,21 @@ function browse(bucket, limit) {
                 }
                 result_html += "</tr>";
                 result_body.append(result_html);
+                rec_count++;
             }
-            $("#browse").html("");
             
-            var table_html = 
-                "<div class='well'>";
-                
+            $("#browse-content").html("");
             var table_html = "<div class='table-container'>" + table.html() + "</div>";
-            $("#browse").html(table_html);
+            $("#browse-blurb").html(
+                "Showing rows " + 
+                    bucket_start + "-" + 
+                    (bucket_start+rec_count) + " of " +
+                    Math.floor((buckets[bucket].count/props.n_val)));
+            console.log(buckets[bucket]);
+            $("#browse-content").html(table_html);
             layout();
+            previous_bucket_start = bucket_start;
+            bucket_start += limit;
         });
     });
 }
@@ -201,7 +210,7 @@ function bucket_list() {
                 if (bucket1 == "") {
                     bucket1 = bucket;
                 }
-                buckets[bucket] = { "count": result[bucket] };
+                buckets[bucket] = { "count": obj[bucket] };
                 add_bucket(bucket);
             }
         }
@@ -220,12 +229,30 @@ $(document).ready(function() {
     $(window).resize(function() {
         layout();
     });
+    $("#older").click(function() {
+        console.log("older");
+        older();
+    });
+    $("#newer").click(function() {
+        console.log("newer");
+        newer();
+    });
     load();
-    $("#q").focus();
 });
+
+function older() {
+    if (previous_bucket_start == 0) {
+        return;
+    }
+}
+
+function newer() {
+
+}
 
 function load_bucket(bucket) {
     last_key = "*";
+    bucket_start = 0;
     browse(bucket, 30);
     structure(bucket);
     statistics(bucket);
@@ -234,7 +261,7 @@ function load_bucket(bucket) {
 function layout() {
     // table-container
     var h = $(window).height();
-    $(".table-container").height(h-100);
+    $(".table-container").height(h-200);
 }
 
 function load() {
