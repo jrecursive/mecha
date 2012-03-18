@@ -86,7 +86,7 @@ public class StreamModule extends MVMModule {
         public void onDataMessage(JSONObject msg) throws Exception {
             if (count > total) {
                 return;
-            } else if (count < total) {
+            } else if (count <= total) {
                 broadcastDataMessage(msg);
             } else if (count == total) {
                 if (doneMsg != null) {
@@ -97,6 +97,7 @@ public class StreamModule extends MVMModule {
                 }
             }
             count++;
+            log.info("count = " + count + ": " + msg.<String>get("key"));
         }
         
         public void onDoneEvent(JSONObject msg) throws Exception {
@@ -122,12 +123,18 @@ public class StreamModule extends MVMModule {
     */
     public class BloomDedupe extends MVMFunction {
         final BloomFilter filter;
+        final String notifyVar;
         
         public BloomDedupe(String refId, MVMContext ctx, JSONObject config) throws Exception {
             super(refId, ctx, config);
             long numElements = Long.parseLong(config.<String>get("num-elements"));
             double mfpRate = Double.parseDouble(config.<String>get("max-fp-rate"));
             filter = BloomFilter.getFilter(numElements, mfpRate);
+            if (config.has("notify")) {
+                notifyVar = config.<String>get("notify");
+            } else {
+                notifyVar = null;
+            }
         }
         
         public void onDataMessage(JSONObject msg) throws Exception {
@@ -138,6 +145,11 @@ public class StreamModule extends MVMModule {
             ByteBuffer buf = bytes(sb.toString());
             if (filter.isPresent(buf)) {
                 log.info("ignored bk, isPresent: " + sb.toString());
+                if (notifyVar != null) {
+                    JSONObject dupeMsg = new JSONObject();
+                    dupeMsg.put("$", "duplicate");
+                    Mecha.getMVM().nativeControlMessage(getContext(), notifyVar, dupeMsg);
+                }
             } else {
                 filter.add(buf);
                 broadcastDataMessage(msg);

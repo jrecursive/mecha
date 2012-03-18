@@ -195,7 +195,7 @@ ${root} = (covered-index-select sort-field:${args.sort-field} sort-order:${args.
 
 #set ($connecting_vertex = $root)
 
-${guid}-dedupe = (bloom-dedupe num-elements:1000000 max-fp-rate:0.001)
+${guid}-dedupe = (bloom-dedupe num-elements:1000000 max-fp-rate:0.0001 notify:"${root}")
 ${connecting_vertex} -> ${guid}-dedupe
 
 #set ($connecting_vertex = "${guid}-dedupe")
@@ -322,7 +322,7 @@ ${guid}-reducer -> ${sink}
 #end global-count
 
 //
-// system-select is used for monitoring
+// system-facet is used for monitoring
 //
 // required: host, filter, sort, limit
 // optional: fields
@@ -421,7 +421,7 @@ ${root} -> ${sink}
 #end publish-global
 
 //
-// 
+// get bucket riak properties
 //
 
 #define-global bucket-props

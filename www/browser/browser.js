@@ -64,7 +64,93 @@ function do_cmd(cmd, f) {
  *   
 */
 
+var last_key = "*";
+function browse(bucket, limit) {
+    mechaClient.bucketProperties({
+        "bucket": bucket
+    }, function (props) {
+        props = props.result[0].props;
+        limit1 = Math.ceil(limit / props.n_val);
+        var table = $("#results-table .results-table").parent().clone();
+        mechaClient.select({
+            "bucket": bucket,
+            "materialize": false,
+            "sort-field": "key",
+            "sort-dir": "asc",
+            "filter": "key:[" + last_key + " TO *]",
+            "limit": limit
+        }, function(result) {
+            console.log(result);
+            var rs = result.result; // [0].data;
+            console.log(rs);
+            var fields = {};
+            for(idx in rs) {
+                var data = rs[idx];
+                for(field in data) {
+                    if (field.charAt(0) == "$") continue;
+                    if (field == "key" ||
+                        field == "bucket") continue;
+                    fields[field] = 1;
+                }
+            }
+            var field_list = [];
+            for(field in fields) {
+                field_list.push(field);
+            }
+            field_list.sort();
+            for(idx in field_list) {
+                var field = field_list[idx];
+            }
+            field_list.reverse();
+            field_list.push("key");
+            field_list.reverse();
+            var hdr_row = table.find(".header-result-row");
+            var hdr_html = "<td>#</td>";
+            for(idx in field_list) {
+                var field = field_list[idx];
+                hdr_html += "<td>" + field + "</td>";
+            }
+            hdr_row.html(hdr_html);
+            var result_body = table.find(".result-rows-body");
+            for(idx in rs) {
+                var data = rs[idx];
+                last_key = data.key;
+                console.log(data);
+                var result_html = "<tr>";
+                result_html += "<td>" + idx + "</td>";
+                for(idx in field_list) {
+                    var field = field_list[idx];
+                    result_html += 
+                        "<td>" +
+                        data[field] + 
+                        "</td>";
+                }
+                result_html += "</tr>";
+                result_body.append(result_html);
+            }
+            $("#browse").html("");
+            
+            var table_html = 
+                "<div class='well'>";
+                
+            var table_html = "<div class='table-container'>" + table.html() + "</div>";
+            $("#browse").html(table_html);
+            layout();
+        });
+    });
+}
 
+function structure(bucket) {
+    
+    
+    $("#structure").text(bucket);
+}
+
+function statistics(bucket) {
+    
+    
+    $("#statistics").text(bucket);
+}
 
 /*
  * 
@@ -74,6 +160,7 @@ function do_cmd(cmd, f) {
 
 function bucket_click() {
     var bucket = $(this).text();
+    load_bucket(bucket);
     console.log("bucket click: " + bucket);
 }
 
@@ -87,7 +174,7 @@ function add_bucket(bucket) {
     
     var after_el = $(".buckets");
     after_el.after(
-        "<li>" + 
+        "<li class='bucket'>" + 
         "<a style='display:inline-block;' href='#' id='" + bucket_id(bucket) + "'>" +
         bucket + 
         "</a>" + 
@@ -107,13 +194,18 @@ function bucket_list() {
     mechaClient.globalBucketCount(function(result) {
         console.log(result);
         result = result.result;
+        bucket1 = "";
         for(idx in result) {
             var obj = result[idx];
             for (bucket in obj) {
+                if (bucket1 == "") {
+                    bucket1 = bucket;
+                }
                 buckets[bucket] = { "count": result[bucket] };
                 add_bucket(bucket);
             }
         }
+        load_bucket(bucket1);
     });
 }
 
@@ -128,16 +220,21 @@ $(document).ready(function() {
     $(window).resize(function() {
         layout();
     });
-    wire();
-    layout();
     load();
     $("#q").focus();
 });
 
-function wire() {
+function load_bucket(bucket) {
+    last_key = "*";
+    browse(bucket, 30);
+    structure(bucket);
+    statistics(bucket);
 }
 
 function layout() {
+    // table-container
+    var h = $(window).height();
+    $(".table-container").height(h-100);
 }
 
 function load() {

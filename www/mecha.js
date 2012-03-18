@@ -114,3 +114,33 @@ MechaClient.prototype.hostFacet = function(params, f) {
         }
     });
 };
+
+MechaClient.prototype.selectSet = function(params, f) {
+    jQuery.ajax({
+        url: this._macro('select-set'),
+        crossDomain:true,
+        type: 'GET',
+        data: params,
+        dataType: 'text',
+        success: function(text, statusText) {
+            var data = JSON.parse(text);
+            console.log("elapsed: " + data.elapsed);
+            f(data);
+        }
+    });
+};
+
+MechaClient.prototype.bucketProperties = function(params, f) {
+    jQuery.ajax({
+        url: this._macro('bucket-props'),
+        crossDomain:true,
+        type: 'GET',
+        data: params,
+        dataType: 'text',
+        success: function(text, statusText) {
+            var data = JSON.parse(text);
+            console.log("elapsed: " + data.elapsed);
+            f(data);
+        }
+    });
+};

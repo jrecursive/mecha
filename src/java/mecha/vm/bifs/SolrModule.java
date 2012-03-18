@@ -294,6 +294,7 @@ public class SolrModule extends MVMModule {
         final private String iterationLabel;
         final private boolean materialize;
         final private String core;
+        final private AtomicLong rowLimit = new AtomicLong(-1);
     
         public SelectIterator(String refId, MVMContext ctx, JSONObject config) throws Exception {
             super(refId, ctx, config);
@@ -335,7 +336,6 @@ public class SolrModule extends MVMModule {
                         long start = 0;
                         long batchSize = 500;
                         long count = 0;
-                        long rowLimit = -1;
                         long rawFound = 0;
                         
                         /*
@@ -359,7 +359,7 @@ public class SolrModule extends MVMModule {
                         }
                         
                         if (selectParams.has("rows")) {
-                            rowLimit = Long.parseLong("" + selectParams.get("rows"));
+                            rowLimit.set(Long.parseLong("" + selectParams.get("rows")));
                             selectParams.remove("rows");
                         }
 
@@ -403,8 +403,8 @@ public class SolrModule extends MVMModule {
                                 if (res.getResults().getNumFound() == 0) {
                                     break;
                                 }
-                                if (rowLimit == -1) {
-                                    rowLimit = res.getResults().getNumFound();
+                                if (rowLimit.get() == -1) {
+                                    rowLimit.set(res.getResults().getNumFound());
                                 }
                                 
                                 for(SolrDocument doc : res.getResults()) {
@@ -450,7 +450,7 @@ public class SolrModule extends MVMModule {
                                             stateLock.unlock();
                                         }
                                         batchCount++;
-                                        if (count >= rowLimit) break;
+                                        if (count >= rowLimit.get()) break;
                                     } catch (java.lang.InterruptedException iex) {
                                         return;
 
@@ -473,7 +473,7 @@ public class SolrModule extends MVMModule {
                                 if (earlyExit.get()) {
                                     break;
                                 }
-                                if (start >= rowLimit) break;
+                                if (start >= rowLimit.get()) break;
                             }
                             long t_elapsed = System.currentTimeMillis() - t_st;
                             
@@ -535,6 +535,14 @@ public class SolrModule extends MVMModule {
                 */
                 } else if (verb.equals("stop")) {
                     stop.set(true);
+                
+                /*
+                 * respond to upstreamed bloom filter notifications
+                 *  of duplicate detection & increase rowLimit by 1
+                */
+                } else if (verb.equals("duplicate")) {
+                    log.info("duplicate, adding 1");
+                    rowLimit.addAndGet(1L);
                     
                 /*
                  * unknown

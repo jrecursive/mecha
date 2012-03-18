@@ -16,11 +16,23 @@
             body {
                 padding-top: 20px;
                 padding-bottom: 40px;
-                overflow:auto;
+                overflow:hidden;
             }
+            
             .sidebar-nav {
                 padding: 9px 0;
             }
+            
+            #browse {
+                font-family: courier;
+                font-size: 12px;
+            }
+            
+            .table-container {
+                overflow:auto;
+                padding:5px;
+            }
+            
         </style>
         <script type="text/javascript" src="../js/jquery-1.7.1.min.js"></script>
         <script type="text/javascript" src="../js/jquery.sparkline.min.js"></script>
@@ -44,17 +56,27 @@
     <body>
         <div class="container-fluid">
           <div class="row-fluid">
-            <div class="span2">
+            <div class="span1">
               <div class="well sidebar-nav">
                 <ul class="nav nav-list bucket-list">
                   <li class="nav-header buckets">Buckets</li>
                 </ul>
               </div><!--/.well -->
             </div><!--/span-->
-            <div class="span10">
+            <div class="span11">
 
-             <span id="results">
-             </span> <!-- results -->
+             <div id="content">
+                <ul class="nav nav-tabs">
+                  <li class="active"><a href="#browse" data-toggle="tab">Browse</a></li>
+                  <li><a href="#structure" data-toggle="tab">Structure</a></li>
+                  <li><a href="#statistics" data-toggle="tab">Statistics</a></li>
+                </ul>
+                <div class="tab-content">
+                  <div class="tab-pane active" id="browse"></div>
+                  <div class="tab-pane" id="structure"></div>
+                  <div class="tab-pane" id="statistics"></div>
+                </div>
+             </div> <!-- results -->
               
             </div><!--/span-->
           </div><!--/row-->
@@ -66,6 +88,21 @@
           </footer>
     
         </div><!--/.fluid-container-->
+        
+        <!-- results table template -->
+        <div style="display:none;">
+            <span id="results-table">
+                <table class="table table-striped table-bordered table-condensed results-table">
+                    <thead>
+                        <tr class="header-result-row">
+                        </tr>
+                    </thead>
+                    <tbody class="result-rows-body">
+                    </tbody>
+                </table>
+            </span>
+        </div>
+
         
         <!-- modal -->
         
