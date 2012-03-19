@@ -159,3 +159,18 @@ MechaClient.prototype.deriveSchema = function(params, f) {
         }
     });
 };
+
+MechaClient.prototype.cardinality = function(params, f) {
+    jQuery.ajax({
+        url: this._macro('cardinality'),
+        crossDomain:true,
+        type: 'GET',
+        data: params,
+        dataType: 'text',
+        success: function(text, statusText) {
+            var data = JSON.parse(text);
+            console.log("elapsed: " + data.elapsed);
+            f(data);
+        }
+    });
+};

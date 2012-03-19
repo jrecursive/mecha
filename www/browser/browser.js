@@ -28,13 +28,15 @@ function do_cmd(cmd, f) {
             }
             if (obj.o["$"] &&
                 obj.o["$"] == "done") {
-                f(obj.o);
                 c.close();
+                return;
             } else if (obj.o["$"] &&
                 obj.o["$"] == "cancel") {
                 errorHandler();
                 c.close();
+                return;
             }
+            f(obj.o);
         } else {
             console.log(msg);
         }
@@ -161,9 +163,11 @@ function structure(bucket) {
         hdr_row.html("<tr><td>field</td><td>%</td></tr>");
         var result_body = table.find(".result-rows-body");
         var max_occ = 0;
+        var bucket_fields = [];
         for(field in schema) {
             var field_occ = schema[field];
             if (field_occ > max_occ) max_occ = field_occ;
+            bucket_fields.push(field);
         }
         for(field in schema) {
             pct = schema[field] / max_occ * 100.00;
@@ -175,14 +179,64 @@ function structure(bucket) {
                 "%</td></tr>";
             result_body.append(row_html);
         }
-        $("#structure-content").html(table.html());
+        var table_html = "<div class='table-container'>" + table.html() + "</div>";
+        $("#structure-content").html(table_html);
+        statistics(bucket, bucket_fields);
     });
 }
 
-function statistics(bucket) {
+function statistics(bucket, fields) {
+    $("#statistics-content").html("");
+    var table = $("#results-table .results-table").parent().clone();
+    table.attr("id", "statistics-table");
+    var hdr_row = table.find(".header-result-row");
+    hdr_row.html("<tr><td>field</td><td>cardinality</td></tr>");
+    var result_body = table.find(".result-rows-body");
+    var max_occ = 0;
+    for(idx in fields) {
+        var field = fields[idx];
+        var row_html = 
+            "<tr><td>" + 
+            field + 
+            "</td><td><div id='" +
+            hex_md5("cardinality-" + field) +  /* encoded cardinality span id */
+            "'></div></td></tr>";
+        result_body.append(row_html);
+    }
+    var table_html = "<div class='table-container'>" + table.html() + "</div>";
+    $("#statistics-content").append(table_html);
     
-    
-    $("#statistics").text(bucket);
+    for(idx in fields) {
+        var field = fields[idx];
+        do_stat_fc(bucket,field);
+    }
+}
+
+function do_stat_fc(bucket,field) {
+        mechaClient.cardinality({
+            "bucket": bucket,
+            "field": field
+        }, function(data) {
+            var data = data.result[0];
+            console.log(data);
+            var html = "<table class='table table-bordered'>";
+            for (datafield in data['by-partition']) {
+                var datafield_l = datafield.split("-")[1];
+                html += 
+                    "<tr><td>" + datafield_l + "</td>" +
+                    "<td>" + data['by-partition'][datafield] + "</td></tr>";
+            }
+            for (datafield in data) {
+                if (datafield == "by-partition") continue;
+                html += 
+                    "<tr><td>" + datafield + "</td>" +
+                    "<td width='50%'>" + data[datafield] + "</td></tr>";
+            }
+            html += "</table>";
+            console.log("#" + hex_md5("cardinality-" + field));
+            $("#" + hex_md5("cardinality-" + field)).html(html);
+            console.log(html);
+        });
 }
 
 /*
@@ -284,13 +338,14 @@ function load_bucket(bucket) {
     bucket_start = [0];
     browse(bucket, g_limit);
     structure(bucket);
-    statistics(bucket);
+    //statistics(bucket); /* depends on structure, and is called upon successful structure call */
 }
 
 function layout() {
     // table-container
     var h = $(window).height();
-    $(".table-container").height(h-200);
+    var container_h = h-200;
+    $(".table-container").height(container_h);
 }
 
 function load() {
