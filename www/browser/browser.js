@@ -226,6 +226,7 @@ function do_stat_fc(bucket,field) {
                     "<tr><td>" + datafield_l + "</td>" +
                     "<td>" + data['by-partition'][datafield] + "</td></tr>";
             }
+            html += "<tr><td colspan=2>&nbsp;</td></tr>";
             for (datafield in data) {
                 if (datafield == "by-partition") continue;
                 html += 
