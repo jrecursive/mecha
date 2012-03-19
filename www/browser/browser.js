@@ -84,9 +84,7 @@ function browse(bucket, limit) {
             "filter": "key:[" + last_key[last_key.length-1] + " TO *]",
             "limit": limit
         }, function(result) {
-            console.log(result);
             var rs = result.result; // [0].data;
-            console.log(rs);
             var fields = {};
             for(idx in rs) {
                 var data = rs[idx];
@@ -122,7 +120,6 @@ function browse(bucket, limit) {
             for(idx in rs) {
                 var data = rs[idx];
                 last_key1 = data.key;
-                console.log(data);
                 var result_html = "<tr>";
                 result_html += "<td>" + (b_start + rec_count + 1) + "</td>";
                 for(idx in field_list) {
@@ -145,7 +142,6 @@ function browse(bucket, limit) {
                     (b_start+1) + "-" + 
                     (b_start+rec_count) + " of " +
                     Math.floor((buckets[bucket].count/props.n_val)));
-            console.log(buckets[bucket]);
             $("#browse-content").html(table_html);
             layout();
             bucket_start.push(b_start+limit);
@@ -154,9 +150,33 @@ function browse(bucket, limit) {
 }
 
 function structure(bucket) {
-    
-    
-    $("#structure").text(bucket);
+    var table = $("#results-table .results-table").parent().clone();
+    table.attr("id", "structure-table");
+    mechaClient.deriveSchema({
+        "max-samples": 100,
+        "bucket": bucket
+    }, function(data) {
+        var schema = data.result[0];
+        var hdr_row = table.find(".header-result-row");
+        hdr_row.html("<tr><td>field</td><td>%</td></tr>");
+        var result_body = table.find(".result-rows-body");
+        var max_occ = 0;
+        for(field in schema) {
+            var field_occ = schema[field];
+            if (field_occ > max_occ) max_occ = field_occ;
+        }
+        for(field in schema) {
+            pct = schema[field] / max_occ * 100.00;
+            var row_html = 
+                "<tr><td>" + 
+                field + 
+                "</td><td>" +
+                pct + 
+                "%</td></tr>";
+            result_body.append(row_html);
+        }
+        $("#structure-content").html(table.html());
+    });
 }
 
 function statistics(bucket) {
@@ -174,7 +194,7 @@ function statistics(bucket) {
 function bucket_click() {
     var bucket = $(this).text();
     load_bucket(bucket);
-    console.log("bucket click: " + bucket);
+    //console.log("bucket click: " + bucket);
 }
 
 function clear_buckets() {
@@ -205,7 +225,7 @@ function bucket_list() {
     buckets = {};
     clear_buckets();
     mechaClient.globalBucketCount(function(result) {
-        console.log(result);
+        //console.log(result);
         result = result.result;
         bucket1 = "";
         for(idx in result) {
@@ -234,19 +254,15 @@ $(document).ready(function() {
         layout();
     });
     $("#prev-btn").click(function() {
-        console.log("older");
         prevpage();
     });
     $("#next-btn").click(function() {
-        console.log("newer");
         nextpage();
     });
     load();
 });
 
 function prevpage() {
-    console.log(bucket_start);
-    console.log(last_key);
     bucket_start.pop();
     last_key.pop();
     if (bucket_start.length > 1) {

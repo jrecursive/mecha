@@ -144,3 +144,18 @@ MechaClient.prototype.bucketProperties = function(params, f) {
         }
     });
 };
+
+MechaClient.prototype.deriveSchema = function(params, f) {
+    jQuery.ajax({
+        url: this._macro('derive-schema'),
+        crossDomain:true,
+        type: 'GET',
+        data: params,
+        dataType: 'text',
+        success: function(text, statusText) {
+            var data = JSON.parse(text);
+            console.log("elapsed: " + data.elapsed);
+            f(data);
+        }
+    });
+};
