@@ -104,7 +104,7 @@ capabilities(_) ->
 capabilities(_, _) ->
     {ok, ?CAPABILITIES}.
 
-%% @doc Start the memory backend
+%% @doc Start the partition
 -spec start(integer(), config()) -> {ok, state()}.
 start(Partition, Config) ->
     io:format("start ~p~n", [Partition]),
@@ -119,14 +119,14 @@ start(Partition, Config) ->
         _  -> {error, cannot_contact_mecha}
     end.
 
-%% @doc Stop the memory backend
+%% @doc Stop the partition
 -spec stop(state()) -> ok.
 stop(#state { mecha_node=_MechaNode, partition=Partition}) -> 
     io:format("stop ~p~n", [Partition]),
     cast_mecha(kv_store, stop, [Partition, ?JI_PLACEHOLDER]),
     ok.
     
-%% @doc Retrieve an object from the memory backend
+%% @doc Retrieve an object from the mecha backend
 -spec get(riak_object:bucket(), riak_object:key(), state()) ->
                  {ok, any(), state()} |
                  {ok, not_found, state()} |
@@ -139,10 +139,7 @@ get(Bucket, Key, State = #state { mecha_node=_MechaNode, partition=Partition }) 
             {ok, term_to_binary(riak_object:from_json(mochijson2:decode(Value0))), State}
     end.
 
-%% @doc Insert an object into the memory backend.
-%% NOTE: The memory backend does not currently
-%% support secondary indexing and the _IndexSpecs
-%% parameter is ignored.
+%% @doc Insert an object into the partition.
 -type index_spec() :: {add, Index, SecondaryKey} | {remove, Index, SecondaryKey}.
 -spec put(riak_object:bucket(), riak_object:key(), [index_spec()], binary(), state()) ->
                  {ok, state()} |
@@ -157,10 +154,7 @@ put(Bucket, Key, _IndexSpecs, Value, State = #state { mecha_node=_MechaNode, par
             {error, mecha_put_error, State}
     end.
 
-%% @doc Delete an object from the memory backend
-%% NOTE: The memory backend does not currently
-%% support secondary indexing and the _IndexSpecs
-%% parameter is ignored.
+%% @doc Delete an object from the partition
 -spec delete(riak_object:bucket(), riak_object:key(), [index_spec()], state()) ->
                     {ok, state()}.
 delete(Bucket, Key, _IndexSpecs, State = #state { mecha_node=_MechaNode, partition=Partition }) ->
@@ -171,14 +165,12 @@ delete(Bucket, Key, _IndexSpecs, State = #state { mecha_node=_MechaNode, partiti
             {error, mecha_error, State}
     end.
 
-%% @doc Returns true if this memory backend contains any
-%% non-tombstone values; otherwise returns false.
 -spec is_empty(state()) -> boolean().
 is_empty(#state { mecha_node=_MechaNode, partition=Partition }) ->
     io:format("is_empty ~p~n", [Partition]),
     call_mecha(kv_store, is_empty, [Partition, ?JI_PLACEHOLDER]).
 
-%% @doc Get the status information for this memory backend
+%% @doc Get status.
 -spec status(state()) -> [{atom(), term()}].
 status(_State) ->
     [{mecha, awesome}].
@@ -266,7 +258,7 @@ fold_objects(FoldObjectsFun, Acc, Opts, State = #state{ mecha_node=_MechaNode, p
                  Acc)
     end.
 
-%% @doc Delete all objects from this memory backend
+%% @doc Delete all objects from this partition
 -spec drop(state()) -> {ok, state()}.
 drop(State = #state{ mecha_node=_MechaNode, partition=Partition }) ->
     io:format("drop ~p~n", [Partition]),

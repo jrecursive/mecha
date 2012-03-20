@@ -112,14 +112,23 @@ public class Bucket {
                 jo1.getJSONObject("metadata").has("X-Riak-Deleted")) {
                 if (jo1.getJSONObject("metadata").getString("X-Riak-Deleted").equals("true")) {
                     /*
-                     * TODO: force cluster-wide delete?
+                     * TODO: force cluster-wide delete? (though this still doesn't solve the tombstone/timer issue)
                     */
                     delete(key);
                     return;
                 }
             }
-
-            JSONObject jo = new JSONObject(jo1.getString("data"));
+            
+            JSONObject jo;
+            
+            try {
+                jo = new JSONObject(jo1.getString("data"));
+            } catch (Exception encEx) {
+                // cannot encode to json, unknown format, simply
+                //  save as binary & do not index.
+                db.put(key, value);
+                return;
+            }
             
             /*
              * Because the object is not deleted, write to object store.

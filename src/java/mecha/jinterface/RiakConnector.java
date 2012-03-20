@@ -182,7 +182,8 @@ public class RiakConnector extends OtpProcess {
             return new OtpErlangAtom("error");
         }
     }
-    
+
+/*    
     public OtpErlangObject get(OtpErlangLong partition, OtpErlangBinary bucketBin, OtpErlangBinary keyBin) {
         try {
             byte[] bucket = bucketBin.binaryValue();
@@ -215,6 +216,41 @@ public class RiakConnector extends OtpProcess {
             return new OtpErlangAtom("error");
         }
     }
+*/
+
+    public OtpErlangObject get(OtpErlangLong partition, OtpErlangBinary bucketBin, OtpErlangBinary keyBin) {
+        try {
+            byte[] bucket = bucketBin.binaryValue();
+            byte[] key = keyBin.binaryValue();
+            byte[] value;
+            if ( (value = mdb.get(partition.toString(), bucket, key)) == null) {
+                OtpErlangObject[] retval = { new OtpErlangAtom("error"), new OtpErlangAtom("not_found") };
+                return new OtpErlangTuple(retval);
+            } else {
+                OtpErlangObject[] retval = { new OtpErlangAtom("ok"), new OtpErlangBinary(value) };
+                return new OtpErlangTuple(retval);
+            }
+        } catch (Exception ex) {
+            Mecha.getMonitoring().error("mecha.riak-connector", ex);
+            ex.printStackTrace();
+            return new OtpErlangAtom("error");
+        }
+    }
+
+    public OtpErlangObject put(OtpErlangLong partition, OtpErlangBinary bucketBin, OtpErlangBinary keyBin, OtpErlangBinary valueBin) {
+        try {
+            byte[] bucket = bucketBin.binaryValue();
+            byte[] key = keyBin.binaryValue();
+            byte[] value = valueBin.binaryValue();
+            mdb.put(partition.toString(), bucket, key, value);
+            return new OtpErlangAtom("ok");
+        } catch (Exception ex) {
+            Mecha.getMonitoring().error("mecha.riak-connector", ex);
+            ex.printStackTrace();
+            return new OtpErlangAtom("error");
+        }
+    }
+
     
     public OtpErlangObject delete(OtpErlangLong partition, OtpErlangBinary bucketBin, OtpErlangBinary keyBin) {
         try {
