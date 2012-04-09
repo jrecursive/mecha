@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <config>
   <abortOnConfigurationError>${solr.abortOnConfigurationError:true}</abortOnConfigurationError>
-  <luceneMatchVersion>LUCENE_35</luceneMatchVersion>
+  <luceneMatchVersion>LUCENE_40</luceneMatchVersion>
   <lib dir="../../contrib/extraction/lib" />
   <lib dir="../../dist/" regex="apache-solr-cell-\d.*\.jar" />
   <lib dir="../../dist/" regex="apache-solr-clustering-\d.*\.jar" />
@@ -10,7 +10,7 @@
   <lib dir="/total/crap/dir/ignored" /> 
   <dataDir>${solr.tmp.data.dir:}</dataDir>
   <directoryFactory name="DirectoryFactory" 
-                    class="${solr.directoryFactory:solr.RAMDirectoryFactory}"/>
+                    class="${solr.directoryFactory:solr.StandardDirectoryFactory}"/>
   <indexDefaults>
     <useCompoundFile>false</useCompoundFile>
     <mergeFactor>100</mergeFactor>

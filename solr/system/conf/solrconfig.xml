@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <config>
   <abortOnConfigurationError>${solr.abortOnConfigurationError:true}</abortOnConfigurationError>
-  <luceneMatchVersion>LUCENE_35</luceneMatchVersion>
+  <luceneMatchVersion>LUCENE_40</luceneMatchVersion>
   
   <!-- e.g., mecha/usr/lib -->
   <lib dir="../usr/lib" />
@@ -13,7 +13,7 @@
   <lib dir="../../contrib/clustering/lib/" />
   <dataDir>${solr.system.data.dir:}</dataDir>
   <directoryFactory name="DirectoryFactory" 
-                    class="${solr.directoryFactory:solr.RAMDirectoryFactory}"/>
+                    class="${solr.directoryFactory:solr.StandardDirectoryFactory}"/>
   <indexDefaults>
     <useCompoundFile>false</useCompoundFile>
     <mergeFactor>100</mergeFactor>
@@ -23,6 +23,7 @@
     <writeLockTimeout>1000</writeLockTimeout>
     <commitLockTimeout>10000</commitLockTimeout>
     <mergePolicy class="org.apache.lucene.index.TieredMergePolicy"/>
+    <mergeScheduler class="org.apache.lucene.index.ConcurrentMergeScheduler"/>
     <lockType>native</lockType>
     <termIndexInterval>512</termIndexInterval>
   </indexDefaults>
@@ -40,10 +41,15 @@
   </mainIndex>
   <jmx />
   <updateHandler class="solr.DirectUpdateHandler2">
+       <autoSoftCommit>
+         <maxTime>1000</maxTime>
+       </autoSoftCommit>
+    <!--
        <autoCommit> 
          <maxDocs>10000</maxDocs>
          <maxTime>1000</maxTime> 
        </autoCommit>
+    -->
   </updateHandler>
      <indexReaderFactory name="IndexReaderFactory" 
                          class="solr.StandardIndexReaderFactory">

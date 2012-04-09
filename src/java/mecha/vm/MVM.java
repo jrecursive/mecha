@@ -22,7 +22,9 @@ import java.io.*;
 import java.net.*;
 
 import org.apache.lucene.search.*;
-import org.apache.lucene.queryParser.*;
+import org.apache.lucene.queryparser.classic.*;
+import org.apache.lucene.queryparser.ext.*;
+import org.apache.lucene.queryparser.flexible.standard.*;
 import org.apache.lucene.analysis.*;
 import org.apache.lucene.util.Version;
 

@@ -30,8 +30,12 @@ public class SolrEventHandlers implements SolrEventListener {
     
     public void newSearcher(SolrIndexSearcher newSearcher,
                             SolrIndexSearcher currentSearcher) {
+        /*
         Mecha.getMonitoring().log("mecha.db.solr-event-handlers.new-searcher", 
                                   "newSearcher(" + newSearcher + ", " + currentSearcher + ")", log);
+        */
+        log.info("mecha.db.solr-event-handlers.new-searcher: " + 
+                 "newSearcher(" + newSearcher + ", " + currentSearcher + ")");
     }
     
     public void postCommit() {
@@ -50,6 +54,14 @@ public class SolrEventHandlers implements SolrEventListener {
             Mecha.getMonitoring().log("mecha.db.solr-event-handlers.post-commit", 
                                       "solr post commit hook", log);
             Mecha.getEventLogManager().recycle();
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+    }
+    
+    public void postSoftCommit() {
+        try {
+            log.info("postSoftCommit()");
         } catch (Exception ex) {
             ex.printStackTrace();
         }
