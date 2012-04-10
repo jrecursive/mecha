@@ -15,14 +15,16 @@
 package mecha.db;
 
 import java.io.*;
-import java.util.List;
-import java.util.ArrayList;
+import java.util.*;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.*;
 import java.util.logging.*;
-import org.fusesource.leveldbjni.*;
-import static org.fusesource.leveldbjni.DB.*;
+import java.text.SimpleDateFormat;
+
 import org.apache.solr.client.solrj.*;
 import org.apache.solr.common.*;
+import org.apache.solr.client.solrj.response.QueryResponse;
+import org.apache.solr.common.params.ModifiableSolrParams;
 
 import mecha.Mecha;
 import mecha.util.*;
@@ -42,50 +44,124 @@ public class Bucket {
     final private String bucketStr;
     final private String partition;
     final private String dataDir;
-    final private String bucketDriverClassName;
-    final private BucketDriver db;
     final private SolrServer solrServer;
     
-    // solr
-    final private SolrServer server;
-    final private LinkedBlockingQueue<SolrInputDocument> solrDocQueue;
+    final private SimpleDateFormat dateFormat;
+
+    private static String STANDARD_DATE_FORMAT = 
+        "yyyy-MM-dd'T'HH:mm:ss";
     
     public Bucket(String partition, 
                   byte[] bucket, 
-                  String dataDir,
-                  SolrServer server,
-                  LinkedBlockingQueue<SolrInputDocument> solrDocQueue) 
-                    throws Exception {
+                  String dataDir) throws Exception {
         this.partition = partition;
         this.bucket = bucket;
         this.bucketStr = (new String(bucket)).trim();
         this.dataDir = dataDir;
-        this.server = server;
-        this.solrDocQueue = solrDocQueue;
-        this.bucketDriverClassName = Mecha.getConfig().<String>get("bucket-driver");
         
+        dateFormat = new java.text.SimpleDateFormat(STANDARD_DATE_FORMAT);
+        
+        /*
+        this.bucketDriverClassName = Mecha.getConfig().<String>get("bucket-driver");
         Class driverClassObj = Class.forName(bucketDriverClassName);
         Class[] argTypes = { String.class, String.class, String.class };
         Object[] args = { partition, bucketStr, dataDir };
         db = (BucketDriver) driverClassObj.getConstructor(argTypes).newInstance(args);
+        */
+        
+        // update to use partition-specific core?
         solrServer = Mecha.getSolrManager().getCore("index").getServer();
         
-        log.info("[" + bucketDriverClassName + "] " + 
-            "Bucket: " + partition + ": " + bucketStr + ": " + dataDir);
+        log.info("Bucket: " + partition + ": " + bucketStr + ": " + dataDir);
     }
-    
-    private void queueForIndexing(SolrInputDocument doc) throws Exception {
-        //solrDocQueue.put(doc);
-        solrServer.add(doc);
-    }
-    
+        
     public void stop() throws Exception {
-        db.stop();
+        log.info("stop: " + bucketStr + ", " + partition + ": " + dataDir);
+        //db.stop();
     }
     
     public byte[] get(byte[] key) throws Exception {
+        String id = makeid(key);
+        
+        ModifiableSolrParams solrParams = new ModifiableSolrParams();
+        solrParams.set("q", "*:*");
+        solrParams.set("fq", "id:" + id);
+        QueryResponse res = 
+            solrServer.query(solrParams);
+        
+        /*
+        log.info("get: " + bucketStr + ": " + partition + ": " + 
+            (new String(key)) + ": " + res.getResults().getNumFound() + " found");
+        */
+        
+        JSONObject msg = null;
+        for(SolrDocument doc : res.getResults()) {
+            msg = jsonizeSolrDoc(doc);
+        } // TODO: anti-entropy; for now, always take the last written
+        if (msg == null) return null;
+        
+        JSONObject riakObject = makeRiakObject(msg);
+        
+        //log.info("riakObject = " + riakObject.toString(2));
+        
         rates.add("mecha.db.bucket.global.get");
-        return db.get(key);
+        
+        return riakObject.toString().getBytes();
+        //return db.get(key);
+    }
+    
+    private JSONObject jsonizeSolrDoc(SolrDocument doc) throws Exception {
+        JSONObject msg = new JSONObject();
+        for(String fieldName : doc.getFieldNames()) {
+            if (fieldName.endsWith("_dt")) {
+                String date = 
+                    dateFormat.format((Date)doc.get(fieldName));
+                msg.put(fieldName, date);
+            } else {
+                msg.put(fieldName, doc.get(fieldName));
+            }
+        }
+        return msg;
+    }
+    
+    /*
+     * msg: "raw" translation of solr document to json equivalent
+    */
+    private JSONObject makeRiakObject(JSONObject msg) throws Exception {
+        JSONObject riakObject = new JSONObject();
+        JSONArray values = new JSONArray();
+        
+        riakObject.put("bucket", msg.getString("bucket"));
+        riakObject.put("key", msg.getString("key"));
+        riakObject.put("vclock", msg.getString("vclock"));
+        
+        JSONObject obj = new JSONObject();
+        JSONObject md = new JSONObject();
+        md.put("links", new JSONArray());
+        md.put("Content-type", "text/json");
+        md.put("X-Riak-VTag", msg.getString("vtag"));
+        md.put("index", new JSONArray());
+        md.put("X-Riak-Last-Modified", msg.getString("last_modified"));
+        md.put("X-Riak-Meta", new JSONArray());
+        obj.put("metadata", md);
+        
+        msg.remove("bucket");
+        msg.remove("key");
+        msg.remove("partition");
+        msg.remove("last_modified");
+        msg.remove("vclock");
+        msg.remove("vtag");
+        msg.remove("id");
+        
+        obj.put("data", msg.toString());
+        values.put(obj);
+        riakObject.put("values", values);
+        
+        return riakObject;
+    }
+    
+    private JSONObject solr2riak(SolrDocument doc) throws Exception {
+        return makeRiakObject(jsonizeSolrDoc(doc));
     }
     
     public void put(byte[] key, byte[] value) throws Exception {
@@ -119,21 +195,33 @@ public class Bucket {
                 }
             }
             
-            JSONObject jo;
+            final String vclock = obj.getString("vclock");
+            String vtag = jo1.getJSONObject("metadata").getString("X-Riak-VTag");
+            String last_modified = jo1.getJSONObject("metadata").getString("X-Riak-Last-Modified");
+            
+            final JSONObject jo;
             
             try {
                 jo = new JSONObject(jo1.getString("data"));
             } catch (Exception encEx) {
                 // cannot encode to json, unknown format, simply
                 //  save as binary & do not index.
-                db.put(key, value);
+                
+                // TODO: store full object in a _binary object payload in
+                //       solr-- use external storage if possible?
+                //db.put(key, value);
                 return;
             }
             
             /*
              * Because the object is not deleted, write to object store.
             */
-            db.put(key, value);
+            
+            //
+            // TODO: PUT with vclock, vtag, last_modified from riak_object
+            //
+            
+            //db.put(key, value);
                         
             String id = makeid(key);
             
@@ -142,6 +230,9 @@ public class Bucket {
             doc.addField("partition", partition);
             doc.addField("bucket", bucketStr);
             doc.addField("key", new String(key));
+            doc.addField("vclock", vclock);
+            doc.addField("vtag", vtag);
+            doc.addField("last_modified", last_modified);
             
             for(String f: JSONObject.getNames(jo)) {
                 
@@ -160,17 +251,10 @@ public class Bucket {
                     f.endsWith("_xyz") ||    // x,y,z coordinate
                     f.endsWith("_xyzw") ||    // x,y,z,w coordinate
                     f.endsWith("_ll") ||    // lat,lon latitude, longitude coordinate
-                    f.endsWith("_geo") ||   // geohash
+                    f.endsWith("_geo")) {
                     
-                    
-                    /*
-                     * If last_modified is specifically set as a field on
-                     *  a PUT, index the value specified -- this is required
-                     *  so it is not "reset" during handoff.
-                    */
-                    f.equals("last_modified")
-                ) {
                     doc.addField(f, jo.get(f));
+                
                 } else if (f.endsWith("_s_mv")) {   // array of exact strings
                     JSONArray mv = jo.getJSONArray(f);
                     List<String> vals = new ArrayList<String>();
@@ -181,7 +265,7 @@ public class Bucket {
                     doc.addField(f, vals);
                 }
             }
-            queueForIndexing(doc);
+            solrServer.add(doc);
         
         } catch (Exception ex) {
             Mecha.getMonitoring().error("mecha.db.mdb", ex);
@@ -195,10 +279,10 @@ public class Bucket {
         log.info(partition + ": delete: " + (new String(key)));
         try {
             rates.add("mecha.db.bucket.global.delete");
-            server.deleteByQuery(
+            solrServer.deleteByQuery(
                 "bucket:\"" + bucketStr + "\" AND " +
                 "key:\"" + (new String(key)) + "\"");
-            db.delete(key);
+            //db.delete(key);
         } catch (Exception ex) {
             Mecha.getMonitoring().error("mecha.db.mdb", ex);
             /*
@@ -216,28 +300,94 @@ public class Bucket {
         }
     }
     
-    public boolean foreach(MDB.ForEachFunction forEachFunction) throws Exception {
+    public boolean foreach(final MDB.ForEachFunction forEachFunction) throws Exception {
         rates.add("mecha.db.bucket.global.foreach");
-        return db.foreach(forEachFunction);
+
+        final Semaphore streamSemaphore = 
+            new Semaphore(1, true);
+        streamSemaphore.acquire();
+        
+        final String q = 
+            "partition:" + partition + 
+            " AND bucket:" + bucketStr;
+        ModifiableSolrParams solrParams = new ModifiableSolrParams();
+        solrParams.set("q", "*:*");
+        solrParams.set("fq", q);
+        
+        final AtomicBoolean fe_b = new AtomicBoolean(true);
+
+        QueryResponse res = 
+            solrServer.queryAndStreamResponse(solrParams, new StreamingResponseCallback() {
+                long numFound = -1;
+                long count = 0;
+                
+                public void streamDocListInfo(long numFound,
+                                              long start,
+                                              Float maxScore) {
+                    log.info("streamDocListInfo: numFound = " + numFound + ", start = " + start + ", maxScore = " + maxScore);
+                    this.numFound = numFound;
+                }
+                
+                public void streamSolrDocument(SolrDocument doc) {
+                    if (!fe_b.get()) return;
+                    
+                    count++;
+                    //log.info(count + ": streamSolrDocument(" + doc + ")");
+                    
+                    try {
+                        final JSONObject solrObj = jsonizeSolrDoc(doc);
+                        final byte[] key = solrObj.getString("key").getBytes();
+                        final JSONObject riakObj = makeRiakObject(solrObj);
+                        final byte[] value = riakObj.toString().getBytes();
+                        
+                        if (!forEachFunction.each(bucket, key, value)) {
+                            fe_b.set(false);
+                            //log.info("releasing stream semaphore");
+                            streamSemaphore.release();
+                            return;
+                        }
+                    } catch (Exception ex) {
+                        ex.printStackTrace();
+                    }
+                    if (count == numFound) {
+                        //log.info("end of line; automatically releasing stream semaphore");
+                        streamSemaphore.release();
+                    }
+                }
+        });
+        
+        streamSemaphore.acquire();
+        return fe_b.get();
+
+        //return db.foreach(forEachFunction);
     }
     
     public long count() throws Exception {
         rates.add("mecha.db.bucket.global.count");
-        return db.count();
+        final String q = 
+            "partition:" + partition + 
+            " AND bucket:" + bucketStr;
+        ModifiableSolrParams solrParams = new ModifiableSolrParams();
+        solrParams.set("q", "*:*");
+        solrParams.set("fq", q);
+        solrParams.set("rows", 0);
+        QueryResponse res = 
+            solrServer.query(solrParams);
+        return res.getResults().getNumFound();
     }
     
     public boolean isEmpty() throws Exception {
         rates.add("mecha.db.bucket.global.is-empty");
-        return db.isEmpty();
+        
+        return count() == 0;
     }
     
     public synchronized void drop() throws Exception {
         rates.add("mecha.db.bucket.global.drop");
         try {
-            server.deleteByQuery(
+            solrServer.deleteByQuery(
                 "partition:" + partition + 
                 " AND bucket:" + bucketStr);
-            db.drop();
         } catch (Exception ex) {
             Mecha.getMonitoring().error("mecha.db.mdb", ex);
             ex.printStackTrace();
@@ -255,6 +405,7 @@ public class Bucket {
     }
     
     public void commit() {
-        db.commit();
+        //log.info("<faux commit>");
+        //db.commit();
     }
 }

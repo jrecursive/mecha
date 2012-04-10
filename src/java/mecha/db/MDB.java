@@ -88,8 +88,6 @@ public class MDB {
         
         documentQueueIndexerThread = 
             new Thread(new DocumentQueueIndexer());
-        //NOTE: now directly wired.  kept here for future testing.
-        //documentQueueIndexerThread.start();
         
         Mecha.getMonitoring().addMonitoredRates(rates);
         log.info("started");
@@ -347,7 +345,7 @@ public class MDB {
             if (null == bucketName) {
                 TextFile.put(mdFn, new String(bucket, "UTF-8"));
             }
-            Bucket bw = new Bucket(partition, bucket, bucketDataDir, solrServer, solrDocumentQueue);
+            Bucket bw = new Bucket(partition, bucket, bucketDataDir); // , solrServer, solrDocumentQueue);
             bucketMap.put(b, bw);
             partitionBuckets.put(partition, bucketMap);
             return bw;

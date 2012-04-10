@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <schema name="mecha" version="1.2">
   <types>
-    <fieldType name="string" class="solr.StrField" sortMissingLast="true" omitNorms="true"/>
+    <fieldType name="string" class="solr.StrField" sortMissingLast="true" omitNorms="true" postingsFormat="Pulsing40"/>
     <fieldType name="boolean" class="solr.BoolField" sortMissingLast="true" omitNorms="true"/>
     <fieldtype name="binary" class="solr.BinaryField"/>
     <fieldType name="int" class="solr.TrieIntField" precisionStep="0" omitNorms="true" positionIncrementGap="0"/>
@@ -153,43 +153,50 @@
  </types>
 
  <fields>
-   <field name="id" type="string" indexed="true" stored="false" required="true" />
+   <field name="id" type="string" indexed="true" stored="true" required="true" />
    <field name="partition" type="string" indexed="true" stored="true" required="true"/>
    <field name="bucket" type="string" indexed="true" stored="true" required="true"/>
    <field name="key" type="string" indexed="true" stored="true" required="true"/>
+   <field name="last_modified" type="string" indexed="false" stored="true" multiValued="false"/>
+   <field name="vtag" type="string" indexed="false" stored="true" multiValued="false"/>
+   <field name="vclock" type="string" indexed="false" stored="true" multiValued="false"/>
+   
+   <!-- tmp -->
+   <!--
    <field name="last_modified" type="tdate" indexed="true" stored="true" default="NOW" multiValued="false"/>
+   -->
    
-   <dynamicField name="*_s"  type="string"  indexed="true"  stored="false"/>
-   <dynamicField name="*_s_mv"  type="string"  indexed="true"  stored="false" multiValued="true"/>
-   <dynamicField name="*_t"  type="text"    indexed="true"  stored="false" termVectors="false" termPositions="false" termOffsets="false"/>
-   <dynamicField name="*_tt"  type="text"    indexed="true"  stored="false" termVectors="true" termPositions="false" termOffsets="false"/>
-   <dynamicField name="*_b"  type="boolean" indexed="true"  stored="false"/>
-   <dynamicField name="*_i" type="tint"    indexed="true"  stored="false"/>
-   <dynamicField name="*_l" type="tlong"   indexed="true"  stored="false"/>
-   <dynamicField name="*_f" type="tfloat"  indexed="true"  stored="false"/>
-   <dynamicField name="*_d" type="tdouble" indexed="true"  stored="false"/>
-   <dynamicField name="*_dt" type="tdate"  indexed="true"  stored="false"/>
-   <dynamicField name="*_xy" type="location" indexed="true" stored="false"/>
-   <dynamicField name="*_ll" type="latLon" indexed="true" stored="false"/>
-   <dynamicField name="*_geo" type="geohash" indexed="true" stored="false"/>
-   <dynamicField name="*_xyz" type="3d_point" indexed="true" stored="false"/>
-   <dynamicField name="*_xyzw" type="4d_point" indexed="true" stored="false"/>
+   <dynamicField name="*_s"  type="string"  indexed="true"  stored="true" postingsFormat="Pulsing40"/>
+   <dynamicField name="*_s_mv"  type="string"  indexed="true"  stored="true" multiValued="true"/>
+   <dynamicField name="*_t"  type="text"    indexed="true"  stored="true" termVectors="false" termPositions="false" termOffsets="false"/>
+   <dynamicField name="*_tt"  type="text"    indexed="true"  stored="true" termVectors="true" termPositions="false" termOffsets="false"/>
+   <dynamicField name="*_b"  type="boolean" indexed="true"  stored="true"/>
+   <dynamicField name="*_i" type="tint"    indexed="true"  stored="true"/>
+   <dynamicField name="*_l" type="tlong"   indexed="true"  stored="true"/>
+   <dynamicField name="*_f" type="tfloat"  indexed="true"  stored="true"/>
+   <dynamicField name="*_d" type="tdouble" indexed="true"  stored="true"/>
+   <dynamicField name="*_dt" type="tdate"  indexed="true"  stored="true"/>
+   <dynamicField name="*_xy" type="location" indexed="true" stored="true"/>
+   <dynamicField name="*_ll" type="latLon" indexed="true" stored="true"/>
+   <dynamicField name="*_geo" type="geohash" indexed="true" stored="true"/>
+   <dynamicField name="*_xyz" type="3d_point" indexed="true" stored="true"/>
+   <dynamicField name="*_xyzw" type="4d_point" indexed="true" stored="true"/>
    
-   <dynamicField name="*_s_s" type="string"  indexed="true"  stored="true"/>
-   <dynamicField name="*_s_mv_s" type="string"  indexed="true"  stored="true" multiValued="true"/>
-   <dynamicField name="*_t_s" type="text"    indexed="true"  stored="true" termVectors="false" termPositions="false" termOffsets="false"/>
-   <dynamicField name="*_tt_s" type="text"    indexed="true"  stored="true" termVectors="true" termPositions="false" termOffsets="false"/>
-   <dynamicField name="*_b_s" type="boolean" indexed="true"  stored="true"/>
-   <dynamicField name="*_i_s" type="tint"    indexed="true"  stored="true"/>
-   <dynamicField name="*_l_s" type="tlong"   indexed="true"  stored="true"/>
-   <dynamicField name="*_f_s" type="tfloat"  indexed="true"  stored="true"/>
-   <dynamicField name="*_d_s" type="tdouble" indexed="true"  stored="true"/>
-   <dynamicField name="*_dt_s" type="tdate"  indexed="true"  stored="true"/>
-   <dynamicField name="*_xy_s" type="location" indexed="true" stored="true"/>
-   <dynamicField name="*_ll_s" type="latLon" indexed="true" stored="true"/>
-   <dynamicField name="*_geo_s" type="geohash" indexed="true" stored="true"/>
-   <dynamicField name="*_xyz_s" type="3d_point" indexed="true" stored="true"/>
-   <dynamicField name="*_xyzw_s" type="4d_point" indexed="true" stored="true"/>
+   <dynamicField name="*_is" type="string"  indexed="true"  stored="false"/>
+   <dynamicField name="*_is_mv" type="string"  indexed="true"  stored="false" multiValued="true"/>
+   <dynamicField name="*_it" type="text"    indexed="true"  stored="false" termVectors="false" termPositions="false" termOffsets="false"/>
+   <dynamicField name="*_itt" type="text"    indexed="true"  stored="false" termVectors="true" termPositions="false" termOffsets="false"/>
+   <dynamicField name="*_ib" type="boolean" indexed="true"  stored="false"/>
+   <dynamicField name="*_ii" type="tint"    indexed="true"  stored="false"/>
+   <dynamicField name="*_il" type="tlong"   indexed="true"  stored="false"/>
+   <dynamicField name="*_if" type="tfloat"  indexed="true"  stored="false"/>
+   <dynamicField name="*_id" type="tdouble" indexed="true"  stored="false"/>
+   <dynamicField name="*_idt" type="tdate"  indexed="true"  stored="false"/>
+   <dynamicField name="*_ixy" type="location" indexed="true" stored="false"/>
+   <dynamicField name="*_ill" type="latLon" indexed="true" stored="false"/>
+   <dynamicField name="*_igeo" type="geohash" indexed="true" stored="false"/>
+   <dynamicField name="*_ixyz" type="3d_point" indexed="true" stored="false"/>
+   <dynamicField name="*_ixyzw" type="4d_point" indexed="true" stored="false"/>
    
    <!-- internally used dynamic fields -->
    <dynamicField name="*_coordinate"  type="tdouble" indexed="true"  stored="false"/>

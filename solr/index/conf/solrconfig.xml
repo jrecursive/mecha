@@ -36,7 +36,7 @@
   <jmx />
   <updateHandler class="solr.DirectUpdateHandler2">
        <autoSoftCommit>
-         <maxTime>1000</maxTime>
+         <maxTime>100</maxTime>
        </autoSoftCommit>
     <!--
        <autoCommit> 

@@ -80,7 +80,7 @@ function browse(bucket, limit) {
         var table = $("#results-table .results-table").parent().clone();
         mechaClient.select({
             "bucket": bucket,
-            "materialize": true,
+            "materialize": false,
             "sort-field": "key",
             "sort-dir": "asc",
             "filter": "key:[" + last_key[last_key.length-1] + " TO *]",
@@ -92,8 +92,15 @@ function browse(bucket, limit) {
                 var data = rs[idx];
                 for(field in data) {
                     if (field.charAt(0) == "$") continue;
+                    /*
                     if (field == "key" ||
-                        field == "bucket") continue;
+                        field == "bucket" ||
+                        field == "partition" ||
+                        field == "vclock" || 
+                        field == "vtag" || 
+                        field == "last_modified" ||
+                        field == "id") continue;
+                    */
                     if (data[field] == "") continue;
                     fields[field] = 1;
                 }
