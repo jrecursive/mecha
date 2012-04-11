@@ -59,12 +59,12 @@ ${root} -> ${sink}
 
 #if (!$args.cardinality-only) #set ($args.cardinality-only = "false") #end
 
-${root} = (with-coverage partition-marker:"<<${guid}-p>>" host-marker:"<<${guid}-h>>" bucket:${args.bucket} do:(warp host:<<${guid}-h>> do:(solr-select params:(facet:true facet.limit:${args.limit} facet.field:${args.field} facet.mincount:${args.mincount} facet.offset:${args.start} $prefix_arg facet.sort:${args.sort} rows:0 q:"(partition:<<${guid}-p>> AND bucket:${args.bucket}) ${args.logical-connector} ${args.filter}") cardinality-only:${args.cardinality-only} partition:<<${guid}-p>>)))
+${root} = (with-coverage partition-marker:"<<${guid}-p>>" host-marker:"<<${guid}-h>>" bucket:${args.bucket} do:(warp host:<<${guid}-h>> do:(solr-select params:(facet:true facet.limit:${args.limit} facet.field:${args.field} facet.offset:${args.start} $prefix_arg facet.sort:${args.sort} rows:0 q:"(partition:<<${guid}-p>> AND bucket:${args.bucket}) ${args.logical-connector} ${args.filter}") cardinality-only:${args.cardinality-only} partition:<<${guid}-p>>)))
 
 #if ($args.cardinality-only == "true")
 ${guid}-reducer = (cardinality-reducer)
 #else
-${guid}-reducer = (value-count-reducer)
+${guid}-reducer = (value-count-reducer mincount:${args.mincount})
 #end
 
 ${root} -> ${guid}-reducer

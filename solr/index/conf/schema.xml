@@ -153,7 +153,11 @@
  </types>
 
  <fields>
+<!--
    <field name="id" type="string" indexed="true" stored="true" required="true" />
+-->
+   <field name="id" type="tint" indexed="true" stored="false" required="true" />
+   <field name="h2" type="tint" indexed="true" stored="false" required="true" />
    <field name="partition" type="string" indexed="true" stored="true" required="true"/>
    <field name="bucket" type="string" indexed="true" stored="true" required="true"/>
    <field name="key" type="string" indexed="true" stored="true" required="true"/>

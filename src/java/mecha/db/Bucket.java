@@ -40,6 +40,8 @@ public class Bucket {
         Mecha.getMonitoring().addMonitoredRates(rates);
     }
     
+    final private static int MURMUR_SEED = 12261976;
+    
     final private byte[] bucket;
     final private String bucketStr;
     final private String partition;
@@ -61,14 +63,6 @@ public class Bucket {
         
         dateFormat = new java.text.SimpleDateFormat(STANDARD_DATE_FORMAT);
         
-        /*
-        this.bucketDriverClassName = Mecha.getConfig().<String>get("bucket-driver");
-        Class driverClassObj = Class.forName(bucketDriverClassName);
-        Class[] argTypes = { String.class, String.class, String.class };
-        Object[] args = { partition, bucketStr, dataDir };
-        db = (BucketDriver) driverClassObj.getConstructor(argTypes).newInstance(args);
-        */
-        
         // update to use partition-specific core?
         solrServer = Mecha.getSolrManager().getCore("index").getServer();
         
@@ -77,22 +71,16 @@ public class Bucket {
         
     public void stop() throws Exception {
         log.info("stop: " + bucketStr + ", " + partition + ": " + dataDir);
-        //db.stop();
     }
     
     public byte[] get(byte[] key) throws Exception {
-        String id = makeid(key);
+        String id = ""+makeid(key);
         
         ModifiableSolrParams solrParams = new ModifiableSolrParams();
         solrParams.set("q", "*:*");
-        solrParams.set("fq", "id:" + id);
+        solrParams.set("fq", "id:\"" + id + "\"");
         QueryResponse res = 
             solrServer.query(solrParams);
-        
-        /*
-        log.info("get: " + bucketStr + ": " + partition + ": " + 
-            (new String(key)) + ": " + res.getResults().getNumFound() + " found");
-        */
         
         JSONObject msg = null;
         for(SolrDocument doc : res.getResults()) {
@@ -102,12 +90,9 @@ public class Bucket {
         
         JSONObject riakObject = makeRiakObject(msg);
         
-        //log.info("riakObject = " + riakObject.toString(2));
-        
         rates.add("mecha.db.bucket.global.get");
         
         return riakObject.toString().getBytes();
-        //return db.get(key);
     }
     
     private JSONObject jsonizeSolrDoc(SolrDocument doc) throws Exception {
@@ -152,6 +137,7 @@ public class Bucket {
         msg.remove("vclock");
         msg.remove("vtag");
         msg.remove("id");
+        msg.remove("h2");
         
         obj.put("data", msg.toString());
         values.put(obj);
@@ -223,10 +209,9 @@ public class Bucket {
             
             //db.put(key, value);
                         
-            String id = makeid(key);
-            
             SolrInputDocument doc = new SolrInputDocument();
-            doc.addField("id", id);
+            doc.addField("id", makeid(key));
+            doc.addField("h2", makeh2(key));
             doc.addField("partition", partition);
             doc.addField("bucket", bucketStr);
             doc.addField("key", new String(key));
@@ -285,10 +270,7 @@ public class Bucket {
         log.info(partition + ": delete: " + (new String(key)));
         try {
             rates.add("mecha.db.bucket.global.delete");
-            solrServer.deleteByQuery(
-                "bucket:\"" + bucketStr + "\" AND " +
-                "key:\"" + (new String(key)) + "\"");
-            //db.delete(key);
+            solrServer.deleteByQuery("id:\"" + makeid(key) + "\"");
         } catch (Exception ex) {
             Mecha.getMonitoring().error("mecha.db.mdb", ex);
             /*
@@ -400,10 +382,30 @@ public class Bucket {
         }
     }
     
-    private String makeid(byte[] key) throws Exception {
+    private int makeid(final byte[] key) throws Exception {
+        byte[] hashval = String.format("%1$s,%2$s,%3$s",
+                partition, bucketStr, new String(key)).getBytes();
+        return MurmurHash3.murmurhash3_x86_32(
+            hashval, 0, hashval.length, MURMUR_SEED);
+        
+        /*
         return HashUtils.sha1(
             String.format("%1$s,%2$s,%3$s",
                 partition, bucketStr, new String(key)));
+        */
+    }
+    
+    private int makeh2(final byte[] key) throws Exception {
+        byte[] hashval = String.format("%1$s,%2$s",
+                bucketStr, new String(key)).getBytes();
+        return MurmurHash3.murmurhash3_x86_32(
+            hashval, 0, hashval.length, MURMUR_SEED);
+        
+        /*
+        return HashUtils.sha1(
+            String.format("%1$s,%2$s,%3$s",
+                partition, bucketStr, new String(key)));
+        */
     }
     
     public String getBucketName() {

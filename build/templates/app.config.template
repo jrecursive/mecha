@@ -6,7 +6,7 @@
  
               {default_bucket_props, [
                   {last_write_wins, true},
-                  {r, 1}
+                  {r, 2}
               ]},
  
               %% Default location of ringstate
