@@ -943,6 +943,7 @@ public class SolrModule extends MVMModule {
     public class ValueCountReducer extends MVMFunction {
         Map<String, Integer> facetMap;
         final int mincount;
+        final boolean h2count; // for internal / debug use
         
         public ValueCountReducer(String refId, MVMContext ctx, JSONObject config) 
             throws Exception {
@@ -952,6 +953,11 @@ public class SolrModule extends MVMModule {
                 mincount = Integer.parseInt(config.getString("mincount"));
             } else {
                 mincount = 0;
+            }
+            if (config.has("h2count")) {
+                h2count = true;
+            } else {
+                h2count = false;
             }
         }
         
@@ -966,9 +972,19 @@ public class SolrModule extends MVMModule {
         
         public void onDoneEvent(JSONObject msg) throws Exception {
             JSONObject dataMsg = new JSONObject();
-            for(String term : facetMap.keySet()) {
-                if (facetMap.get(term) >= mincount) {
-                    dataMsg.put(term, facetMap.get(term));
+            if (h2count) {
+                int h2ct = 0;
+                for(Integer ct : facetMap.values()) {
+                    if (ct > 1) {
+                        h2ct++;
+                    }
+                }
+                dataMsg.put("h2count", h2ct);
+            } else {
+                for(String term : facetMap.keySet()) {
+                    if (facetMap.get(term) >= mincount) {
+                        dataMsg.put(term, facetMap.get(term));
+                    }
                 }
             }
             broadcastDataMessage(dataMsg);

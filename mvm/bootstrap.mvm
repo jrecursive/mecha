@@ -54,6 +54,9 @@ ${root} -> ${sink}
 #if (!$args.start) #set ($args.start = "0") #end
 #if (!$args.sort) #set ($args.sort = "count") #end
 
+#if (!$args.h2count) #set ($args.h2count_str = "")
+#else #set ($args.h2count_str = " h2count:true") #end
+
 #if ($args.prefix) #set ($prefix_arg = "facet.prefix:${args.prefix}")
 #else #set ($prefix_arg = "") #end
 
@@ -64,7 +67,7 @@ ${root} = (with-coverage partition-marker:"<<${guid}-p>>" host-marker:"<<${guid}
 #if ($args.cardinality-only == "true")
 ${guid}-reducer = (cardinality-reducer)
 #else
-${guid}-reducer = (value-count-reducer mincount:${args.mincount})
+${guid}-reducer = (value-count-reducer mincount:${args.mincount}${args.h2count_str})
 #end
 
 ${root} -> ${guid}-reducer
