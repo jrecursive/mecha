@@ -28,7 +28,7 @@ register namespace:$ module-class:mecha.vm.bifs.SystemModule verbs:(commit:Commi
 	#set ($args.logical-connector = "AND") 
 #else #set ($args.logical-connector = "") #end
 #if (!$args.filter) #set ($args.filter = "") #end
-#if (!$args.materialize) #set ($args.materialize = "true") #end
+#if (!$args.materialize) #set ($args.materialize = "false") #end
 #if (!$args.sort-field) #set ($args.sort-field = "key") #end
 #if (!$args.sort-dir) #set ($args.sort-dir = "asc") #end
 #set ($args.filter = $util.escapeQuotes($args.filter))
@@ -165,7 +165,7 @@ ${guid}-reducer -> ${sink}
 #if (!$args.limit) #set ($args.limit = "-1") #end
 #if (!$args.sort-field) #set ($args.sort-field = "key") #end
 #if (!$args.sort-dir) #set ($args.sort-dir = "asc") #end
-#if (!$args.materialize) #set ($args.materialize = "true") #end
+#if (!$args.materialize) #set ($args.materialize = "false") #end
 #if (!$args.core) #set ($args.core = "index") #end
 #if (!$args.fields) #set ($args.fields = "*") #end
 
@@ -224,7 +224,7 @@ ${connecting_vertex} -> ${sink}
 #if (!$args.limit) #set ($args.limit = "-1") #end
 #if (!$args.sort-field) #set ($args.sort-field = "key") #end
 #if (!$args.sort-dir) #set ($args.sort-dir = "asc") #end
-#if (!$args.materialize) #set ($args.materialize = "true") #end
+#if (!$args.materialize) #set ($args.materialize = "false") #end
 #if (!$args.core) #set ($args.core = "index") #end
 #if (!$args.fields) #set ($args.fields = "*") #end
 

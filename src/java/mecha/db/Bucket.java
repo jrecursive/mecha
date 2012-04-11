@@ -253,6 +253,12 @@ public class Bucket {
                     f.endsWith("_ll") ||    // lat,lon latitude, longitude coordinate
                     f.endsWith("_geo")) {
                     
+                    if (f.endsWith("_dt")) {
+                        if (!jo.getString(f).endsWith("Z")) {
+                            jo.put(f,jo.getString(f) + "Z");
+                        }
+                    }
+                    
                     doc.addField(f, jo.get(f));
                 
                 } else if (f.endsWith("_s_mv")) {   // array of exact strings

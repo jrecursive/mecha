@@ -764,8 +764,7 @@ public class SolrModule extends MVMModule {
                                     } else {
                                         msg = new JSONObject();
                                         for(String fieldName : doc.getFieldNames()) {
-                                            if (fieldName.equals("last_modified") ||
-                                                fieldName.endsWith("_dt")) {
+                                            if (fieldName.endsWith("_dt")) {
                                                 String date = 
                                                     dateFormat.format((Date)doc.get(fieldName));
                                                 msg.put(fieldName, date);

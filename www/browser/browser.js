@@ -92,7 +92,6 @@ function browse(bucket, limit) {
                 var data = rs[idx];
                 for(field in data) {
                     if (field.charAt(0) == "$") continue;
-                    /*
                     if (field == "key" ||
                         field == "bucket" ||
                         field == "partition" ||
@@ -100,7 +99,6 @@ function browse(bucket, limit) {
                         field == "vtag" || 
                         field == "last_modified" ||
                         field == "id") continue;
-                    */
                     if (data[field] == "") continue;
                     fields[field] = 1;
                 }
