@@ -45,6 +45,8 @@ public class MacroServlet extends HttpServlet {
         throws ServletException, IOException {
         try {
             response.setCharacterEncoding("UTF-8");
+            response.setHeader("Access-Control-Allow-Origin", "*");
+
             final JSONObject params = 
                 parseParameterMap(request.getParameterMap());
             String[] parts = request.getPathInfo().substring(1).split("/");            

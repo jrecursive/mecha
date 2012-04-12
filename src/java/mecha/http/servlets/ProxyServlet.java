@@ -47,6 +47,8 @@ public class ProxyServlet extends HttpServlet {
         throws ServletException, IOException {
         try {
             response.setCharacterEncoding("UTF-8");
+            response.setHeader("Access-Control-Allow-Origin", "*");
+            
             Map<String, String[]> requestParamMap = request.getParameterMap();
             String u = requestParamMap.get("u")[0];
             response.getWriter().print(HTTPUtils.fetch(u));

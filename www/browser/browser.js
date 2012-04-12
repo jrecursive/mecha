@@ -3,7 +3,7 @@ var config;
 var g_limit = 30;
 
 function do_cmd(cmd, f) {
-    var c = new WebSocket("ws://" + config['server-addr'] + ":" + 
+    var c = new WebSocket("ws://" + window.location.hostname + ":" + // config['server-addr'] + ":" + 
             config['websocket-port'] + "/mecha");
     c.onopen = function() {
         c.send("auth " + config.password);

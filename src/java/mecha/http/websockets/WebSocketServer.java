@@ -39,7 +39,10 @@ public class WebSocketServer {
         ServerBootstrap bootstrap = new ServerBootstrap(new NioServerSocketChannelFactory(
                 Executors.newCachedThreadPool(), Executors.newCachedThreadPool()));
         bootstrap.setPipelineFactory(new WebSocketServerPipelineFactory());
-        bootstrap.bind(new InetSocketAddress(addr, port));
+        //bootstrap.bind(new InetSocketAddress(addr, port));
+        
+        // xxx todo: tmp
+        bootstrap.bind(new InetSocketAddress("0.0.0.0", port));
         log.info("* websocket server started (port " + port + ")");
     }
 }

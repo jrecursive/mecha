@@ -47,6 +47,8 @@ public class ProcServlet extends HttpServlet {
         throws ServletException, IOException {
         try {
             response.setCharacterEncoding("UTF-8");
+            response.setHeader("Access-Control-Allow-Origin", "*");
+            
             final JSONObject params = new JSONObject();
             Map<String, String[]> requestParamMap = request.getParameterMap();
             for(String k : requestParamMap.keySet()) {

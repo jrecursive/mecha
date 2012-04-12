@@ -2,7 +2,7 @@
 <html>
     <head>
         <meta charset="utf-8">
-        <title>Mecha - Console</title>
+        <title>Mecha - dashboard</title>
         <link href="bootstrap/css/bootstrap.css" rel="stylesheet">
         
         <!-- Le HTML5 shim, for IE6-8 support of HTML5 elements -->
@@ -35,7 +35,7 @@
                 "riak.node.puts": "rputs",
                 "riak.node.gets": "rgets",
                 "jvm.free-memory": "jvmfree",
-                "jvm.used-memory": "jvmused",
+                //"jvm.used-memory": "jvmused",
                 "mecha.db.bucket.global.get": "glget",
                 "mecha.server.connections": "mcon",
                 "mecha.server.active-connections": "acon",
@@ -72,7 +72,8 @@
             
             function refresh() {
                 var u = "http://" +
-                         config['server-addr'] + ":" +
+                         //config['server-addr'] + ":" +
+                         window.location.hostname + ":" +
                          config['http-port'] + 
                             "/proc/riak/do?u=/admin/cluster/list";
 
@@ -119,15 +120,17 @@
                         //node_row.find(".ring_pct").html(node.ring_pct);
                         //node_row.find(".pending_pct").html(node.pending_pct);
                         //node_row.find(".reachable").html(node.reachable===true?"true":"false");
-                        node_row.find(".mem_erlang").html(erlang_mem_pct + "%" + "<br>" + erlang_mem_mbytes + " MB");
+                        //node_row.find(".mem_erlang").html(erlang_mem_pct + "%" + "<br>" + erlang_mem_mbytes + " MB");
                         node_row.find(".mem_used").html(total_mem_used_pct + "%" + "<br>" + total_mem_used_mbytes + " MB");
                         //node_row.find(".mem_total").html( total_mem + " GB");
                         node_row.find(".warnings").html("");
                         cluster_table.find("#cluster-rows").append(node_row);
                     }
                     
+                    /*
                     var u = "http://" +
-                         config['server-addr'] + ":" +
+                         //config['server-addr'] + ":" +
+                         window.location.hostname + ":" + 
                          config['http-port'] + 
                             "/proc/cluster/do?u=/proc/node/last-commit";
                     var now_sec = (new Date()).valueOf() / 1000.00;
@@ -144,12 +147,14 @@
                             $("#h-" + hex_md5(host) + " .lcommit").html(lcommsg);
                         }
                     });
+                    */
                     
                     /*
                      * overview
                     */
                     var u = "http://" +
-                         config['server-addr'] + ":" +
+                         //config['server-addr'] + ":" +
+                         window.location.hostname + ":" +
                          config['http-port'] + 
                             "/proc/riak/do?u=/admin/overview";
                     $.getJSON(u, function(data) {
@@ -178,7 +183,8 @@
                      * metrics
                     */
                     var u = "http://" +
-                         config['server-addr'] + ":" +
+                         //config['server-addr'] + ":" +
+                         window.location.hostname + ":" + 
                          config['http-port'] + 
                             "/proc/metrics?entries=15&all=true";
                     $.getJSON(u, function(data) {
@@ -279,11 +285,11 @@
                         <!-- /admin/cluster/list/ -->
                         <td class="databox cluster-data host">HOST</td>
                         <td class="databox cluster-data status">STATUS</td>
-                        <td class="databox cluster-data lcommit">LCOMMIT</td>
+                        <!-- <td class="databox cluster-data lcommit">LCOMMIT</td> -->
                         <!-- <td class="databox cluster-data ring_pct">ring_pct</td>
                         <td class="databox cluster-data pending_pct">pending_pct</td> -->
                         <!-- <td class="databox cluster-data reachable">reachable</td> -->
-                        <td class="databox cluster-data mem_erlang">MEM_ERL</td>
+                        <!-- <td class="databox cluster-data mem_erlang">MEM_ERL</td> -->
                         <td class="databox cluster-data mem_used">MEM_USED</td>
                         <!-- <td class="databox cluster-data mem_total">mem_total</td> -->
                         
@@ -320,7 +326,7 @@
                         <td class="databox cluster-data metric m_rgets">RGETS</td>
                         
                         <td class="databox cluster-data metric m_jvmfree">JVMFREE</td>
-                        <td class="databox cluster-data metric m_jvmused">JVMUSED</td>
+                        <!-- <td class="databox cluster-data metric m_jvmused">JVMUSED</td> -->
                         <!-- <td class="databox cluster-data metric m_glget">GLGET</td> -->
                         <td class="databox cluster-data metric m_mcon">MCON</td>
                         <!-- <td class="databox cluster-data metric m_acon">ACON</td> -->

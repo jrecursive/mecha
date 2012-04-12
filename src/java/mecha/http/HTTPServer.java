@@ -45,7 +45,9 @@ public class HTTPServer {
         addr = Mecha.getConfig().getString("server-addr");
         wwwRoot = Mecha.getConfig().getString("www-root");
         
-        server = new Server(new InetSocketAddress(addr, port));
+        //server = new Server(new InetSocketAddress(addr, port));
+        // xxx todo: tmp
+        server = new Server(port);
         context = new ServletContextHandler(ServletContextHandler.NO_SECURITY);
         context.setContextPath("/");
         server.setHandler(context);
