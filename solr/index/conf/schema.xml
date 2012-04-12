@@ -31,6 +31,12 @@
       </analyzer>
     </fieldType>
 
+    <fieldType name="text_path" class="solr.TextField" positionIncrementGap="100">
+      <analyzer> <!-- type="Index"> -->
+        <tokenizer class="solr.PathHierarchyTokenizerFactory"/>
+      </analyzer>
+    </fieldType>
+
     <fieldType name="text" class="solr.TextField" positionIncrementGap="100">
       <analyzer type="index">
         <tokenizer class="solr.WhitespaceTokenizerFactory"/>
@@ -150,14 +156,22 @@
     <fieldType name="3d_point" class="solr.PointType" dimension="3" subFieldSuffix="_d"/>
     <fieldType name="4d_point" class="solr.PointType" dimension="4" subFieldSuffix="_d"/>
     
+    <!-- Money/currency field type. See http://wiki.apache.org/solr/MoneyFieldType
+        Parameters:
+          defaultCurrency: Specifies the default currency if none specified. Defaults to "USD"
+          precisionStep:   Specifies the precisionStep for the TrieLong field used for the amount
+          providerClass:   Lets you plug in other exchange backend. Defaults to FileExchangeRatePr
+ovider
+                           The FileExchangeRateProvider takes one parameter:
+                             currencyConfig: name of an xml file holding exhange rates
+   -->
+    <fieldType name="currency" class="solr.CurrencyField" precisionStep="8" defaultCurrency="USD" 
+currencyConfig="currency.xml" />
+    
  </types>
 
  <fields>
-<!--
-   <field name="id" type="string" indexed="true" stored="true" required="true" />
--->
    <field name="id" type="string" indexed="true" stored="false" required="true" />
-   <field name="h2" type="string" indexed="true" stored="false" required="true" />
    <field name="partition" type="string" indexed="true" stored="true" required="true"/>
    <field name="bucket" type="string" indexed="true" stored="true" required="true"/>
    <field name="key" type="string" indexed="true" stored="true" required="true"/>
@@ -165,15 +179,12 @@
    <field name="vtag" type="string" indexed="false" stored="true" multiValued="false"/>
    <field name="vclock" type="string" indexed="false" stored="true" multiValued="false"/>
    
-   <!-- tmp -->
-   <!--
-   <field name="last_modified" type="tdate" indexed="true" stored="true" default="NOW" multiValued="false"/>
-   -->
-   
    <dynamicField name="*_s"  type="string"  indexed="true"  stored="true" postingsFormat="Pulsing40"/>
-   <dynamicField name="*_s_mv"  type="string"  indexed="true"  stored="true" multiValued="true"/>
+   <dynamicField name="*_s_mv"  type="string"  indexed="true"  stored="true" multiValued="true" postingsFormat="Pulsing40"/>
    <dynamicField name="*_t"  type="text"    indexed="true"  stored="true" termVectors="false" termPositions="false" termOffsets="false"/>
    <dynamicField name="*_tt"  type="text"    indexed="true"  stored="true" termVectors="true" termPositions="false" termOffsets="false"/>
+   <dynamicField name="*_cat"  type="text_path" indexed="true"  stored="true"/>
+   <dynamicField name="*_cur"  type="currency" indexed="true"  stored="true"/>
    <dynamicField name="*_b"  type="boolean" indexed="true"  stored="true"/>
    <dynamicField name="*_i" type="tint"    indexed="true"  stored="true"/>
    <dynamicField name="*_l" type="tlong"   indexed="true"  stored="true"/>
@@ -186,10 +197,27 @@
    <dynamicField name="*_xyz" type="3d_point" indexed="true" stored="true"/>
    <dynamicField name="*_xyzw" type="4d_point" indexed="true" stored="true"/>
    
+   <dynamicField name="*_bin" type="binary" indexed="false" stored="true"/>
+   
+   <dynamicField name="*_ss"  type="string"  indexed="false"  stored="true"/>
+   <dynamicField name="*_scur"  type="currency" indexed="false"  stored="true"/>
+   <dynamicField name="*_sb"  type="boolean" indexed="false"  stored="true"/>
+   <dynamicField name="*_si" type="tint"    indexed="false"  stored="true"/>
+   <dynamicField name="*_sl" type="tlong"   indexed="false"  stored="true"/>
+   <dynamicField name="*_sf" type="tfloat"  indexed="false"  stored="true"/>
+   <dynamicField name="*_sd" type="tdouble" indexed="false"  stored="true"/>
+   <dynamicField name="*_sdt" type="tdate"  indexed="false"  stored="true"/>
+   <dynamicField name="*_sxy" type="location" indexed="false" stored="true"/>
+   <dynamicField name="*_sll" type="latLon" indexed="false" stored="true"/>
+   <dynamicField name="*_sgeo" type="geohash" indexed="false" stored="true"/>
+   <dynamicField name="*_sxyz" type="3d_point" indexed="false" stored="true"/>
+   <dynamicField name="*_sxyzw" type="4d_point" indexed="false" stored="true"/>   
+   
    <dynamicField name="*_is" type="string"  indexed="true"  stored="false"/>
    <dynamicField name="*_is_mv" type="string"  indexed="true"  stored="false" multiValued="true"/>
    <dynamicField name="*_it" type="text"    indexed="true"  stored="false" termVectors="false" termPositions="false" termOffsets="false"/>
    <dynamicField name="*_itt" type="text"    indexed="true"  stored="false" termVectors="true" termPositions="false" termOffsets="false"/>
+   <dynamicField name="*_icat"  type="text_path" indexed="true"  stored="true"/>
    <dynamicField name="*_ib" type="boolean" indexed="true"  stored="false"/>
    <dynamicField name="*_ii" type="tint"    indexed="true"  stored="false"/>
    <dynamicField name="*_il" type="tlong"   indexed="true"  stored="false"/>

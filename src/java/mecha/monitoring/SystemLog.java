@@ -161,6 +161,7 @@ public class SystemLog {
     }
     
     public void log(String type, String name, String message, JSONObject data) {
+        /*
         try {
             String id = HashUtils.sha1(Mecha.guid());
             SolrInputDocument doc = new SolrInputDocument();
@@ -191,6 +192,7 @@ public class SystemLog {
         } catch (Exception ex) {
             ex.printStackTrace();
         }
+        */
     }
     
     protected void deleteByQuery(String query) throws Exception {

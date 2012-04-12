@@ -198,10 +198,12 @@ ${root} = (covered-index-select sort-field:${args.sort-field} sort-order:${args.
 
 #set ($connecting_vertex = $root)
 
-${guid}-dedupe = (bloom-dedupe num-elements:1000000 max-fp-rate:0.0001 notify:"${root}")
-${connecting_vertex} -> ${guid}-dedupe
-
-#set ($connecting_vertex = "${guid}-dedupe")
+#*
+    --- no longer necessary with "perfectly aligned" coverage ---
+    ${guid}-dedupe = (bloom-dedupe num-elements:1000000 max-fp-rate:0.0001 notify:"${root}")
+    ${connecting_vertex} -> ${guid}-dedupe
+    #set ($connecting_vertex = "${guid}-dedupe")
+*#
 
 #if ($args.start != "0")
 ${guid}-start = (eat count:${args.start})
@@ -241,11 +243,13 @@ ${connecting_vertex} -> ${sink}
 #set ($args.filter = $util.escapeQuotes($args.filter))
 
 ${root} = (with-coverage partition-marker:"<<${guid}-p>>" host-marker:"<<${guid}-h>>" bucket:${args.bucket} do:(warp host:<<${guid}-h>> do:(solr-select params:(q:"*:*" fq:"(partition:<<${guid}-p>> AND bucket:${args.bucket}) ${args.logical-connector} ${args.filter}" start:${args.start} rows:${args.limit} sort:"${args.sort-field} ${args.sort-dir}" fl:"${args.fields}") materialize:${args.materialize} core:${args.core})))
-${guid}-dedupe = (bloom-dedupe num-elements:1000000 max-fp-rate:0.001)
+// ${guid}-dedupe = (bloom-dedupe num-elements:1000000 max-fp-rate:0.001)
 ${guid}-reducer = (sorted-accumulating-reducer sort-field:${args.sort-field} sort-dir:${args.sort-dir})
 
-${root} -> ${guid}-dedupe
-${guid}-dedupe -> ${guid}-reducer
+// ${root} -> ${guid}-dedupe
+// ${guid}-dedupe -> ${guid}-reducer
+${root} -> ${guid}-reducer
+
 ${guid}-reducer -> ${sink}
 
 #end select-set

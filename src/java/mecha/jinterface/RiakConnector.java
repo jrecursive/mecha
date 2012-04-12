@@ -18,6 +18,7 @@ import java.lang.reflect.*;
 import java.util.*;
 import java.util.logging.*;
 import java.util.concurrent.*;
+import java.util.concurrent.locks.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import com.ericsson.otp.erlang.*;
 import mecha.json.*;
@@ -34,8 +35,15 @@ public class RiakConnector extends OtpProcess {
     
     final private Hashtable<String, Method> methodTable =
         new Hashtable<String, Method>();
-    final private ExecutorService commandExecutor =
-        Executors.newCachedThreadPool();
+    final private ExecutorService genericCommandExecutor =
+        Executors.newFixedThreadPool(1);
+    
+    // partition-executors
+    final private Map<String, ExecutorService> partitionExecutors =
+        new ConcurrentHashMap<String, ExecutorService>();
+    
+    // jinterface mbox lock
+    final private ReentrantLock mboxLock = new ReentrantLock(true);
     
     // mdb
 
@@ -65,7 +73,27 @@ public class RiakConnector extends OtpProcess {
     }
     
     private void processMsg(final OtpMsg msg) {
-        commandExecutor.execute(new MsgRunnable(this,msg));
+        OtpErlangTuple svcMsg;
+        try {
+            svcMsg = (OtpErlangTuple) msg.getMsg();
+        } catch (com.ericsson.otp.erlang.OtpErlangDecodeException ex) {
+            genericCommandExecutor.execute(new MsgRunnable(this,msg));
+            return;
+        }
+        OtpErlangObject[] args = ((OtpErlangList) svcMsg.elementAt(1)).elements();
+        if (args[0] instanceof OtpErlangLong) {
+            final String partition = ( (OtpErlangLong) args[0] ).toString();
+            final ExecutorService commandExecutor;
+            if (partitionExecutors.containsKey(partition)) {
+                commandExecutor = partitionExecutors.get(partition);
+            } else {
+                commandExecutor = Executors.newFixedThreadPool(1);
+                partitionExecutors.put(partition, commandExecutor);
+            }
+            commandExecutor.execute(new MsgRunnable(this,msg));
+        } else {
+            genericCommandExecutor.execute(new MsgRunnable(this,msg));
+        }
     }
 
     private class MsgRunnable implements Runnable {
@@ -117,7 +145,12 @@ public class RiakConnector extends OtpProcess {
                     reply[0] = ref;
                     reply[1] = callResult;
                     OtpErlangTuple r = new OtpErlangTuple(reply);
-                    getMbox().send(replyToPid, r);
+                    mboxLock.lock();
+                    try {
+                        getMbox().send(replyToPid, r);
+                    } finally {
+                        mboxLock.unlock();
+                    }
                 }
             } catch (Exception ex) {
                 Mecha.getMonitoring().error("mecha.riak-connector", ex);
@@ -289,7 +322,12 @@ public class RiakConnector extends OtpProcess {
                 mdb.fold(partition.toString(), 
                                forEachFunction);
             }
-            getMbox().send(streamToPid, new OtpErlangAtom("done"));
+            mboxLock.lock();
+            try {
+                getMbox().send(streamToPid, new OtpErlangAtom("done"));
+            } finally {
+                mboxLock.unlock();
+            }
         } catch (Exception ex) {
             Mecha.getMonitoring().error("mecha.riak-connector", ex);
             ex.printStackTrace();
@@ -306,11 +344,21 @@ public class RiakConnector extends OtpProcess {
         try {
             mdb.foldBucketNames(partition.toString(), new MDB.ForEachFunction() {
                 public boolean each(byte[] bucket, byte[] _key, byte[] _value) {
-                    getMbox().send(streamToPid, new OtpErlangBinary(bucket));
+                    mboxLock.lock();
+                    try {
+                        getMbox().send(streamToPid, new OtpErlangBinary(bucket));
+                    } finally {
+                        mboxLock.unlock();
+                    }
                     return true;
                 }
             });
-            getMbox().send(streamToPid, new OtpErlangAtom("done"));
+            mboxLock.lock();
+            try {
+                getMbox().send(streamToPid, new OtpErlangAtom("done"));
+            } finally {
+                mboxLock.unlock();
+            }
         } catch (Exception ex) {
             Mecha.getMonitoring().error("mecha.riak-connector", ex);
             ex.printStackTrace();
@@ -366,7 +414,12 @@ public class RiakConnector extends OtpProcess {
                                   new OtpErlangBinary(value)
                                 };
                             OtpErlangTuple otpbkv = new OtpErlangTuple(bkv);
-                            getMbox().send(streamToPid, otpbkv);
+                            mboxLock.lock();
+                            try {
+                                getMbox().send(streamToPid, otpbkv);
+                            } finally {
+                                mboxLock.unlock();
+                            }
                             return true;
                         }
                     });
@@ -380,7 +433,12 @@ public class RiakConnector extends OtpProcess {
                                       new OtpErlangBinary(value)
                                     };
                                 OtpErlangTuple otpbkv = new OtpErlangTuple(bkv);
-                                getMbox().send(streamToPid, otpbkv);
+                                mboxLock.lock();
+                                try {
+                                    getMbox().send(streamToPid, otpbkv);
+                                } finally {
+                                    mboxLock.unlock();
+                                }
                                 
                                 /*
                                  * TODO: Either configurable backpressure ACKs or 
@@ -420,7 +478,12 @@ public class RiakConnector extends OtpProcess {
                 
             } finally {
                 foldProcMgr.shutdown();
-                getMbox().send(streamToPid, new OtpErlangAtom("done"));
+                mboxLock.lock();
+                try {
+                    getMbox().send(streamToPid, new OtpErlangAtom("done"));
+                } finally {
+                    mboxLock.unlock();
+                }
             }
         } catch (Exception ex) {
             Mecha.getMonitoring().error("mecha.riak-connector", ex);
@@ -453,7 +516,12 @@ public class RiakConnector extends OtpProcess {
                               new OtpErlangBinary(key)
                             };
                         OtpErlangTuple otpbkv = new OtpErlangTuple(bkv);
-                        getMbox().send(streamToPid, otpbkv);
+                        mboxLock.lock();
+                        try {
+                            getMbox().send(streamToPid, otpbkv);
+                        } finally {
+                            mboxLock.unlock();
+                        }
                         return true;
                     }
                 });
@@ -465,12 +533,22 @@ public class RiakConnector extends OtpProcess {
                               new OtpErlangBinary(key)
                             };
                         OtpErlangTuple otpbkv = new OtpErlangTuple(bkv);
-                        getMbox().send(streamToPid, otpbkv);
+                        mboxLock.lock();
+                        try {
+                            getMbox().send(streamToPid, otpbkv);
+                        } finally {
+                            mboxLock.unlock();
+                        }
                         return true;
                     }
                 });
             }
-            getMbox().send(streamToPid, new OtpErlangAtom("done"));
+            mboxLock.lock();
+            try {
+                getMbox().send(streamToPid, new OtpErlangAtom("done"));
+            } finally {
+                mboxLock.unlock();
+            }
         } catch (Exception ex) {
             Mecha.getMonitoring().error("mecha.riak-connector", ex);
             ex.printStackTrace();

@@ -5,8 +5,12 @@
   <lib dir="../lib" />
   <lib dir="../usr/lib" />
   <dataDir>${solr.data.dir:}</dataDir>
+<!--
   <directoryFactory name="DirectoryFactory" 
                     class="${solr.directoryFactory:solr.StandardDirectoryFactory}"/>
+-->
+  <directoryFactory name="DirectoryFactory" 
+                    class="${solr.directoryFactory:solr.NRTCachingDirectoryFactory}"/>
   <indexDefaults>
     <useCompoundFile>false</useCompoundFile>
     <mergeFactor>100</mergeFactor>
@@ -26,7 +30,6 @@
     <ramBufferSizeMB>128</ramBufferSizeMB>
     <mergeFactor>100</mergeFactor>
     <unlockOnStartup>false</unlockOnStartup>
-    <reopenReaders>true</reopenReaders>
     <deletionPolicy class="solr.SolrDeletionPolicy">
       <str name="maxCommitsToKeep">1</str>
       <str name="maxOptimizedCommitsToKeep">0</str>
@@ -35,9 +38,16 @@
   </mainIndex>
   <jmx />
   <updateHandler class="solr.DirectUpdateHandler2">
-       <autoSoftCommit>
-         <maxTime>100</maxTime>
-       </autoSoftCommit>
+        <!-- Enables a transaction log, currently used for real-time get.
+             "dir" - the target directory for transaction logs, defaults to the
+                solr data directory.  --> 
+        <updateLog>
+          <str name="dir">${solr.data.dir:}</str>
+        </updateLog>
+
+        <autoSoftCommit>
+         <maxTime>1000</maxTime>
+        </autoSoftCommit>
     <!--
        <autoCommit> 
          <maxDocs>10000</maxDocs>
@@ -72,8 +82,8 @@
                     
                     <!-- showItems="32" /> -->
 
-   <enableLazyFieldLoading>true</enableLazyFieldLoading>
-   <queryResultWindowSize>1000</queryResultWindowSize>
+   <enableLazyFieldLoading>false</enableLazyFieldLoading>
+   <queryResultWindowSize>100</queryResultWindowSize>
     
    <!-- Maximum number of documents to cache for any entry in the
         queryResultCache. 
@@ -236,6 +246,18 @@
        not be initialized until the first request that uses it.
 
     -->
+    
+  <!-- realtime get handler, guaranteed to return the latest stored fields of
+       any document, without the need to commit or open a new searcher.  The
+       current implementation relies on the updateLog feature being enabled. -->
+  <requestHandler name="/get" class="solr.RealTimeGetHandler">
+     <lst name="defaults">
+       <str name="omitHeader">true</str>
+     </lst>
+  </requestHandler>
+
+    
+    
   <!-- SearchHandler
 
        http://wiki.apache.org/solr/SearchHandler

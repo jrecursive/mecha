@@ -160,7 +160,7 @@ function structure(bucket) {
     var table = $("#results-table .results-table").parent().clone();
     table.attr("id", "structure-table");
     mechaClient.deriveSchema({
-        "max-samples": 100,
+        "max-samples": 10,
         "bucket": bucket
     }, function(data) {
         var schema = data.result[0];
@@ -186,7 +186,7 @@ function structure(bucket) {
         }
         var table_html = "<div class='table-container'>" + table.html() + "</div>";
         $("#structure-content").html(table_html);
-        statistics(bucket, bucket_fields);
+        //statistics(bucket, bucket_fields);
     });
 }
 
@@ -343,7 +343,7 @@ function load_bucket(bucket) {
     last_key = ["*"];
     bucket_start = [0];
     browse(bucket, g_limit);
-    structure(bucket);
+    //structure(bucket);
     //statistics(bucket); /* depends on structure, and is called upon successful structure call */
 }
 

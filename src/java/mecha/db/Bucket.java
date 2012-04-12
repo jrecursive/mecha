@@ -211,7 +211,7 @@ public class Bucket {
                         
             SolrInputDocument doc = new SolrInputDocument();
             doc.addField("id", ""+makeid(key));
-            doc.addField("h2", ""+makeh2(key));
+            //doc.addField("h2", ""+makeh2(key));
             doc.addField("partition", partition);
             doc.addField("bucket", bucketStr);
             doc.addField("key", new String(key));

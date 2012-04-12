@@ -351,8 +351,6 @@ public class SolrModule extends MVMModule {
                             selectParams.put("q", "*:*");
                         }
                         
-                        log.info("fq = " + selectParams.get("fq"));
-                        
                         if (selectParams.has("start")) {
                             start = Long.parseLong("" + selectParams.get("start"));
                             selectParams.remove("start");
