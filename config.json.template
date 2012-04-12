@@ -23,6 +23,7 @@
     "riak-http-port": 18098,
     "riak-https-port": 18099,
     "riak-protobuf-port": 18100,
+    "riak-handoff-port": 18101,
     
     ##
     ## once riak-partitions is set DO NOT CHANGE!
