@@ -49,7 +49,7 @@
             }
             
             function refresh_mecha() {
-                var u = "/proc/cluster/do?u=/mecha/local-system-select%3Flimit=" + gl_limit + "%26filter=bucket:log%2520name:mecha%252A%2520%252Dis_error_b:true%26sort=last_modified%2520desc";
+                var u = "/proc/cluster/do?u=/mecha/local-system-select%3Flimit=" + gl_limit + "%26filter=bucket:log%2520name:mecha%252A%2520%252Dis_error_b:true%26sort=ts%2520desc";
                 $.getJSON(u, function(data) {
                     var result = data.result;
                     for(host in result) {
@@ -57,9 +57,9 @@
                         for(idx in data) {
                             var entry = data[idx];
                             if (entry.message == "") continue;
-                            entry.message = entry.last_modified + ": " +
+                            entry.message = entry.ts + ": " +
                                             entry.message;
-                            var row_id = entry['last_modified'];
+                            var row_id = entry['ts'];
                             timeline_entry(row_id, "mecha", entry);
                         }
                     }
@@ -72,7 +72,7 @@
             }
 
             function refresh_riak() {
-                var u = "/proc/cluster/do?u=/mecha/local-system-select%3Flimit=" + gl_limit + "%26filter=bucket:log%2520name:riak.log%2520%252Dis_error_b:true%26sort=last_modified%2520desc";
+                var u = "/proc/cluster/do?u=/mecha/local-system-select%3Flimit=" + gl_limit + "%26filter=bucket:log%2520name:riak.log%2520%252Dis_error_b:true%26sort=ts%2520desc";
                 $.getJSON(u, function(data) {
                     var result = data.result;
                     for(host in result) {
@@ -94,7 +94,7 @@
                                 }
                                 continue;
                             }
-                            var row_id = entry['last_modified'];
+                            var row_id = entry['ts'];
                             entry.name = msg_type;
                             if (msg_type == p_msg_type) {
                                 entry.name = "";
@@ -113,7 +113,7 @@
             }
 
             function refresh_errors() {
-                var u = "/proc/cluster/do?u=/mecha/local-system-select%3Flimit=" + gl_limit + "%26filter=bucket:log%2520is_error_b:true%26sort=last_modified%2520desc";
+                var u = "/proc/cluster/do?u=/mecha/local-system-select%3Flimit=" + gl_limit + "%26filter=bucket:log%2520is_error_b:true%26sort=ts%2520desc";
                 $.getJSON(u, function(data) {
                     var result = data.result;
                     for(host in result) {
@@ -121,9 +121,9 @@
                         for(idx in data) {
                             var entry = data[idx];
                             if (entry.message == "") continue;
-                            entry.message = entry.last_modified + ": " +
+                            entry.message = entry.ts + ": " +
                                             entry.message;
-                            var row_id = entry['last_modified'];
+                            var row_id = entry['ts'];
                             timeline_entry(row_id, "error", entry);
                         }
                     }

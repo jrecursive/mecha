@@ -163,7 +163,7 @@
    <field name="name" type="string" indexed="true" stored="true" required="true"/>
     
    <!-- always default -->   
-   <field name="last_modified" type="tdate" indexed="true" stored="true" default="NOW" multiValued="false"/>
+   <field name="ts" type="tdate" indexed="true" stored="true" default="NOW" multiValued="false"/>
    
    <!-- default text message field (text log entries) -->
    <field name="message" type="text" indexed="true" stored="true" termVectors="true" termPositions="false" termOffsets="false" required="false"/>

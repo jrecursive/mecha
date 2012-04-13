@@ -29,7 +29,7 @@
     <useCompoundFile>false</useCompoundFile>
     <ramBufferSizeMB>128</ramBufferSizeMB>
     <mergeFactor>100</mergeFactor>
-    <unlockOnStartup>false</unlockOnStartup>
+    <unlockOnStartup>true</unlockOnStartup>
     <deletionPolicy class="solr.SolrDeletionPolicy">
       <str name="maxCommitsToKeep">1</str>
       <str name="maxOptimizedCommitsToKeep">0</str>

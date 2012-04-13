@@ -132,7 +132,7 @@ function getLog(host) {
     }
     var url = "/mecha/system-select?host=" + 
         host + 
-        "&sort=last_modified desc&limit=10&filter=bucket:log AND NOT name:riak.log";
+        "&sort=ts desc&limit=10&filter=bucket:log AND NOT name:riak.log";
     log_ok = false;
     xhr = $.getJSON(url, function(data) {
         log_triggered = true;
@@ -168,7 +168,7 @@ function getLog(host) {
                 message_html = "<h4>" + result['message'] + "</h4>";
             }
             
-            var result_t = moment(result['last_modified'], "YYYY-MM-DDTHH:mm:ss").subtract('hours', 1).fromNow()
+            var result_t = moment(result['ts'], "YYYY-MM-DDTHH:mm:ss").subtract('hours', 1).fromNow()
             html += 
                 "<tr>" +
                     "<td " + modifier + " >" + result['name'] + "<br/>" + label_mod + "<br/></td><td>" +
@@ -190,7 +190,7 @@ function getLog(host) {
 }
 
 function getTrace(host, trace_id, ex_ct) {
-    var url = '/mecha/system-select?host=' + host + '&sort=last_modified%20asc&limit=100&filter=trace_id_s:' + trace_id;
+    var url = '/mecha/system-select?host=' + host + '&sort=ts%20asc&limit=100&filter=trace_id_s:' + trace_id;
     xhr = $.getJSON(url, function(data) {
         var obj = data.result;
         var html = "<table class='table table-bordered table-condensed'>";

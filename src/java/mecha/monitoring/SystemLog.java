@@ -128,11 +128,11 @@ public class SystemLog {
                         Mecha.getConfig()
                              .getJSONObject("log")
                              .getString("log-pruning-interval");
-                    solrServer.deleteByQuery("bucket:metric AND last_modified:[* TO NOW-" +
+                    solrServer.deleteByQuery("bucket:metric AND ts:[* TO NOW-" +
                                              metricPruningInterval + "]");
-                    solrServer.deleteByQuery("bucket:log AND last_modified:[* TO NOW-" +
+                    solrServer.deleteByQuery("bucket:log AND ts:[* TO NOW-" +
                                              logPruningInterval + "]");
-                    solrServer.deleteByQuery("bucket:error AND last_modified:[* TO NOW-" +
+                    solrServer.deleteByQuery("bucket:error AND ts:[* TO NOW-" +
                                              logPruningInterval + "]");
                     Thread.sleep(60000);
                 } catch (java.lang.InterruptedException iex) {
@@ -161,7 +161,6 @@ public class SystemLog {
     }
     
     public void log(String type, String name, String message, JSONObject data) {
-        /*
         try {
             String id = HashUtils.sha1(Mecha.guid());
             SolrInputDocument doc = new SolrInputDocument();
@@ -192,7 +191,6 @@ public class SystemLog {
         } catch (Exception ex) {
             ex.printStackTrace();
         }
-        */
     }
     
     protected void deleteByQuery(String query) throws Exception {

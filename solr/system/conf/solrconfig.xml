@@ -17,8 +17,8 @@
   <indexDefaults>
     <useCompoundFile>false</useCompoundFile>
     <mergeFactor>100</mergeFactor>
-    <ramBufferSizeMB>32</ramBufferSizeMB>
-    <maxBufferedDocs>10000</maxBufferedDocs>
+    <ramBufferSizeMB>2</ramBufferSizeMB>
+    <maxBufferedDocs>10</maxBufferedDocs>
     <maxFieldLength>10000</maxFieldLength>
     <writeLockTimeout>1000</writeLockTimeout>
     <commitLockTimeout>10000</commitLockTimeout>
@@ -29,9 +29,9 @@
   </indexDefaults>
   <mainIndex>
     <useCompoundFile>false</useCompoundFile>
-    <ramBufferSizeMB>32</ramBufferSizeMB>
+    <ramBufferSizeMB>2</ramBufferSizeMB>
     <mergeFactor>100</mergeFactor>
-    <unlockOnStartup>false</unlockOnStartup>
+    <unlockOnStartup>true</unlockOnStartup>
     <reopenReaders>true</reopenReaders>
     <deletionPolicy class="solr.SolrDeletionPolicy">
       <str name="maxCommitsToKeep">1</str>
@@ -42,7 +42,7 @@
   <jmx />
   <updateHandler class="solr.DirectUpdateHandler2">
        <autoSoftCommit>
-         <maxTime>1000</maxTime>
+         <maxTime>100</maxTime>
        </autoSoftCommit>
     <!--
        <autoCommit> 
