@@ -64,7 +64,8 @@ public class Bucket {
         dateFormat = new java.text.SimpleDateFormat(STANDARD_DATE_FORMAT);
         
         // update to use partition-specific core?
-        solrServer = Mecha.getSolrManager().getCore("index").getServer();
+        //solrServer = Mecha.getSolrManager().getCore("index").getServer();
+        solrServer = Mecha.getSolrManager().getCore(partition,true).getServer();
         
         log.info("Bucket: " + partition + ": " + bucketStr + ": " + dataDir);
     }

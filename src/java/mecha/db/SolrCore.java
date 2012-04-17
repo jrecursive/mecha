@@ -24,12 +24,15 @@ import org.apache.solr.core.CoreContainer;
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.response.QueryResponse;
+import org.apache.solr.client.solrj.request.CoreAdminRequest;
 import org.apache.solr.common.SolrDocument;
 import org.apache.solr.common.SolrDocumentList;
 import org.apache.solr.common.params.ModifiableSolrParams;
 import org.apache.solr.common.params.SolrParams;
 import org.apache.solr.common.util.NamedList;
 import org.apache.solr.servlet.SolrRequestParsers;
+
+import mecha.Mecha;
 
 public class SolrCore {
     final private static Logger log = 
@@ -41,7 +44,8 @@ public class SolrCore {
     final private CoreContainer container;
 
     public SolrCore(String solrHomePath,
-                    String solrCoreName) throws Exception {
+                    String solrCoreName,
+                    boolean createIfNotExist) throws Exception {
         homePath = solrHomePath;
         coreName = solrCoreName;
         log.info("starting solr core [" + homePath + "] " + coreName);
@@ -49,6 +53,16 @@ public class SolrCore {
         container = new CoreContainer();
         container.load(solrHomePath, f );
         server = new EmbeddedSolrServer(container, solrCoreName);
+        
+        if (createIfNotExist) {
+            log.info("calling createCore(" + solrCoreName + ", " + solrHomePath + ", " + server + ")");
+            CoreAdminRequest.createCore(
+                solrCoreName, 
+                solrHomePath + "/" + solrCoreName, 
+                Mecha.getSolrManager().getIndexServer(), 
+                "./solr/" + solrCoreName + "/conf/solrconfig.xml", 
+                "./solr/_p/conf/schema.xml");
+        }
     }
     
     public String getHomePath() {
@@ -70,6 +84,7 @@ public class SolrCore {
     public void shutdown() throws Exception {
         System.out.println("forcing shutdown commit .. ");
         //server.commit(true, false);
+        server.shutdown();
         System.out.println(coreName + ": shutdown ok.");
     }
 }

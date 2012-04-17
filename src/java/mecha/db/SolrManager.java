@@ -14,11 +14,17 @@
 
 package mecha.db;
 
+import java.io.*;
 import java.util.*;
 import java.util.logging.*;
 import java.util.concurrent.*;
+
+import org.apache.commons.io.FileUtils;
+
 import org.apache.solr.client.solrj.SolrServer;
+
 import mecha.Mecha;
+import mecha.util.*;
 
 public class SolrManager {
     final private static Logger log = 
@@ -33,25 +39,62 @@ public class SolrManager {
         cores = new ConcurrentHashMap<String, SolrCore>();
     }
     
-    public SolrCore getCore(String coreName) throws Exception {
+    public synchronized SolrCore getCore(String coreName) throws Exception {
+        return getCore(coreName, false);
+    }
+    
+    public synchronized SolrCore getCore(String coreName, boolean createIfNotExist) throws Exception {
         SolrCore solrInst = cores.get(coreName);
         if (solrInst == null) {
-            solrInst = startCore(coreName);
+            solrInst = startCore(coreName, createIfNotExist);
             cores.put(coreName, solrInst);
         }
         return solrInst;
     }
     
     public synchronized SolrCore startCore(String coreName) throws Exception {
+        return startCore(coreName, false);
+    }
+    
+    public synchronized SolrCore startCore(String coreName, boolean createIfNotExist) throws Exception {
+        
+        if (createIfNotExist) {
+            // does directory exist?  "./solr/<prefix><partition#>"
+            String corePath = "./solr/" + coreName + "/conf";
+            log.info("startCore: corePath = '" + corePath + "'");
+            
+            File corePathFile = new File(corePath);
+            if (!corePathFile.isDirectory()) {
+                if (createIfNotExist) {
+                    // create core & process solrconfig.xml.template
+                    createCore(coreName, corePath, corePathFile);
+                } else {
+                    throw new Exception("core '" + coreName + "' does not exist and createIfNotExist = false");
+                }
+            }
+        }
+        
         SolrCore solrInst = cores.get(coreName);
         if (solrInst != null) {
             return solrInst;
         }
         String solrHomePath = Mecha.getConfig().getString("solr-home");
         solrInst = 
-            new SolrCore(solrHomePath, coreName);
+            new SolrCore(solrHomePath, coreName, createIfNotExist);
         cores.put(coreName, solrInst);
         return solrInst;
+    }
+    
+    private synchronized void createCore(String coreName, String corePath, File corePathFile) throws Exception {
+        log.info("createCore(" + coreName + ", " + corePathFile + ")");
+        
+        corePathFile.mkdirs();
+        File source = new File("./solr/_p/conf");
+        FileUtils.copyDirectory(source, corePathFile);
+        String solrConfigStr = TextFile.get(corePath + "/solrconfig.xml.template");
+        solrConfigStr = solrConfigStr.replaceAll("<<mecha:data-dir>>", "./data/core/" + coreName);
+        TextFile.put(corePath + "/solrconfig.xml", solrConfigStr);
+        log.info("solrconfig.xml written");
     }
     
     public SolrServer getSolrServer(String coreName) throws Exception {

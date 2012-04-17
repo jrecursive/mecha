@@ -45,6 +45,8 @@ public class SolrModule extends MVMModule {
         
     private static String STANDARD_DATE_FORMAT = 
         "yyyy-MM-dd'T'HH:mm:ss";
+        
+    public static String PARTITION_PREFIX = "";
             
     public SolrModule() throws Exception {
         super();
@@ -320,7 +322,7 @@ public class SolrModule extends MVMModule {
             if (config.has("core")) {
                 core = config.<String>get("core");
             } else {
-                core = "index";
+                core = PARTITION_PREFIX + config.getString("partition");
             }
             
             /*
@@ -583,7 +585,7 @@ public class SolrModule extends MVMModule {
             if (config.has("core")) {
                 core = config.<String>get("core");
             } else {
-                core = "index";
+                core = PARTITION_PREFIX + config.getString("partition");
             }
             
             if (config.has("delete-by-query") &&
@@ -741,10 +743,14 @@ public class SolrModule extends MVMModule {
                                     String objPartition = "" + doc.get("partition");
                                     String objBucket = "" + doc.get("bucket");
                                     String objKey = "" + doc.get("key");
-                                    if (core.equals("index")) {
+                                    
+                                    // core-per-partition delete
+                                    if (!core.equals("tmp") && !core.equals("system")) {
                                         Mecha.getMDB()
                                              .getBucket(objPartition, objBucket)
                                              .delete(objKey.getBytes());
+                                    
+                                    // tmp & system cores
                                     } else {
                                         Mecha.getSolrManager()
                                              .getSolrServer(core)
@@ -950,6 +956,7 @@ public class SolrModule extends MVMModule {
                 core = config.getString("core");
             } else {
                 core = "index";
+                throw new Exception("DELETE BY SELECT -- NEEDS RE-IMPLEMENTATION");
             }
         }
         

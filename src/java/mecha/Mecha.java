@@ -55,6 +55,9 @@ public class Mecha {
     final static public AtomicBoolean riakDown =
         new AtomicBoolean(true);
     
+    // for core-per-partition: partition name prefix
+    final public static String PARTITION_PROTO_DIR = "./solr/_p/";
+    
     /*
      * startup & init
     */
