@@ -84,8 +84,8 @@ public class SolrManager {
     public synchronized SolrCore startCore(String coreName, boolean createIfNotExist) throws Exception {
         
         if (createIfNotExist) {
-            // does directory exist?  "./solr/partitions/<partition#>/conf"
-            String corePath = "./solr/partitions/" + coreName + "/conf";
+            // does directory exist?  "./solr/<partition#>/conf"
+            String corePath = "./solr/" + coreName + "/conf";
             log.info("startCore: corePath = '" + corePath + "'");
             
             File corePathFile = new File(corePath);

@@ -54,7 +54,7 @@ public class SolrCore {
                 solrCoreName, 
                 solrCoreName, 
                 Mecha.getSolrManager().getCore("index").getServer(),
-                    "./solr/partitions/" + solrCoreName + "/conf/solrconfig.xml", 
+                    "./solr/" + solrCoreName + "/conf/solrconfig.xml", 
                     "./solr/_p/conf/schema.xml");
         }
 
