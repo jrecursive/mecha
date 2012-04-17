@@ -172,12 +172,7 @@ currencyConfig="currency.xml" />
 
  <fields>
    <field name="id" type="string" indexed="true" stored="true" required="true" />
-   
-   <!--
-    * partition should now be implicit with "core-per-partition" organization
    <field name="partition" type="string" indexed="false" stored="true" required="true"/>
-   -->
-   
    <field name="bucket" type="string" indexed="true" stored="true" required="true"/>
    <field name="key" type="string" indexed="true" stored="true" required="true"/>
    <field name="last_modified" type="string" indexed="false" stored="true" multiValued="false"/>
