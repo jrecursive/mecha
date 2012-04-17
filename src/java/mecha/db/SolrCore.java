@@ -69,7 +69,7 @@ public class SolrCore {
     
     public void shutdown() throws Exception {
         System.out.println("forcing shutdown commit .. ");
-        server.commit(true, false);
+        //server.commit(true, false);
         System.out.println(coreName + ": shutdown ok.");
     }
 }

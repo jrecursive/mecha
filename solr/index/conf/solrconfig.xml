@@ -10,8 +10,8 @@
                     class="${solr.directoryFactory:solr.StandardDirectoryFactory}"/>
 -->
   <directoryFactory name="DirectoryFactory" 
-                    class="${solr.directoryFactory:solr.NRTCachingDirectoryFactory}"/>
-  <indexDefaults>
+                    class="${solr.directoryFactory:solr.StandardDirectoryFactory}"/>
+  <indexConfig>
     <useCompoundFile>false</useCompoundFile>
     <mergeFactor>100</mergeFactor>
     <ramBufferSizeMB>128</ramBufferSizeMB>
@@ -23,8 +23,7 @@
     <mergeScheduler class="org.apache.lucene.index.ConcurrentMergeScheduler"/>
     <lockType>native</lockType>
     <termIndexInterval>512</termIndexInterval>
-  </indexDefaults>
-  <mainIndex>
+
     <reopenReaders>true</reopenReaders>
     <useCompoundFile>false</useCompoundFile>
     <ramBufferSizeMB>128</ramBufferSizeMB>
@@ -35,7 +34,7 @@
       <str name="maxOptimizedCommitsToKeep">0</str>
     </deletionPolicy>
     <infoStream file="INFOSTREAM.txt">false</infoStream> 
-  </mainIndex>
+  </indexConfig>
   <jmx />
   <updateHandler class="solr.DirectUpdateHandler2">
         <!-- Enables a transaction log, currently used for real-time get.

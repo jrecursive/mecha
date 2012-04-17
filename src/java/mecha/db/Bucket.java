@@ -223,7 +223,13 @@ public class Bucket {
                 
                 // TODO: configuration driven w/ indexing/indexer plugins
                 
-                if (f.endsWith("_s") ||     // exact string
+                if (
+                    
+                    /*
+                     * stored & indexed
+                    */
+                    
+                    f.endsWith("_s") ||     // exact string
                     f.endsWith("_dt") ||    // ISO8601 date
                     f.endsWith("_t") ||     // fulltext (default analysis, no vectors)
                     f.endsWith("_tt") ||    // fulltext (default analysis, vectors)
@@ -236,7 +242,57 @@ public class Bucket {
                     f.endsWith("_xyz") ||    // x,y,z coordinate
                     f.endsWith("_xyzw") ||    // x,y,z,w coordinate
                     f.endsWith("_ll") ||    // lat,lon latitude, longitude coordinate
-                    f.endsWith("_geo")) {
+                    f.endsWith("_geo") ||
+                    f.endsWith("_cat") ||
+                    f.endsWith("_cur") ||
+                    
+                    /*
+                     * stored, not indexed
+                    */
+                    
+                    f.endsWith("_ss") ||     // exact string
+                    f.endsWith("_sdt") ||    // ISO8601 date
+                    f.endsWith("_st") ||     // fulltext (default analysis, no vectors)
+                    f.endsWith("_stt") ||    // fulltext (default analysis, vectors)
+                    f.endsWith("_si") ||     // integer
+                    f.endsWith("_sl") ||     // long
+                    f.endsWith("_sf") ||     // float
+                    f.endsWith("_sd") ||     // double
+                    f.endsWith("_sb") ||     // boolean ("true" or "false")
+                    f.endsWith("_sxy") ||    // x,y coordinate
+                    f.endsWith("_sxyz") ||    // x,y,z coordinate
+                    f.endsWith("_sxyzw") ||    // x,y,z,w coordinate
+                    f.endsWith("_sll") ||    // lat,lon latitude, longitude coordinate
+                    f.endsWith("_sgeo") ||
+                    f.endsWith("_scur") ||
+                    
+                    /*
+                     * indexed, not stored
+                    */
+                    
+                    f.endsWith("_is") ||     // exact string
+                    f.endsWith("_idt") ||    // ISO8601 date
+                    f.endsWith("_it") ||     // fulltext (default analysis, no vectors)
+                    f.endsWith("_itt") ||    // fulltext (default analysis, vectors)
+                    f.endsWith("_ii") ||     // integer
+                    f.endsWith("_il") ||     // long
+                    f.endsWith("_if") ||     // float
+                    f.endsWith("_id") ||     // double
+                    f.endsWith("_ib") ||     // boolean ("true" or "false")
+                    f.endsWith("_ixy") ||    // x,y coordinate
+                    f.endsWith("_ixyz") ||    // x,y,z coordinate
+                    f.endsWith("_ixyzw") ||    // x,y,z,w coordinate
+                    f.endsWith("_ill") ||    // lat,lon latitude, longitude coordinate
+                    f.endsWith("_igeo") ||
+                    f.endsWith("_icur") || 
+                    f.endsWith("_icat") ||
+                    
+                    /*
+                     * stored binary value
+                    */
+                    
+                    f.endsWith("_bin")        // binary stored field
+                        ) {
                     
                     if (f.endsWith("_dt")) {
                         if (!jo.getString(f).endsWith("Z")) {
@@ -246,13 +302,19 @@ public class Bucket {
                     
                     doc.addField(f, jo.get(f));
                 
-                } else if (f.endsWith("_s_mv")) {   // array of exact strings
+                /*
+                 * multi-value fields
+                */
+                
+                } else if (f.endsWith("_s_mv") ||       // stored, indexed, array of strings
+                           f.endsWith("_ss_mv") ||      // stored, not indexed, array of strings
+                           f.endsWith("_is_mv")         // indexed, not stored, array of strings
+                        ) {   // array of exact strings
                     JSONArray mv = jo.getJSONArray(f);
                     List<String> vals = new ArrayList<String>();
                     for(int j=0; j<mv.length(); j++) {
                         vals.add(mv.getString(j));
-                    }
-                    
+                    }    
                     doc.addField(f, vals);
                 }
             }
@@ -271,6 +333,7 @@ public class Bucket {
         try {
             rates.add("mecha.db.bucket.global.delete");
             solrServer.deleteByQuery("id:\"" + makeid(key) + "\"");
+            solrServer.commit();
         } catch (Exception ex) {
             Mecha.getMonitoring().error("mecha.db.mdb", ex);
             /*

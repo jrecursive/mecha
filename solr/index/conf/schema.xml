@@ -178,7 +178,11 @@ currencyConfig="currency.xml" />
    <field name="last_modified" type="string" indexed="false" stored="true" multiValued="false"/>
    <field name="vtag" type="string" indexed="false" stored="true" multiValued="false"/>
    <field name="vclock" type="string" indexed="false" stored="true" multiValued="false"/>
+   <field name="_version_" type="long" indexed="true" stored="true" default="1"/>
    
+   <!--
+    stored & indexed
+   -->
    <dynamicField name="*_s"  type="string"  indexed="true"  stored="true" postingsFormat="Pulsing40"/>
    <dynamicField name="*_s_mv"  type="string"  indexed="true"  stored="true" multiValued="true" postingsFormat="Pulsing40"/>
    <dynamicField name="*_t"  type="text"    indexed="true"  stored="true" termVectors="false" termPositions="false" termOffsets="false"/>
@@ -197,9 +201,18 @@ currencyConfig="currency.xml" />
    <dynamicField name="*_xyz" type="3d_point" indexed="true" stored="true"/>
    <dynamicField name="*_xyzw" type="4d_point" indexed="true" stored="true"/>
    
+   <!--
+    simple stored binary field, no analysis, no indexing
+   -->
+   
    <dynamicField name="*_bin" type="binary" indexed="false" stored="true"/>
    
+   <!--
+    stored, not indexed
+   -->
+   
    <dynamicField name="*_ss"  type="string"  indexed="false"  stored="true"/>
+   <dynamicField name="*_ss_mv"  type="string"  indexed="false"  stored="true" multiValued="true" postingsFormat="Pulsing40"/>
    <dynamicField name="*_scur"  type="currency" indexed="false"  stored="true"/>
    <dynamicField name="*_sb"  type="boolean" indexed="false"  stored="true"/>
    <dynamicField name="*_si" type="tint"    indexed="false"  stored="true"/>
@@ -212,6 +225,10 @@ currencyConfig="currency.xml" />
    <dynamicField name="*_sgeo" type="geohash" indexed="false" stored="true"/>
    <dynamicField name="*_sxyz" type="3d_point" indexed="false" stored="true"/>
    <dynamicField name="*_sxyzw" type="4d_point" indexed="false" stored="true"/>   
+   
+   <!--
+    indexed, not stored
+   -->
    
    <dynamicField name="*_is" type="string"  indexed="true"  stored="false"/>
    <dynamicField name="*_is_mv" type="string"  indexed="true"  stored="false" multiValued="true"/>

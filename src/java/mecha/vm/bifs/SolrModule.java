@@ -25,6 +25,7 @@ import java.text.Collator;
 import java.text.SimpleDateFormat;
 
 import org.apache.solr.client.solrj.response.QueryResponse;
+import org.apache.solr.client.solrj.response.UpdateResponse;
 import org.apache.solr.common.params.ModifiableSolrParams;
 import org.apache.solr.common.SolrDocument;
 import org.apache.solr.client.solrj.response.FacetField;
@@ -791,9 +792,11 @@ public class SolrModule extends MVMModule {
                         doneMsg.put("elapsed", t_elapsed);
                         doneMsg.put("count", count);
                         if (deleteByQuery) {
+                            /*
                             Mecha.getSolrManager()
                                  .getSolrServer(core)
                                  .commit(true, true);
+                            */
                             doneMsg.put("deleted", rawFound);
                         } else {
                             doneMsg.put("found", rawFound);
@@ -935,6 +938,35 @@ public class SolrModule extends MVMModule {
 
     }
     
+    public class DeleteBySelect extends MVMFunction {
+        final private String q;
+        final private String core;
+        
+        public DeleteBySelect(String refId, MVMContext ctx, JSONObject config) 
+            throws Exception {
+            super(refId, ctx, config);
+            q = config.getString("q");
+            if (config.has("core")) {
+                core = config.getString("core");
+            } else {
+                core = "index";
+            }
+        }
+        
+        public void onStartEvent(JSONObject startEventMsg) throws Exception {
+            log.info("DeleteBySelect: core = " + core + ", q = " + q);
+            UpdateResponse res = 
+                Mecha.getSolrManager().getSolrServer(core).deleteByQuery(q);
+            //log.info("(delete commit)");
+            //Mecha.getSolrManager().getSolrServer(core).commit();
+            //log.info("(delete commit complete)");
+            log.info("DeleteBySelect: res = " + res);
+            
+            JSONObject deleteDoneMsg = new JSONObject();
+            broadcastDone(deleteDoneMsg);
+        }
+    }
+
     /*
      * Process stream of faceted value points & reduce on done.
      *  Can be used for anything that passes messages with a

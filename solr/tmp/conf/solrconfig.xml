@@ -11,7 +11,7 @@
   <dataDir>${solr.tmp.data.dir:}</dataDir>
   <directoryFactory name="DirectoryFactory" 
                     class="${solr.directoryFactory:solr.RAMDirectoryFactory}"/>
-  <indexDefaults>
+  <indexConfig>
     <useCompoundFile>false</useCompoundFile>
     <mergeFactor>100</mergeFactor>
     <ramBufferSizeMB>128</ramBufferSizeMB>
@@ -22,8 +22,6 @@
     <mergePolicy class="org.apache.lucene.index.TieredMergePolicy"/>
     <lockType>native</lockType>
     <termIndexInterval>512</termIndexInterval>
-  </indexDefaults>
-  <mainIndex>
     <useCompoundFile>false</useCompoundFile>
     <ramBufferSizeMB>128</ramBufferSizeMB>
     <mergeFactor>100</mergeFactor>
@@ -34,7 +32,7 @@
       <str name="maxOptimizedCommitsToKeep">0</str>
     </deletionPolicy>
     <infoStream file="INFOSTREAM.txt">false</infoStream> 
-  </mainIndex>
+  </indexConfig>
   <jmx />
   <updateHandler class="solr.DirectUpdateHandler2">
        <autoCommit> 

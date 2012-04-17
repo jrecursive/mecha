@@ -6,7 +6,7 @@
 register namespace:$ module-class:mecha.vm.bifs.RiakClientModule verbs:(get:Get put:Put delete:Delete bucket-props:BucketProps)
 register namespace:$ module-class:mecha.vm.bifs.ChannelModule verbs:(subscribe:Subscribe unsubscribe:Unsubscribe publish:Publish)
 register namespace:$ module-class:mecha.vm.bifs.ClientModule verbs:(client-sink:ClientSink channel-sink:ChannelSink start-all-sources:StartAllSources macro-sink:MacroSink)
-register namespace:$ module-class:mecha.vm.bifs.SolrModule verbs:(solr-select:Select solr-select-iterator:SelectIterator value-count-reducer:ValueCountReducer covered-index-select:CoveredIndexSelect cardinality-reducer:CardinalityReducer field-value-count-reducer:FieldValueCountReducer sorted-accumulating-reducer:SortedAccumulatingReducer)
+register namespace:$ module-class:mecha.vm.bifs.SolrModule verbs:(solr-select:Select solr-select-iterator:SelectIterator value-count-reducer:ValueCountReducer covered-index-select:CoveredIndexSelect cardinality-reducer:CardinalityReducer field-value-count-reducer:FieldValueCountReducer sorted-accumulating-reducer:SortedAccumulatingReducer select-delete:DeleteBySelect)
 register namespace:$ module-class:mecha.vm.bifs.MDBModule verbs:(materialize-pbk-stream:MaterializePBKStream stream-partition-bucket:StreamPartitionBucket partition-bucket-iterator:PartitionBucketIterator drop-partition-bucket:DropPartitionBucket global-drop-bucket:GlobalDropBucket compute-schema:ComputeSchema)
 register namespace:$ module-class:mecha.vm.bifs.ETLModule verbs:(project:Project extract-riak-value:ExtractRiakValue)
 register namespace:$ module-class:mecha.vm.bifs.ClusterModule verbs:(with-coverage:WithCoverage with-iterated-coverage:WithIteratedCoverage with-sorted-coverage:WithSortedCoverage warp:Warp with-cluster-coverage:WithClusterCoverage)
@@ -33,7 +33,11 @@ register namespace:$ module-class:mecha.vm.bifs.SystemModule verbs:(commit:Commi
 #if (!$args.sort-dir) #set ($args.sort-dir = "asc") #end
 #set ($args.filter = $util.escapeQuotes($args.filter))
 
-${root} = (covered-index-select sort-field:${args.sort-field} sort-order:${args.sort-dir} query-marker:"<<${guid}-q>>" host-marker:"<<${guid}-h>>" bucket:${args.bucket} do:(warp host:<<${guid}-h>> do:(solr-select-iterator params:(q:"((<<${guid}-q>>) AND bucket:${args.bucket}) ${args.logical-connector} ${args.filter}" sfield:${args.field} pt:"${args.lat},${args.lon}" d:${args.radius} fq:"{!bbox}" sort:"${args.sort-field} ${args.sort-dir}") materialize:${args.materialize})))
+//reverted to with-sorted-coverage to support core-per-partition organization
+//${root} = (covered-index-select sort-field:${args.sort-field} sort-order:${args.sort-dir} query-marker:"<<${guid}-q>>" host-marker:"<<${guid}-h>>" bucket:${args.bucket} do:(warp host:<<${guid}-h>> do:(solr-select-iterator params:(q:"((<<${guid}-q>>) AND bucket:${args.bucket}) ${args.logical-connector} ${args.filter}" sfield:${args.field} pt:"${args.lat},${args.lon}" d:${args.radius} fq:"{!bbox}" sort:"${args.sort-field} ${args.sort-dir}") materialize:${args.materialize})))
+
+${root} = (with-sorted-coverage sort-field:${args.sort-field} sort-order:${args.sort-dir} partition-marker:"<<${guid}-p>>" host-marker:"<<${guid}-h>>" bucket:${args.bucket} do:(warp host:<<${guid}-h>> do:(solr-select-iterator params:(q:"partition:<<${guid}-p>> AND bucket:${args.bucket} ${args.filter}" sfield:${args.field} pt:"${args.lat},${args.lon}" d:${args.radius} fq:"{!bbox}" sort:"${args.sort-field} ${args.sort-dir}") materialize:${args.materialize})))
+
 ${root} -> ${sink}
 
 #end spatial-select
@@ -190,7 +194,10 @@ ${guid}-reducer -> ${sink}
                 solr-select-iterator
 *#
 
-${root} = (covered-index-select sort-field:${args.sort-field} sort-order:${args.sort-dir} query-marker:"<<${guid}-q>>" host-marker:"<<${guid}-h>>" bucket:${args.bucket} do:(warp host:<<${guid}-h>> do:(solr-select-iterator params:(q:"*:*" fq:"((<<${guid}-q>>) AND bucket:${args.bucket}) ${args.logical-connector} ${args.filter}" rows:${args.limit} sort:"${args.sort-field} ${args.sort-dir}" fl:"${args.fields}") materialize:${args.materialize} core:${args.core})))
+//reverted to with-sorted-coverage to support core-per-partition organization
+//${root} = (covered-index-select sort-field:${args.sort-field} sort-order:${args.sort-dir} query-marker:"<<${guid}-q>>" host-marker:"<<${guid}-h>>" bucket:${args.bucket} do:(warp host:<<${guid}-h>> do:(solr-select-iterator params:(q:"*:*" fq:"((<<${guid}-q>>) AND bucket:${args.bucket}) ${args.logical-connector} ${args.filter}" rows:${args.limit} sort:"${args.sort-field} ${args.sort-dir}" fl:"${args.fields}") materialize:${args.materialize} core:${args.core})))
+
+${root} = (with-sorted-coverage sort-field:${args.sort-field} sort-order:${args.sort-dir} partition-marker:"<<${guid}-p>>" host-marker:"<<${guid}-h>>" bucket:${args.bucket} do:(warp host:<<${guid}-h>> do:(solr-select-iterator params:(q:"*:*" fq:"partition:<<${guid}-p>> AND bucket:${args.bucket} ${args.filter}" rows:${args.limit} sort:"${args.sort-field} ${args.sort-dir}") materialize:${args.materialize})))
 
 #*
     Account for start & count (e.g., LIMIT <start>,<limit>)
@@ -270,7 +277,7 @@ ${guid}-reducer -> ${sink}
 
 #if ($args.filter)
     #set ($args.filter = $util.escapeQuotes($args.filter))
-    ${root} = (with-cluster-coverage host-marker:"<<${guid}-h>>" do:(warp host:<<${guid}-h>> do:(solr-select params:(q:"bucket:${args.bucket} AND ${args.filter}") materialize:false core:${args.core} delete-by-query:true)))
+    ${root} = (with-cluster-coverage host-marker:"<<${guid}-h>>" do:(warp host:<<${guid}-h>> do:(select-delete q:"bucket:${args.bucket} AND ${args.filter}" core:${args.core})))
     ${root} -> ${sink}
 #end
 #end delete-by-select
