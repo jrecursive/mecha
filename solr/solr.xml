@@ -4,13 +4,5 @@
     <core instanceDir="index/" name="index"/>
     <core instanceDir="tmp/" name="tmp"/>
     <core instanceDir="system/" name="system"/>
-    <core schema="./solr/_p/conf/schema.xml" instanceDir="p0/" name="p0" conf="./solr/p0/conf/solrconfig.xml"/>
-    <core schema="./solr/_p/conf/schema.xml" instanceDir="p1/" name="p1" conf="./solr/p1/conf/solrconfig.xml"/>
-    <core schema="./solr/_p/conf/schema.xml" instanceDir="p2/" name="p2" conf="./solr/p2/conf/solrconfig.xml"/>
-    <core schema="./solr/_p/conf/schema.xml" instanceDir="p3/" name="p3" conf="./solr/p3/conf/solrconfig.xml"/>
-    <core schema="./solr/_p/conf/schema.xml" instanceDir="p4/" name="p4" conf="./solr/p4/conf/solrconfig.xml"/>
-    <core schema="./solr/_p/conf/schema.xml" instanceDir="p5/" name="p5" conf="./solr/p5/conf/solrconfig.xml"/>
-    <core schema="./solr/_p/conf/schema.xml" instanceDir="p6/" name="p6" conf="./solr/p6/conf/solrconfig.xml"/>
-    <core schema="./solr/_p/conf/schema.xml" instanceDir="p7/" name="p7" conf="./solr/p7/conf/solrconfig.xml"/>
   </cores>
 </solr>

@@ -292,7 +292,6 @@ public class SolrModule extends MVMModule {
         final private AtomicBoolean stop;
         final private ReentrantLock stateLock;
         final private Thread iteratorThread;
-        final private String iterationLabel;
         final private boolean materialize;
         final private String core;
         final private AtomicLong rowLimit = new AtomicLong(-1);
@@ -303,12 +302,6 @@ public class SolrModule extends MVMModule {
             stop = new AtomicBoolean(false);
             stateLock = new ReentrantLock();
             next.acquire();
-            
-            if (config.has("iterator-name")) {
-                iterationLabel = config.getString("iterator-name");
-            } else {
-                iterationLabel = null;
-            }
             
             if (config.has("materialize") &&
                 config.getString("materialize").equals("true")) {
