@@ -60,12 +60,13 @@ public class Bucket {
         this.bucket = bucket;
         this.bucketStr = (new String(bucket)).trim();
         this.dataDir = dataDir;
-        
         dateFormat = new java.text.SimpleDateFormat(STANDARD_DATE_FORMAT);
         
         // update to use partition-specific core?
         //solrServer = Mecha.getSolrManager().getCore("index").getServer();
-        solrServer = Mecha.getSolrManager().getCore(partition,true).getServer();
+        synchronized(Bucket.class) {
+            solrServer = Mecha.getSolrManager().getPartitionCore(partition).getServer();
+        }
         
         log.info("Bucket: " + partition + ": " + bucketStr + ": " + dataDir);
     }
@@ -133,7 +134,7 @@ public class Bucket {
         
         msg.remove("bucket");
         msg.remove("key");
-        msg.remove("partition");
+        if (msg.has("partition")) msg.remove("partition");
         msg.remove("last_modified");
         msg.remove("vclock");
         msg.remove("vtag");
@@ -213,7 +214,7 @@ public class Bucket {
             SolrInputDocument doc = new SolrInputDocument();
             doc.addField("id", ""+makeid(key));
             //doc.addField("h2", ""+makeh2(key));
-            doc.addField("partition", partition);
+            //doc.addField("partition", partition);
             doc.addField("bucket", bucketStr);
             doc.addField("key", new String(key));
             doc.addField("vclock", vclock);
@@ -360,8 +361,10 @@ public class Bucket {
         streamSemaphore.acquire();
         
         final String q = 
-            "partition:" + partition + 
+            "bucket:" + bucketStr;
+            /*"partition:" + partition + 
             " AND bucket:" + bucketStr;
+            */
         ModifiableSolrParams solrParams = new ModifiableSolrParams();
         solrParams.set("q", "*:*");
         solrParams.set("fq", q);
@@ -417,8 +420,12 @@ public class Bucket {
     public long count() throws Exception {
         rates.add("mecha.db.bucket.global.count");
         final String q = 
+            "bucket:" + bucketStr;
+            /*
             "partition:" + partition + 
             " AND bucket:" + bucketStr;
+            */
+            
         ModifiableSolrParams solrParams = new ModifiableSolrParams();
         solrParams.set("q", "*:*");
         solrParams.set("fq", q);
@@ -438,8 +445,11 @@ public class Bucket {
         rates.add("mecha.db.bucket.global.drop");
         try {
             solrServer.deleteByQuery(
+                "bucket:" + bucketStr);
+                /*
                 "partition:" + partition + 
                 " AND bucket:" + bucketStr);
+                */
         } catch (Exception ex) {
             Mecha.getMonitoring().error("mecha.db.mdb", ex);
             ex.printStackTrace();

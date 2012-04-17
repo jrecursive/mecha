@@ -46,8 +46,6 @@ public class SolrModule extends MVMModule {
     private static String STANDARD_DATE_FORMAT = 
         "yyyy-MM-dd'T'HH:mm:ss";
         
-    public static String PARTITION_PREFIX = "";
-            
     public SolrModule() throws Exception {
         super();
     }
@@ -322,7 +320,7 @@ public class SolrModule extends MVMModule {
             if (config.has("core")) {
                 core = config.<String>get("core");
             } else {
-                core = PARTITION_PREFIX + config.getString("partition");
+                core = Mecha.getSolrManager().getPartitionCoreName(config.getString("partition"));
             }
             
             /*
@@ -585,7 +583,7 @@ public class SolrModule extends MVMModule {
             if (config.has("core")) {
                 core = config.<String>get("core");
             } else {
-                core = PARTITION_PREFIX + config.getString("partition");
+                core = Mecha.getSolrManager().getPartitionCoreName(config.getString("partition"));
             }
             
             if (config.has("delete-by-query") &&

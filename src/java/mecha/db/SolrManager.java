@@ -35,8 +35,33 @@ public class SolrManager {
     final public static String SYSTEM_CORE = "system";
     final private Map<String, SolrCore> cores;
     
-    public SolrManager() {
+    final public static int PARTITION_CORE_COUNT = 8;
+    final private List<String> partitionCoreRingList;
+    final private ConsistentHash<String> partitionCoreRing;
+    final private HashMap<String, String> partitionCoreCache;
+    
+    public SolrManager() throws Exception {
         cores = new ConcurrentHashMap<String, SolrCore>();
+        partitionCoreRingList = new ArrayList<String>();
+        for (int i = 0; i < PARTITION_CORE_COUNT; i++) {
+            String s = "p" + i;
+            partitionCoreRingList.add(s);
+        }
+        partitionCoreRing = new ConsistentHash<String>(1, partitionCoreRingList);
+        partitionCoreCache = new HashMap<String, String>();
+    }
+    
+    public String getPartitionCoreName(String partition) throws Exception {
+        if (!partitionCoreCache.containsKey(partition)) {
+            String partitionCore = partitionCoreRing.get(partition);
+            log.info("mapped " + partition + " -> " + partitionCore);
+            partitionCoreCache.put(partition, partitionCore);
+        }
+        return partitionCoreCache.get(partition);
+    }
+    
+    public SolrCore getPartitionCore(String partition) throws Exception {
+        return getCore(getPartitionCoreName(partition));
     }
     
     public synchronized SolrCore getCore(String coreName) throws Exception {

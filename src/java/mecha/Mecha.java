@@ -55,9 +55,6 @@ public class Mecha {
     final static public AtomicBoolean riakDown =
         new AtomicBoolean(true);
     
-    // for core-per-partition: partition name prefix
-    final public static String PARTITION_PROTO_DIR = "./solr/_p/";
-    
     /*
      * startup & init
     */
@@ -231,7 +228,14 @@ public class Mecha {
             String coreName = cores.getString(i);
             log.info("/ starting core: " + coreName);
             if (null == get().solrManager.startCore(coreName)) {
-                throw new Exception ("Cannot start solr core '" + coreName);
+                throw new Exception ("Cannot start solr core " + coreName);
+            }
+        }
+        for(int i=0; i < SolrManager.PARTITION_CORE_COUNT; i++) {
+            String partitionCoreName = "p" + i;
+            log.info("starting core " + partitionCoreName);
+            if (null == get().solrManager.startCore(partitionCoreName,true)) {
+                throw new Exception ("Cannot start partition core " + partitionCoreName);
             }
         }
     }

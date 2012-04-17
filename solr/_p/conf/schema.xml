@@ -171,7 +171,7 @@ currencyConfig="currency.xml" />
  </types>
 
  <fields>
-   <field name="id" type="string" indexed="true" stored="false" required="true" />
+   <field name="id" type="string" indexed="true" stored="true" required="true" />
    
    <!--
     * partition should now be implicit with "core-per-partition" organization

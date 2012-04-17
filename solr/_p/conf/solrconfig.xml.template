@@ -10,13 +10,13 @@
                     class="${solr.directoryFactory:solr.StandardDirectoryFactory}"/>
 -->
   <directoryFactory name="DirectoryFactory" 
-                    class="${solr.directoryFactory:solr.StandardDirectoryFactory}"/>
+                    class="${solr.directoryFactory:solr.NRTCachingDirectoryFactory}"/>
   <indexConfig>
     <useCompoundFile>false</useCompoundFile>
-    <mergeFactor>100</mergeFactor>
-    <ramBufferSizeMB>32</ramBufferSizeMB>
+    <mergeFactor>10</mergeFactor>
+    <ramBufferSizeMB>8</ramBufferSizeMB>
     <maxBufferedDocs>1000</maxBufferedDocs>
-    <maxFieldLength>100000</maxFieldLength>
+    <maxFieldLength>10000</maxFieldLength>
     <writeLockTimeout>1000</writeLockTimeout>
     <commitLockTimeout>10000</commitLockTimeout>
     <mergePolicy class="org.apache.lucene.index.TieredMergePolicy"/>
@@ -43,14 +43,14 @@
         </updateLog>
 
         <autoSoftCommit>
-         <maxTime>1000</maxTime>
+         <maxTime>100</maxTime>
         </autoSoftCommit>
-    <!--
+        <!--
        <autoCommit> 
          <maxDocs>10000</maxDocs>
          <maxTime>1000</maxTime> 
        </autoCommit>
-    -->
+        -->
       <listener event="postCommit" class="mecha.db.SolrEventHandlers" />
   </updateHandler>
      <indexReaderFactory name="IndexReaderFactory" 

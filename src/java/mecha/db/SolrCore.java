@@ -48,21 +48,23 @@ public class SolrCore {
                     boolean createIfNotExist) throws Exception {
         homePath = solrHomePath;
         coreName = solrCoreName;
+        if (createIfNotExist) {
+            log.info("calling createCore(" + solrCoreName + ", " + solrCoreName + ")");
+            CoreAdminRequest.createCore(
+                solrCoreName, 
+                solrCoreName, 
+                Mecha.getSolrManager().getIndexServer()); /*
+                , 
+                "./solr/" + solrCoreName + "/conf/solrconfig.xml", 
+                "./solr/_p/conf/schema.xml");
+                */
+        }
+
         log.info("starting solr core [" + homePath + "] " + coreName);
         File f = new File(new File(solrHomePath), "solr.xml" );
         container = new CoreContainer();
         container.load(solrHomePath, f );
         server = new EmbeddedSolrServer(container, solrCoreName);
-        
-        if (createIfNotExist) {
-            log.info("calling createCore(" + solrCoreName + ", " + solrHomePath + ", " + server + ")");
-            CoreAdminRequest.createCore(
-                solrCoreName, 
-                solrHomePath + "/" + solrCoreName, 
-                Mecha.getSolrManager().getIndexServer(), 
-                "./solr/" + solrCoreName + "/conf/solrconfig.xml", 
-                "./solr/_p/conf/schema.xml");
-        }
     }
     
     public String getHomePath() {
