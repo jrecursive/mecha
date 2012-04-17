@@ -53,11 +53,9 @@ public class SolrCore {
             CoreAdminRequest.createCore(
                 solrCoreName, 
                 solrCoreName, 
-                Mecha.getSolrManager().getIndexServer()); /*
-                , 
-                "./solr/" + solrCoreName + "/conf/solrconfig.xml", 
-                "./solr/_p/conf/schema.xml");
-                */
+                Mecha.getSolrManager().getCore("index").getServer(),
+                    "./solr/partitions/" + solrCoreName + "/conf/solrconfig.xml", 
+                    "./solr/_p/conf/schema.xml");
         }
 
         log.info("starting solr core [" + homePath + "] " + coreName);

@@ -361,10 +361,8 @@ public class Bucket {
         streamSemaphore.acquire();
         
         final String q = 
-            "bucket:" + bucketStr;
-            /*"partition:" + partition + 
+            "partition:" + partition + 
             " AND bucket:" + bucketStr;
-            */
         ModifiableSolrParams solrParams = new ModifiableSolrParams();
         solrParams.set("q", "*:*");
         solrParams.set("fq", q);
@@ -420,11 +418,8 @@ public class Bucket {
     public long count() throws Exception {
         rates.add("mecha.db.bucket.global.count");
         final String q = 
-            "bucket:" + bucketStr;
-            /*
             "partition:" + partition + 
             " AND bucket:" + bucketStr;
-            */
             
         ModifiableSolrParams solrParams = new ModifiableSolrParams();
         solrParams.set("q", "*:*");
@@ -445,11 +440,8 @@ public class Bucket {
         rates.add("mecha.db.bucket.global.drop");
         try {
             solrServer.deleteByQuery(
-                "bucket:" + bucketStr);
-                /*
                 "partition:" + partition + 
                 " AND bucket:" + bucketStr);
-                */
         } catch (Exception ex) {
             Mecha.getMonitoring().error("mecha.db.mdb", ex);
             ex.printStackTrace();

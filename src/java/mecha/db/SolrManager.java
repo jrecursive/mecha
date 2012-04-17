@@ -84,8 +84,8 @@ public class SolrManager {
     public synchronized SolrCore startCore(String coreName, boolean createIfNotExist) throws Exception {
         
         if (createIfNotExist) {
-            // does directory exist?  "./solr/<prefix><partition#>"
-            String corePath = "./solr/" + coreName + "/conf";
+            // does directory exist?  "./solr/partitions/<partition#>/conf"
+            String corePath = "./solr/partitions/" + coreName + "/conf";
             log.info("startCore: corePath = '" + corePath + "'");
             
             File corePathFile = new File(corePath);
@@ -126,9 +126,11 @@ public class SolrManager {
         return getCore(coreName).getServer();
     }
     
+    /*
     public SolrServer getIndexServer() throws Exception {
         return getCore(INDEX_CORE).getServer();
     }
+    */
 
     public SolrServer getTmpServer() throws Exception {
         return getCore(TMP_CORE).getServer();
@@ -139,8 +141,9 @@ public class SolrManager {
     }
     
     public void shutdown() throws Exception {
-        System.out.println("shutting down " + INDEX_CORE + "...");
-        getCore(INDEX_CORE).shutdown();
+        for(String core : cores.keySet()) {
+            getCore(core).shutdown();
+        }
     }
     
 }

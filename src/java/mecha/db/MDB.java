@@ -52,43 +52,14 @@ public class MDB {
     final private LinkedBlockingQueue<SolrInputDocument> solrDocumentQueue =
         new LinkedBlockingQueue<SolrInputDocument>();
 
-    private SolrServer solrServer;
-    private Thread documentQueueIndexerThread;
-    
-    private class DocumentQueueIndexer implements Runnable {
-        public void run() {
-            while(true) {
-                try {
-                    List<SolrInputDocument> docs = new ArrayList<SolrInputDocument>();
-                    solrDocumentQueue.drainTo(docs);
-                    if (docs.size() > 0) {
-                        solrServer.add(docs);
-                        log.info(docs.size() + " indexed");
-                        Mecha.getMonitoring()
-                             .metric("mecha.db.mdb.documents-indexed", 
-                                     docs.size());
-                    } else {
-                        //Mecha.getMonitoring()
-                        //     .metric("mecha.db.mdb.documents-indexed", 0);
-                        Thread.sleep(10);
-                    }
-                } catch (Exception ex) {
-                    Mecha.getMonitoring().error("mecha.db.mdb", ex);
-                    ex.printStackTrace();
-                }
-            }
-        }
-    }
-    
+    //private SolrServer solrServer;
+        
     public MDB() throws Exception { }
     
     public void startMDB() throws Exception {
-        solrServer = Mecha.getSolrManager().getCore("index").getServer();
-        log.info("solrServer: " + solrServer.toString());
-        
-        documentQueueIndexerThread = 
-            new Thread(new DocumentQueueIndexer());
-        
+        //solrServer = Mecha.getSolrManager().getCore("index").getServer();
+        //log.info("solrServer: " + solrServer.toString());
+                
         Mecha.getMonitoring().addMonitoredRates(rates);
         log.info("started");
     }
@@ -257,6 +228,7 @@ public class MDB {
                     "bucket: " + bucket);
                 count++;
             }
+            /*
             if (count > 0) {
                 log.info("globalDropBucket: " + bucket + ": Removing from index...");
                 solrServer.deleteByQuery("bucket:" + bucket);
@@ -264,6 +236,7 @@ public class MDB {
                 solrServer.commit(true,true);
                 log.info("globalDropBucket: " + bucket + ": done!");
             }
+            */
         }
         return count;
     }
@@ -345,7 +318,7 @@ public class MDB {
             if (null == bucketName) {
                 TextFile.put(mdFn, new String(bucket, "UTF-8"));
             }
-            Bucket bw = new Bucket(partition, bucket, bucketDataDir); // , solrServer, solrDocumentQueue);
+            Bucket bw = new Bucket(partition, bucket, bucketDataDir);
             bucketMap.put(b, bw);
             partitionBuckets.put(partition, bucketMap);
             return bw;

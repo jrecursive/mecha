@@ -53,7 +53,7 @@ public class SystemModule extends MVMModule {
         
         public void onStartEvent(JSONObject msg) throws Exception {
             long t_st = System.currentTimeMillis();
-            Mecha.getSolrManager().getIndexServer().commit(true,true);
+            //Mecha.getSolrManager().getIndexServer().commit(true,true);
             try {
                 Mecha.getMDB().commit();
             } catch (Exception ex) {

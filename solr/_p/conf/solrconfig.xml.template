@@ -21,7 +21,7 @@
     <commitLockTimeout>10000</commitLockTimeout>
     <mergePolicy class="org.apache.lucene.index.TieredMergePolicy"/>
     <mergeScheduler class="org.apache.lucene.index.ConcurrentMergeScheduler"/>
-    <lockType>native</lockType>
+    <lockType>single</lockType>
     <termIndexInterval>512</termIndexInterval>
 
     <reopenReaders>true</reopenReaders>
