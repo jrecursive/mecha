@@ -55,7 +55,7 @@ public class SolrModule extends MVMModule {
     
     public void moduleUnload() throws Exception {
     }
-        
+            
     /*
      * Solr-specific optimization of WithSortedCoverage.
      *

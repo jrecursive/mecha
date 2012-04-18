@@ -25,6 +25,7 @@ import org.apache.solr.client.solrj.*;
 import org.apache.solr.common.*;
 import org.apache.solr.client.solrj.response.QueryResponse;
 import org.apache.solr.common.params.ModifiableSolrParams;
+import org.apache.solr.common.util.NamedList;
 
 import mecha.Mecha;
 import mecha.util.*;
@@ -40,18 +41,19 @@ public class Bucket {
         Mecha.getMonitoring().addMonitoredRates(rates);
     }
     
-    final private static int MURMUR_SEED = 12261976;
-    
     final private byte[] bucket;
     final private String bucketStr;
     final private String partition;
     final private String dataDir;
     final private SolrServer solrServer;
     
+    /*
+     * Do not change.
+    */
     final private SimpleDateFormat dateFormat;
-
     private static String STANDARD_DATE_FORMAT = 
         "yyyy-MM-dd'T'HH:mm:ss";
+    final private static int MURMUR_SEED = 12261976;
     
     public Bucket(String partition, 
                   byte[] bucket, 
@@ -74,17 +76,19 @@ public class Bucket {
         String id = ""+makeid(key);
         
         ModifiableSolrParams solrParams = new ModifiableSolrParams();
-        solrParams.set("q", "*:*");
-        solrParams.set("fq", "id:\"" + id + "\"");
+        //solrParams.set("q", "*:*");
+        solrParams.set("qt", "/get");
+        solrParams.set("id", id);
+        //solrParams.set("fq", "id:\"" + id + "\"");
         QueryResponse res = 
             solrServer.query(solrParams);
         
-        JSONObject msg = null;
-        for(SolrDocument doc : res.getResults()) {
-            msg = jsonizeSolrDoc(doc);
-        } // TODO: anti-entropy; for now, always take the last written
-        if (msg == null) return null;
+        NamedList<Object> response = res.getResponse();
         
+        SolrDocument doc = (SolrDocument) response.get("doc");
+        if (doc == null) return null;
+        
+        JSONObject msg = jsonizeSolrDoc(doc);
         JSONObject riakObject = makeRiakObject(msg);
         
         rates.add("mecha.db.bucket.global.get");
@@ -329,8 +333,8 @@ public class Bucket {
         log.info(partition + ": delete: " + (new String(key)));
         try {
             rates.add("mecha.db.bucket.global.delete");
-            solrServer.deleteByQuery("id:\"" + makeid(key) + "\"");
-            //solrServer.commit();
+            //solrServer.deleteByQuery("id:\"" + makeid(key) + "\"");
+            solrServer.deleteById(""+makeid(key));
         } catch (Exception ex) {
             Mecha.getMonitoring().error("mecha.db.mdb", ex);
             /*

@@ -35,7 +35,7 @@ public class SolrManager {
     final public static String SYSTEM_CORE = "system";
     final private Map<String, SolrCore> cores;
     
-    final public static int PARTITION_CORE_COUNT = 8;
+    final public static int PARTITION_CORE_COUNT = 4;
     final private List<String> partitionCoreRingList;
     final private ConsistentHash<String> partitionCoreRing;
     final private HashMap<String, String> partitionCoreCache;
