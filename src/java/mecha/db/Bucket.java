@@ -330,7 +330,7 @@ public class Bucket {
         try {
             rates.add("mecha.db.bucket.global.delete");
             solrServer.deleteByQuery("id:\"" + makeid(key) + "\"");
-            solrServer.commit();
+            //solrServer.commit();
         } catch (Exception ex) {
             Mecha.getMonitoring().error("mecha.db.mdb", ex);
             /*

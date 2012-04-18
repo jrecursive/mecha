@@ -946,20 +946,20 @@ public class SolrModule extends MVMModule {
             if (config.has("core")) {
                 core = config.getString("core");
             } else {
-                core = "index";
-                throw new Exception("DELETE BY SELECT -- NEEDS RE-IMPLEMENTATION");
+                core = null; // todo: cleaner impl; implies "all partition cores"
             }
         }
         
         public void onStartEvent(JSONObject startEventMsg) throws Exception {
             log.info("DeleteBySelect: core = " + core + ", q = " + q);
-            UpdateResponse res = 
-                Mecha.getSolrManager().getSolrServer(core).deleteByQuery(q);
-            //log.info("(delete commit)");
-            //Mecha.getSolrManager().getSolrServer(core).commit();
-            //log.info("(delete commit complete)");
-            log.info("DeleteBySelect: res = " + res);
             
+            if (core == null) {
+                for(String core : Mecha.getSolrManager().getPartitionCoreRingList()) {
+                    Mecha.getSolrManager().getSolrServer(core).deleteByQuery(q);
+                }
+            } else {
+                Mecha.getSolrManager().getSolrServer(core).deleteByQuery(q);
+            }
             JSONObject deleteDoneMsg = new JSONObject();
             broadcastDone(deleteDoneMsg);
         }

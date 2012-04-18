@@ -60,6 +60,10 @@ public class SolrManager {
         return partitionCoreCache.get(partition);
     }
     
+    public List<String> getPartitionCoreRingList() {
+        return partitionCoreRingList;
+    }
+    
     public SolrCore getPartitionCore(String partition) throws Exception {
         return getCore(getPartitionCoreName(partition));
     }
