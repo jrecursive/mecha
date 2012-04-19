@@ -53,7 +53,7 @@ public class EventTapModule extends MVMModule {
         
         public void start(JSONObject msg) throws Exception {
             Mecha.getCEP().addQuery(type, filter, channel);
-            broadcastDone();
+            //broadcastDone();
         }
     }
 }
