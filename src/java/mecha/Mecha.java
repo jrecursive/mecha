@@ -30,6 +30,7 @@ import mecha.vm.*;
 import mecha.vm.channels.*;
 import mecha.monitoring.*;
 import mecha.riak.*;
+import mecha.cep.*;
 
 public class Mecha {
     final private static Logger log = 
@@ -50,6 +51,8 @@ public class Mecha {
     final private Channels channels;
     final private EventLogManager eventLogManager;
     final private Monitoring monitoring;
+    final private CEP cep;
+    
     static private boolean shuttingDown = false;
     static public long lastCommit = 0;
     final static public AtomicBoolean riakDown =
@@ -88,6 +91,9 @@ public class Mecha {
         throws Exception { }
         
     private Mecha() throws Exception {
+        log.info("* starting cep");
+        cep = new CEP();
+    
         log.info("* starting monitoring");
         monitoring = new Monitoring();
 
@@ -211,6 +217,10 @@ public class Mecha {
     
     public static RiakManager getRiakManager() {
         return get().riakManager;
+    }
+    
+    public static CEP getCEP() {
+        return get().cep;
     }
     
     /*

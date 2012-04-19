@@ -76,23 +76,16 @@ public class Bucket {
         String id = ""+makeid(key);
         
         ModifiableSolrParams solrParams = new ModifiableSolrParams();
-        //solrParams.set("q", "*:*");
         solrParams.set("qt", "/get");
         solrParams.set("id", id);
-        //solrParams.set("fq", "id:\"" + id + "\"");
         QueryResponse res = 
             solrServer.query(solrParams);
-        
         NamedList<Object> response = res.getResponse();
-        
         SolrDocument doc = (SolrDocument) response.get("doc");
         if (doc == null) return null;
-        
         JSONObject msg = jsonizeSolrDoc(doc);
         JSONObject riakObject = makeRiakObject(msg);
-        
         rates.add("mecha.db.bucket.global.get");
-        
         return riakObject.toString().getBytes();
     }
     
@@ -317,10 +310,15 @@ public class Bucket {
                         vals.add(mv.getString(j));
                     }    
                     doc.addField(f, vals);
-                }
+                } // ELSE: Ignore field!
             }
             solrServer.add(doc);
-        
+            
+            jo.put("bucket", bucketStr);
+            jo.put("key", new String(key));
+            jo.put("partition", partition);
+            Mecha.getCEP().process("put", jo);
+            
         } catch (Exception ex) {
             Mecha.getMonitoring().error("mecha.db.mdb", ex);
             ex.printStackTrace();

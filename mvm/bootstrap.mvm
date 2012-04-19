@@ -14,6 +14,7 @@ register namespace:$ module-class:mecha.vm.bifs.StreamModule verbs:(vector-seque
 register namespace:$ module-class:mecha.vm.bifs.RelationalModule verbs:(sort-merge-equijoin:SortMergeEquiJoin)
 register namespace:$ module-class:mecha.vm.bifs.IteratorModule verbs:(buffered-iterator:BufferedIterator)
 register namespace:$ module-class:mecha.vm.bifs.SystemModule verbs:(commit:Commit splitter:Splitter repeater:Repeater invoke:Invoke)
+register namespace:$ module-class:mecha.vm.bifs.EventTapModule verbs:(tap:Tap)
 
 /////////////
 // globals //
@@ -440,3 +441,19 @@ ${root} = (bucket-props bucket:${args.bucket})
 ${root} -> ${sink}
 #end bucket-props
 
+//
+// add system event tap
+//   required: type, filter, channel
+//
+#define-global tap
+    #set ($args.filter = $util.escapeQuotes($args.filter))
+
+    #if ($args.channel) 
+        #set ($channel_arg = " channel:${args.channel}")
+    #else 
+        #set ($channel_arg = "") 
+    #end
+    
+    ${root} = (tap type:${args.type} filter:"${args.filter}"${channel_arg})
+    ${root} -> ${sink}
+#end tap

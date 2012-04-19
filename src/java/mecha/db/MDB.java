@@ -48,18 +48,9 @@ public class MDB {
     final private Map<String, String> partitionDirs =
         new ConcurrentHashMap<String, String>();
 
-    // queue of documents to be indexed
-    final private LinkedBlockingQueue<SolrInputDocument> solrDocumentQueue =
-        new LinkedBlockingQueue<SolrInputDocument>();
-
-    //private SolrServer solrServer;
-        
     public MDB() throws Exception { }
     
     public void startMDB() throws Exception {
-        //solrServer = Mecha.getSolrManager().getCore("index").getServer();
-        //log.info("solrServer: " + solrServer.toString());
-                
         Mecha.getMonitoring().addMonitoredRates(rates);
         log.info("started");
     }
