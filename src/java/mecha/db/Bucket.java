@@ -73,7 +73,7 @@ public class Bucket {
     }
     
     public byte[] get(byte[] key) throws Exception {
-        String id = ""+makeid(key);
+        String id = makeid(key);
         
         ModifiableSolrParams solrParams = new ModifiableSolrParams();
         solrParams.set("qt", "/get");
@@ -204,7 +204,7 @@ public class Bucket {
             //db.put(key, value);
                         
             SolrInputDocument doc = new SolrInputDocument();
-            doc.addField("id", ""+makeid(key));
+            doc.addField("id", makeid(key));
             //doc.addField("h2", ""+makeh2(key));
             doc.addField("partition", partition);
             doc.addField("bucket", bucketStr);
@@ -332,7 +332,7 @@ public class Bucket {
         try {
             rates.add("mecha.db.bucket.global.delete");
             //solrServer.deleteByQuery("id:\"" + makeid(key) + "\"");
-            solrServer.deleteById(""+makeid(key));
+            solrServer.deleteById(makeid(key));
         } catch (Exception ex) {
             Mecha.getMonitoring().error("mecha.db.mdb", ex);
             /*
@@ -445,17 +445,17 @@ public class Bucket {
         }
     }
     
-    private int makeid(final byte[] key) throws Exception {
+    private String makeid(final byte[] key) throws Exception {
+        /*
         byte[] hashval = String.format("%1$s,%2$s,%3$s",
                 partition, bucketStr, new String(key)).getBytes();
         return MurmurHash3.murmurhash3_x86_32(
             hashval, 0, hashval.length, MURMUR_SEED);
+        */
         
-        /*
         return HashUtils.sha1(
             String.format("%1$s,%2$s,%3$s",
                 partition, bucketStr, new String(key)));
-        */
     }
     
     private int makeh2(final byte[] key) throws Exception {

@@ -121,7 +121,8 @@ public class SolrManager {
         File source = new File("./solr/_p/conf");
         FileUtils.copyDirectory(source, corePathFile);
         String solrConfigStr = TextFile.get(corePath + "/solrconfig.xml.template");
-        solrConfigStr = solrConfigStr.replaceAll("<<mecha:data-dir>>", "./data/core/" + coreName);
+        String solrCoreDataDir = Mecha.getConfig().getString("solr-data-dir") + "/core/" + coreName;
+        solrConfigStr = solrConfigStr.replaceAll("<<mecha:data-dir>>", solrCoreDataDir);
         TextFile.put(corePath + "/solrconfig.xml", solrConfigStr);
         log.info("solrconfig.xml written");
     }

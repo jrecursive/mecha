@@ -34,8 +34,10 @@
                 "riak.cpu.avg15": "cpu15",
                 "riak.node.puts": "rputs",
                 "riak.node.gets": "rgets",
-                "jvm.free-memory": "jvmfree",
-                //"jvm.used-memory": "jvmused",
+                "riak.node.put.fsm.time.median": "puttime",
+                "riak.node.get.fsm.time.median": "gettime",
+                //"jvm.free-memory": "jvmfree",
+                "jvm.used-memory": "jvmused",
                 "mecha.db.bucket.global.get": "glget",
                 "mecha.server.connections": "mcon",
                 "mecha.server.active-connections": "acon",
@@ -43,7 +45,7 @@
                 "mecha.mvm.data-msg": "datamsg",
                 "mecha.mvm.global.functions.task-count": "tc",
                 "mecha.mvm.global.functions": "fc",
-                "mecha.mvm.global.functions.queue-depth": "qd",
+                //"mecha.mvm.global.functions.queue-depth": "qd",
                 "mecha.mvm.global.functions.active": "fa",
                 "mecha.mvm.global.functions.complete": "fc",
                 "mecha.vm.bifs.solr-module.system.select.query.ms": "selms",
@@ -290,7 +292,7 @@
                         <td class="databox cluster-data pending_pct">pending_pct</td> -->
                         <!-- <td class="databox cluster-data reachable">reachable</td> -->
                         <!-- <td class="databox cluster-data mem_erlang">MEM_ERL</td> -->
-                        <td class="databox cluster-data mem_used">MEM_USED</td>
+                        <td class="databox cluster-data mem_used">SYSMEM</td>
                         <!-- <td class="databox cluster-data mem_total">mem_total</td> -->
                         
                         <!-- metrics -->
@@ -325,17 +327,20 @@
                         <td class="databox cluster-data metric m_rputs">RPUTS</td>
                         <td class="databox cluster-data metric m_rgets">RGETS</td>
                         
-                        <td class="databox cluster-data metric m_jvmfree">JVMFREE</td>
-                        <!-- <td class="databox cluster-data metric m_jvmused">JVMUSED</td> -->
+                        <td class="databox cluster-data metric m_gettime">GETFSM</td>
+                        <td class="databox cluster-data metric m_puttime">PUTFSM</td>
+                        
+                        <!-- <td class="databox cluster-data metric m_jvmfree">JVMFREE</td> -->
+                        <td class="databox cluster-data metric m_jvmused">JMEM</td>
                         <!-- <td class="databox cluster-data metric m_glget">GLGET</td> -->
                         <td class="databox cluster-data metric m_mcon">MCON</td>
-                        <!-- <td class="databox cluster-data metric m_acon">ACON</td> -->
+                        <td class="databox cluster-data metric m_acon">ACON</td>
                         <td class="databox cluster-data metric m_achan">ACHAN</td>
                         <td class="databox cluster-data metric m_datamsg">DATAMSG</td>
                         
                         <td class="databox cluster-data metric m_tc">TC</td>
                         <td class="databox cluster-data metric m_fc">FC</td>
-                        <td class="databox cluster-data metric m_qd">QD</td>
+                        <!-- <td class="databox cluster-data metric m_qd">QD</td> -->
                         <td class="databox cluster-data metric m_fa">FA</td>
                         
                         <td class="databox cluster-data metric m_selms">SELMS</td>
