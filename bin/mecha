@@ -1,5 +1,5 @@
 export JAVA_HOME=./jre
 export PATH=./jre/bin:${PATH}
 #ulimit -n 250000
-#java -XX:+UseConcMarkSweepGC -XX:+UseParNewGC -XX:CMSInitiatingOccupancyFraction=70 -server -d64 -Djava.library.path=./lib/native -cp build/classes:.:lib/* -Xmx2G mecha.Mecha
+#java -XX:+UseConcMarkSweepGC -XX:+UseParNewGC -XX:CMSInitiatingOccupancyFraction=70 -server -d64 -Djava.library.path=./lib/native -cp build/classes:.:lib/* -Xmx1G mecha.Mecha
 java -Dfile.encoding=UTF-8 -XX:+UseCompressedOops -XX:+UseStringCache -XX:+OptimizeStringConcat -XX:+UseFastAccessorMethods -XX:+UseBiasedLocking  -XX:MaxTenuringThreshold=15 -XX:SurvivorRatio=8 -XX:TargetSurvivorRatio=90 -XX:+UseConcMarkSweepGC -XX:+UseParNewGC -XX:CMSInitiatingOccupancyFraction=70 -server -d64 -Djava.library.path=./lib/native -cp build/classes:.:lib/* -Xmx1G mecha.Mecha
