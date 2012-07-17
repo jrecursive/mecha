@@ -43,7 +43,7 @@
     ##  the riak-home setting.
     ##
     
-    "riak-home": "./build/riak-1.1.1rc1/rel/riak",
+    "riak-home": "./build/riak-1.2.0rc1/rel/riak",
     
     "riak-script": "bin/riak",
     "riak-admin-script": "bin/riak-admin",
@@ -163,8 +163,8 @@
     ##  on mecha shutdown (usually used for development).
     ##
     
-    "riak-start": true,
-    "riak-stop": true,
+    "riak-start": false,
+    "riak-stop": false,
         
     ##
     ## Do not touch the below items even if you do know what you're doing.
