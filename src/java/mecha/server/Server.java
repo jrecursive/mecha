@@ -168,6 +168,44 @@ public class Server {
                 connection.getChannel().close();
                 return;
             }
+                        
+            /*
+             * Command buffering states.
+            */
+            
+            /*
+             * Trap lines that end in "{{" and set command
+             *  buffering to true.
+            */
+            if (request.trim().endsWith("{{")) {
+                cl.setCommandBuffering(true);
+                request = request.trim();
+                cl.appendCommandBuffer(
+                    request.substring(0,request.length()-2));
+                return;
+            }
+            
+            if (cl.isBufferingCommands()) {
+                /*
+                 * if we end in two closing right braces
+                 *  end of block has been signaled and
+                 *  we will process the current buffer
+                 *  plus the current line (request); if
+                 *  we do not end in two closing right braces,
+                 *  append to the buffer and return without
+                 *  further output.
+                */
+                if (request.trim().endsWith("}}")) {
+                    cl.appendCommandBuffer(
+                        request.substring(0,request.length()-2));
+                    request = cl.getCommandBuffer();
+                    cl.setCommandBuffering(false);
+                    cl.clearCommandBuffer();
+                } else {
+                    cl.appendCommandBuffer(request);
+                    return;
+                }
+            }
             
             /*
              * Append to current block if in
@@ -301,7 +339,8 @@ public class Server {
             /*
              * disconnect.
             */
-            } else if (cmd.equals("$bye")) {
+            } else if (cmd.equals("$bye") ||
+                       cmd.equals("\\q")) {
                 connection.getChannel().close();
                 return;
             
@@ -328,6 +367,7 @@ public class Server {
             } else {
                 //log.info("mvm: execute: " + cl + "/" + cl.getContext() + ": " + request);
                 response = Mecha.getMVM().execute(cl.getContext(), request);
+                cl.clearCommandBuffer();
             }
             
             if (response == null) {
@@ -337,6 +377,7 @@ public class Server {
             }
             
         } catch (Exception ex) {
+            cl.clearCommandBuffer();
             try {
                 JSONObject exceptionMsg = Mecha.getMonitoring().error("mecha.server", ex);
                 ex.printStackTrace();

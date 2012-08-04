@@ -139,7 +139,12 @@ public class SystemLog {
                     log.info("pruner thread stopped");
                     return;
                 } catch (Exception ex) {
-                    ex.printStackTrace();
+                    try {
+                        ex.printStackTrace();
+                        Thread.sleep(10000);
+                    } catch (Exception ex1) {
+                        ex1.printStackTrace();
+                    }
                 }
             }
         }

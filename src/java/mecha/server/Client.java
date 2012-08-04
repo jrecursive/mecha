@@ -73,6 +73,12 @@ public class Client implements ChannelConsumer {
     */
     final private String id;
     
+    /*
+     * Command input buffer
+    */
+    private StringBuffer commandBuffer;
+    private boolean bufferingCommands;
+    
     public Client(ChannelHandlerContext connection) throws Exception {
         id = "socket-" +
              HashUtils.sha1(
@@ -99,6 +105,38 @@ public class Client implements ChannelConsumer {
         clientChannel = Mecha.getChannels().getOrCreateChannel(id);
         clientChannel.addMember(this);
         addSubscription(id);
+        
+        commandBuffer = new StringBuffer();
+        bufferingCommands = false;
+    }
+    
+    /*
+     * Command buffer helpers
+    */
+    
+    public String getCommandBuffer() {
+        return commandBuffer.toString();
+    }
+    
+    public void appendCommandBuffer(String cmd) {
+        commandBuffer.append(cmd);
+    }
+    
+    public void clearCommandBuffer() {
+        commandBuffer = new StringBuffer();
+    }
+    
+    public void setCommandBuffer(String cmd) {
+        clearCommandBuffer();
+        appendCommandBuffer(cmd);
+    }
+    
+    public void setCommandBuffering(boolean bufferingCommands) {
+        this.bufferingCommands = bufferingCommands;
+    }
+    
+    public boolean isBufferingCommands() {
+        return bufferingCommands;
     }
     
     /*

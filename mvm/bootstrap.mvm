@@ -37,7 +37,27 @@ register namespace:$ module-class:mecha.vm.bifs.EventTapModule verbs:(tap:Tap)
 //reverted to with-sorted-coverage to support core-per-partition organization
 //${root} = (covered-index-select sort-field:${args.sort-field} sort-order:${args.sort-dir} query-marker:"<<${guid}-q>>" host-marker:"<<${guid}-h>>" bucket:${args.bucket} do:(warp host:<<${guid}-h>> do:(solr-select-iterator params:(q:"((<<${guid}-q>>) AND bucket:${args.bucket}) ${args.logical-connector} ${args.filter}" sfield:${args.field} pt:"${args.lat},${args.lon}" d:${args.radius} fq:"{!bbox}" sort:"${args.sort-field} ${args.sort-dir}") materialize:${args.materialize})))
 
-${root} = (with-sorted-coverage sort-field:${args.sort-field} sort-order:${args.sort-dir} partition-marker:"<<${guid}-p>>" host-marker:"<<${guid}-h>>" bucket:${args.bucket} do:(warp host:<<${guid}-h>> do:(solr-select-iterator params:(q:"partition:<<${guid}-p>> AND bucket:${args.bucket} ${args.filter}" sfield:${args.field} pt:"${args.lat},${args.lon}" d:${args.radius} fq:"{!bbox}" sort:"${args.sort-field} ${args.sort-dir}") materialize:${args.materialize} partition:<<${guid}-p>>)))
+${root} = {{
+    (with-sorted-coverage
+        sort-field:${args.sort-field}
+        sort-order:${args.sort-dir}
+        partition-marker:"<<${guid}-p>>"
+        host-marker:"<<${guid}-h>>"
+        bucket:${args.bucket}
+        do:(warp host:<<${guid}-h>>
+            do:(solr-select-iterator
+                params:(
+                    q:"partition:<<${guid}-p>> AND bucket:${args.bucket} ${args.filter}" 
+                    sfield:${args.field} 
+                    pt:"${args.lat},${args.lon}" 
+                    d:${args.radius} 
+                    fq:"{!bbox}" 
+                    sort:"${args.sort-field} ${args.sort-dir}") 
+                    materialize:${args.materialize} 
+                    partition:<<${guid}-p>>
+            )
+        )
+    )}}
 
 ${root} -> ${sink}
 
