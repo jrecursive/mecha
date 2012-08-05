@@ -80,7 +80,9 @@ public class RiakClientModule extends MVMModule {
             final String key = getConfig().<String>get("key");
             final Bucket bucket = riakClient.createBucket(bucketName).execute();
             final IRiakObject obj = bucket.fetch(key).execute();
-            broadcastDataMessage(new JSONObject(obj.getValueAsString()));
+            if (obj != null) {
+               broadcastDataMessage(new JSONObject(obj.getValueAsString()));
+            }
             broadcastDone();
         }
     }

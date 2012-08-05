@@ -64,7 +64,8 @@ public class Bucket {
         this.dataDir = dataDir;
         dateFormat = new java.text.SimpleDateFormat(STANDARD_DATE_FORMAT);
         
-        solrServer = Mecha.getSolrManager().getPartitionCore(partition).getServer();
+        //solrServer = Mecha.getSolrManager().getPartitionCore(partition).getServer();
+        solrServer = Mecha.getSolrManager().getCore("index").getServer();
         log.info("Bucket: " + partition + ": " + bucketStr + ": " + dataDir);
     }
         
@@ -360,6 +361,7 @@ public class Bucket {
         final String q = 
             "partition:" + partition + 
             " AND bucket:" + bucketStr;
+        log.info("foreach: q = '" + q + "'");
         ModifiableSolrParams solrParams = new ModifiableSolrParams();
         solrParams.set("q", "*:*");
         solrParams.set("fq", q);
@@ -376,6 +378,9 @@ public class Bucket {
                                               Float maxScore) {
                     log.info("streamDocListInfo: numFound = " + numFound + ", start = " + start + ", maxScore = " + maxScore);
                     this.numFound = numFound;
+                    if (numFound == 0) {
+                        streamSemaphore.release();
+                    }
                 }
                 
                 public void streamSolrDocument(SolrDocument doc) {

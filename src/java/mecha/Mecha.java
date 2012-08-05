@@ -241,6 +241,8 @@ public class Mecha {
                 throw new Exception ("Cannot start solr core " + coreName);
             }
         }
+        
+        /* zzz remove hashed multi-core storage
         for(int i=0; i < SolrManager.PARTITION_CORE_COUNT; i++) {
             String partitionCoreName = "p" + i;
             log.info("starting core " + partitionCoreName);
@@ -248,6 +250,8 @@ public class Mecha {
                 throw new Exception ("Cannot start partition core " + partitionCoreName);
             }
         }
+        */
+        
     }
     
     private static void generateRiakConfigs(JSONObject config) {

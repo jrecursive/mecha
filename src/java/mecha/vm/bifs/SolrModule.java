@@ -313,7 +313,7 @@ public class SolrModule extends MVMModule {
             if (config.has("core")) {
                 core = config.<String>get("core");
             } else {
-                core = Mecha.getSolrManager().getPartitionCoreName(config.getString("partition"));
+                core = "index";
             }
             
             /*
@@ -576,7 +576,7 @@ public class SolrModule extends MVMModule {
             if (config.has("core")) {
                 core = config.<String>get("core");
             } else {
-                core = Mecha.getSolrManager().getPartitionCoreName(config.getString("partition"));
+                core = "index";
             }
             
             if (config.has("delete-by-query") &&
@@ -946,7 +946,9 @@ public class SolrModule extends MVMModule {
             if (config.has("core")) {
                 core = config.getString("core");
             } else {
-                core = null; // todo: cleaner impl; implies "all partition cores"
+                //core = null; // todo: cleaner impl; implies "all partition cores"
+                // zzz de-multi-core zzz
+                core = "index";
             }
         }
         
@@ -954,9 +956,12 @@ public class SolrModule extends MVMModule {
             log.info("DeleteBySelect: core = " + core + ", q = " + q);
             
             if (core == null) {
+                Mecha.getSolrManager().getSolrServer("index").deleteByQuery(q);
+                /*
                 for(String core : Mecha.getSolrManager().getPartitionCoreRingList()) {
                     Mecha.getSolrManager().getSolrServer(core).deleteByQuery(q);
                 }
+                */
             } else {
                 Mecha.getSolrManager().getSolrServer(core).deleteByQuery(q);
             }

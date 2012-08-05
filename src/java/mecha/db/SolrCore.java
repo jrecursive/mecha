@@ -48,6 +48,8 @@ public class SolrCore {
                     boolean createIfNotExist) throws Exception {
         homePath = solrHomePath;
         coreName = solrCoreName;
+        
+        /* zzz de-multi-core zzz
         if (createIfNotExist) {
             log.info("calling createCore(" + solrCoreName + ", " + solrCoreName + ")");
             CoreAdminRequest.createCore(
@@ -57,6 +59,7 @@ public class SolrCore {
                     "./solr/" + solrCoreName + "/conf/solrconfig.xml", 
                     "./solr/_p/conf/schema.xml");
         }
+        */
 
         log.info("starting solr core [" + homePath + "] " + coreName);
         File f = new File(new File(solrHomePath), "solr.xml" );
