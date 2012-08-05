@@ -206,7 +206,6 @@ public class Bucket {
                         
             SolrInputDocument doc = new SolrInputDocument();
             doc.addField("id", makeid(key));
-            //doc.addField("h2", ""+makeh2(key));
             doc.addField("partition", partition);
             doc.addField("bucket", bucketStr);
             doc.addField("key", new String(key));
@@ -361,7 +360,7 @@ public class Bucket {
         final String q = 
             "partition:" + partition + 
             " AND bucket:" + bucketStr;
-        log.info("foreach: q = '" + q + "'");
+        
         ModifiableSolrParams solrParams = new ModifiableSolrParams();
         solrParams.set("q", "*:*");
         solrParams.set("fq", q);
@@ -376,7 +375,7 @@ public class Bucket {
                 public void streamDocListInfo(long numFound,
                                               long start,
                                               Float maxScore) {
-                    log.info("streamDocListInfo: numFound = " + numFound + ", start = " + start + ", maxScore = " + maxScore);
+                    //log.info("streamDocListInfo: numFound = " + numFound + ", start = " + start + ", maxScore = " + maxScore);
                     this.numFound = numFound;
                     if (numFound == 0) {
                         streamSemaphore.release();
@@ -385,10 +384,7 @@ public class Bucket {
                 
                 public void streamSolrDocument(SolrDocument doc) {
                     if (!fe_b.get()) return;
-                    
                     count++;
-                    //log.info(count + ": streamSolrDocument(" + doc + ")");
-                    
                     try {
                         final JSONObject solrObj = jsonizeSolrDoc(doc);
                         final byte[] key = solrObj.getString("key").getBytes();
@@ -413,8 +409,6 @@ public class Bucket {
         
         streamSemaphore.acquire();
         return fe_b.get();
-
-        //return db.foreach(forEachFunction);
     }
     
     public long count() throws Exception {
@@ -451,29 +445,9 @@ public class Bucket {
     }
     
     private String makeid(final byte[] key) throws Exception {
-        /*
-        byte[] hashval = String.format("%1$s,%2$s,%3$s",
-                partition, bucketStr, new String(key)).getBytes();
-        return MurmurHash3.murmurhash3_x86_32(
-            hashval, 0, hashval.length, MURMUR_SEED);
-        */
-        
         return HashUtils.sha1(
             String.format("%1$s,%2$s,%3$s",
                 partition, bucketStr, new String(key)));
-    }
-    
-    private int makeh2(final byte[] key) throws Exception {
-        byte[] hashval = String.format("%1$s,%2$s",
-                bucketStr, new String(key)).getBytes();
-        return MurmurHash3.murmurhash3_x86_32(
-            hashval, 0, hashval.length, MURMUR_SEED);
-        
-        /*
-        return HashUtils.sha1(
-            String.format("%1$s,%2$s,%3$s",
-                partition, bucketStr, new String(key)));
-        */
     }
     
     public String getBucketName() {
