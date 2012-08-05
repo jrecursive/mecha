@@ -171,13 +171,15 @@ register {{
             bucket:${args.bucket} 
             do:(warp 
                 host:<<${guid}-h>> 
-                do:(solr-select-iterator params:(
-                    q:"((<<${guid}-q>>) AND bucket:${args.bucket}) ${args.logical-connector} ${args.filter}" 
-                    sfield:${args.field} 
-                    pt:"${args.lat},${args.lon}" 
-                    d:${args.radius} 
-                    fq:"{!bbox}" 
-                    sort:"${args.sort-field} ${args.sort-dir}") 
+                do:(solr-select-iterator 
+                    params:(
+                        q:"((<<${guid}-q>>) AND bucket:${args.bucket}) ${args.logical-connector} ${args.filter}" 
+                        sfield:${args.field} 
+                        pt:"${args.lat},${args.lon}" 
+                        d:${args.radius} 
+                        fq:"{!bbox}" 
+                        sort:"${args.sort-field} ${args.sort-dir}"
+                    ) 
                     materialize:${args.materialize}
                 )
             )
@@ -491,7 +493,6 @@ register {{
                     solr-select-iterator
     *#
     
-    //reverted to with-sorted-coverage to support core-per-partition organization
     ${root} = {{
         (covered-index-select 
             sort-field:${args.sort-field} 
