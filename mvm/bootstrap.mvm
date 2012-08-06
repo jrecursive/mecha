@@ -258,7 +258,7 @@ register {{
     #if ($args.cardinality-only == "true")
         ${guid}-reducer = (cardinality-reducer)
     #else
-        ${guid}-reducer = (value-count-reducer mincount:${args.mincount}${args.h2count_str})
+        ${guid}-reducer = (value-count-reducer mincount:${args.mincount})
     #end
     
     ${root} -> ${guid}-reducer

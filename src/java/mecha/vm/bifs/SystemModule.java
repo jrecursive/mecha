@@ -99,7 +99,7 @@ public class SystemModule extends MVMModule {
                 splitStart = false;
             }
             if (config.has("done") &&
-                config.<String>get("control").equals("true")) {
+                config.<String>get("done").equals("true")) {
                 splitDone = true;
             } else {
                 splitDone = false;
