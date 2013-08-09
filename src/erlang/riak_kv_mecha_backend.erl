@@ -2,7 +2,7 @@
 %%
 %% riak_kv_mecha_backend: riak mecha backend
 %%
-%% Copyright (c) 2012 John Muellerleile  All Rights Reserved.
+%% Copyright (c) 2013 John Muellerleile @jrecursive  All Rights Reserved.
 %%
 %% This file is provided to you under the Apache License,
 %% Version 2.0 (the "License"); you may not use this file
