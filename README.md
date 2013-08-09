@@ -17,6 +17,8 @@ mecha
 
 * https://github.com/jrecursive/mecha/blob/master/src/java/mecha/vm/MVM.java the actual "mecha virtual machine"
 
+* one newer iteration of this idea, in a more general sense, i've hacked a bit on over at my project 'breadboard': https://github.com/jrecursive/breadboard/tree/master/src/breadboard/vm
+
 #### JINTERFACE - if you're a masochist and enjoy interfacing java <-> erlang: 
 
 * https://github.com/jrecursive/mecha/blob/master/src/java/mecha/jinterface/RiakConnector.java
