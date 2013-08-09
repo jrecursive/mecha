@@ -5,6 +5,8 @@ mecha
 
 ### THIS IS EXPERIMENTAL, PROTOTYPE CODE AND NO LONGER MAINTAINED
 
+* i'm happy to answer any questions you may have.  until then...
+
 ## some interesting waypoints in the code
 
 #### MVM - If you are curious about the query subsystem (arguably the interesting part) here are the places to look: 
