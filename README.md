@@ -3,11 +3,11 @@
 mecha
 =====
 
-## THIS IS EXPERIMENTAL, PROTOTYPE CODE AND NO LONGER MAINTAINED
+### THIS IS EXPERIMENTAL, PROTOTYPE CODE AND NO LONGER MAINTAINED
 
-# some interesting waypoints in the code
+## some interesting waypoints in the code
 
-## MVM - If you are curious about the query subsystem (arguably the interesting part) here are the places to look: 
+### MVM - If you are curious about the query subsystem (arguably the interesting part) here are the places to look: 
 
 * https://github.com/jrecursive/mecha/blob/master/mvm/bootstrap.mvm is the "mecha virtual machine" registering of "query primitives" and build-up of those primitives into higher-level queries (eg select, join, etc)
 
@@ -15,7 +15,7 @@ mecha
 
 * https://github.com/jrecursive/mecha/blob/master/src/java/mecha/vm/MVM.java the actual "mecha virtual machine"
 
-## JINTERFACE - if you're a masochist and enjoy interfacing java <-> erlang, here you go: 
+### JINTERFACE - if you're a masochist and enjoy interfacing java <-> erlang, here you go: 
 
 * https://github.com/jrecursive/mecha/blob/master/src/java/mecha/jinterface/RiakConnector.java
 
@@ -23,7 +23,7 @@ mecha
 
 * mecha-specific RPC back to erlang: https://github.com/jrecursive/mecha/blob/master/src/java/mecha/jinterface/RiakRPC.java
 
-## STORAGE & INDEX - bucket interface and storage
+### STORAGE & INDEX - bucket interface and storage
 
 * https://github.com/jrecursive/mecha/tree/master/src/java/mecha/db mecha.db.*, in particular, MDB.java, is where I implemented the riak bucket interface (of the time)
 
@@ -31,9 +31,9 @@ mecha
 
 * https://github.com/jrecursive/mecha/blob/master/src/java/mecha/db/Bucket.java this is probably the most interesting file, handling field name conversion, riak object decomposition, etc
 
-## The rest of the code is basically uninteresting and/or hastily written, YMMV :)
+### The rest of the code is basically uninteresting and/or hastily written, YMMV :)
 
-## BUILD INSTRUCTIONS (these will probably still work)
+### BUILD INSTRUCTIONS (these will probably still work)
 
 ```
 
